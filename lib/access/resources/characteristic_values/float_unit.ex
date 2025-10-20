@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+#
+# SPDX-License-Identifier: MIT
+
+defmodule DiffoExample.Access.FloatUnit do
+  @moduledoc """
+  Diffo - TMF Service and Resource Management with a difference
+
+  FloatUnit - AshTyped Struct for Float with Unit
+  """
+  use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
+
+  jason do
+    pick [:amount, :unit]
+    compact(true)
+  end
+
+  outstanding do
+    expect [:amount, :unit]
+  end
+
+  typed_struct do
+    field :amount, :float, description: "the amount"
+
+    field :unit, :atom, description: "the unit"
+  end
+
+  defimpl String.Chars do
+    def to_string(struct) do
+      inspect(struct)
+    end
+  end
+end
