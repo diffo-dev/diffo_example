@@ -61,17 +61,14 @@ defmodule DiffoExample.Access.Path do
              end)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, with_specification} <- Specification.relate_instance(result, changeset),
-                    {:ok, with_relationships} <-
-                      Relationship.relate_instance(with_specification, changeset),
-                    {:ok, with_features} <-
-                      Feature.relate_instance(with_relationships, changeset),
-                    {:ok, with_characteristics} <-
-                      Characteristic.relate_instance(with_features, changeset),
-                    {:ok, with_places} <- Place.relate_instance(with_characteristics, changeset),
-                    {:ok, _with_parties} <- Party.relate_instance(with_places, changeset),
-                    {:ok, path} <- Access.get_path_by_id(result.id),
-                    do: {:ok, path}
+               with {:ok, result} <- Specification.relate_instance(result, changeset),
+                    {:ok, result} <- Relationship.relate_instance(result, changeset),
+                    {:ok, result} <- Feature.relate_instance(result, changeset),
+                    {:ok, result} <- Characteristic.relate_instance(result, changeset),
+                    {:ok, result} <- Place.relate_instance(result, changeset),
+                    {:ok, result} <- Party.relate_instance(result, changeset),
+                    {:ok, result} <- Access.get_path_by_id(result.id),
+                    do: {:ok, result}
              end)
 
       change load [:href]
@@ -83,9 +80,9 @@ defmodule DiffoExample.Access.Path do
       argument :characteristic_value_updates, {:array, :term}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _result} <- Characteristic.update_values(result, changeset),
-                    {:ok, path} <- Access.get_path_by_id(result.id),
-                    do: {:ok, path}
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Access.get_path_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
 
@@ -94,9 +91,9 @@ defmodule DiffoExample.Access.Path do
       argument :relationships, {:array, :struct}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _path} <- Relationship.relate_instance(result, changeset),
-                    {:ok, path} <- Access.get_path_by_id(result.id),
-                    do: {:ok, path}
+               with {:ok, result} <- Relationship.relate_instance(result, changeset),
+                    {:ok, result} <- Access.get_path_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
   end

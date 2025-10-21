@@ -72,15 +72,13 @@ defmodule DiffoExample.Access.DslAccess do
              end)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, with_specification} <- Specification.relate_instance(result, changeset),
-                    {:ok, with_features} <-
-                      Feature.relate_instance(with_specification, changeset),
-                    {:ok, with_characteristics} <-
-                      Characteristic.relate_instance(with_features, changeset),
-                    {:ok, with_parties} <- Party.relate_instance(with_characteristics, changeset),
-                    {:ok, _with_places} <- Place.relate_instance(with_parties, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               with {:ok, result} <- Specification.relate_instance(result, changeset),
+                    {:ok, result} <- Feature.relate_instance(result, changeset),
+                    {:ok, result} <- Characteristic.relate_instance(result, changeset),
+                    {:ok, result} <- Party.relate_instance(result, changeset),
+                    {:ok, result} <- Place.relate_instance(result, changeset),
+                    {:ok, result} <- Access.get_dsl_by_id(result.id),
+                    do: {:ok, result}
              end)
 
       change load [:href]
@@ -105,9 +103,9 @@ defmodule DiffoExample.Access.DslAccess do
                ])
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _with_place} <- Place.relate_instance(result, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               with {:ok, result} <- Place.relate_instance(result, changeset),
+                    {:ok, result} <- Access.get_dsl_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
 
@@ -118,9 +116,9 @@ defmodule DiffoExample.Access.DslAccess do
       change transition_state(:reserved)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _result} <- Characteristic.update_values(result, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Access.get_dsl_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
   end
