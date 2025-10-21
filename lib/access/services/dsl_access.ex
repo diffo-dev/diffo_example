@@ -10,12 +10,10 @@ defmodule DiffoExample.Access.DslAccess do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Specification
-  alias Diffo.Provider.Instance.Feature
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.Party
   alias Diffo.Provider.Instance.Place
   alias DiffoExample.Access
+  alias DiffoExample.Access.ActionHelper
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -64,23 +62,10 @@ defmodule DiffoExample.Access.DslAccess do
       argument :characteristics, {:array, :uuid}, public?: false
       argument :features, {:array, :uuid}, public?: false
 
-      change before_action(fn changeset, _context ->
-               changeset
-               |> Specification.set_specified_by_argument()
-               |> Feature.set_features_argument()
-               |> Characteristic.set_characteristics_argument()
-             end)
+      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, with_specification} <- Specification.relate_instance(result, changeset),
-                    {:ok, with_features} <-
-                      Feature.relate_instance(with_specification, changeset),
-                    {:ok, with_characteristics} <-
-                      Characteristic.relate_instance(with_features, changeset),
-                    {:ok, with_parties} <- Party.relate_instance(with_characteristics, changeset),
-                    {:ok, _with_places} <- Place.relate_instance(with_parties, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               ActionHelper.build_after(changeset, result, :get_dsl_by_id)
              end)
 
       change load [:href]
@@ -105,9 +90,9 @@ defmodule DiffoExample.Access.DslAccess do
                ])
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _with_place} <- Place.relate_instance(result, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               with {:ok, result} <- Place.relate_instance(result, changeset),
+                    {:ok, result} <- Access.get_dsl_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
 
@@ -118,9 +103,9 @@ defmodule DiffoExample.Access.DslAccess do
       change transition_state(:reserved)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, _result} <- Characteristic.update_values(result, changeset),
-                    {:ok, dsl_access} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, dsl_access}
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Access.get_dsl_by_id(result.id),
+                    do: {:ok, result}
              end)
     end
   end
