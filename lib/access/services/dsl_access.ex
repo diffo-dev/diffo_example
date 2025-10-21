@@ -10,12 +10,10 @@ defmodule DiffoExample.Access.DslAccess do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Specification
-  alias Diffo.Provider.Instance.Feature
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.Party
   alias Diffo.Provider.Instance.Place
   alias DiffoExample.Access
+  alias DiffoExample.Access.ActionHelper
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -64,21 +62,10 @@ defmodule DiffoExample.Access.DslAccess do
       argument :characteristics, {:array, :uuid}, public?: false
       argument :features, {:array, :uuid}, public?: false
 
-      change before_action(fn changeset, _context ->
-               changeset
-               |> Specification.set_specified_by_argument()
-               |> Feature.set_features_argument()
-               |> Characteristic.set_characteristics_argument()
-             end)
+      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Specification.relate_instance(result, changeset),
-                    {:ok, result} <- Feature.relate_instance(result, changeset),
-                    {:ok, result} <- Characteristic.relate_instance(result, changeset),
-                    {:ok, result} <- Party.relate_instance(result, changeset),
-                    {:ok, result} <- Place.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, result}
+               ActionHelper.build_after(changeset, result, :get_dsl_by_id)
              end)
 
       change load [:href]

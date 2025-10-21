@@ -10,16 +10,13 @@ defmodule DiffoExample.Access.Card do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Specification
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Feature
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.Place
-  alias Diffo.Provider.Instance.Party
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
+  alias DiffoExample.Access.ActionHelper
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -56,22 +53,10 @@ defmodule DiffoExample.Access.Card do
 
       change set_attribute(:type, :resource)
 
-      change before_action(fn changeset, _context ->
-               changeset
-               |> Specification.set_specified_by_argument()
-               |> Feature.set_features_argument()
-               |> Characteristic.set_characteristics_argument()
-             end)
+      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Specification.relate_instance(result, changeset),
-                    {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Feature.relate_instance(result, changeset),
-                    {:ok, result} <- Characteristic.relate_instance(result, changeset),
-                    {:ok, result} <- Place.relate_instance(result, changeset),
-                    {:ok, result} <- Party.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_card_by_id(result.id),
-                    do: {:ok, result}
+               ActionHelper.build_after(changeset, result, :get_card_by_id)
              end)
 
       change load [:href]
