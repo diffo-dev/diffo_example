@@ -24,7 +24,7 @@ by adding `diffo_example` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:diffo_example, "~> 0.0.1"}
+    {:diffo_example, "~> 0.0.2"}
   ]
 end
 ```

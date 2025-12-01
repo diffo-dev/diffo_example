@@ -25,7 +25,7 @@ defmodule DiffoExample.Test.Parties do
                %{uuid: instance.id},
                :PartyRef,
                %{uuid: actual_party_ref.id},
-               :INVOLVED_WITH,
+               :RELATES,
                :outgoing
              )
 
@@ -34,7 +34,7 @@ defmodule DiffoExample.Test.Parties do
                %{uuid: actual_party_ref.id},
                :Party,
                %{key: actual_party_ref.party_id},
-               :INVOLVED_WITH,
+               :RELATES,
                :outgoing
              )
     end)
