@@ -12,9 +12,9 @@ defmodule DiffoExample.Access.Path do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Access
-  alias DiffoExample.Access.ActionHelper
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -53,7 +53,7 @@ defmodule DiffoExample.Access.Path do
       change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
       change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, :get_path_by_id)
+               ActionHelper.build_after(changeset, result, Access, :get_path_by_id)
              end)
 
       change load [:href]
