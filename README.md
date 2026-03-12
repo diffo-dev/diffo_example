@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diff
 SPDX-License-Identifier: MIT
 -->
 
-# Diffo Examples
+# Diffo Example
 
 [![Module Version](https://img.shields.io/hexpm/v/diffo)](https://hex.pm/packages/diffo_example)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen)](https://hexdocs.pm/diffo_example/)
@@ -42,21 +42,22 @@ Contributions are welcome, please start with an [issue](https://github.com/diffo
 
 ## Acknowledgements
 
-Thanks to [Telstra](https://www.telstra.com.au/) for supporting innovation in orchestration and inventory shared-tech which resulted in the award winning difference engine [2024 TMF Excellence Award in Autonomous Networks](https://www.tmforum.org/about/awards-and-recognition/excellence-awards/winners-2024/) powering three network service entities enabling outstanding product experience [2025 TMF Excellence Award in Customer Experience](https://www.tmforum.org/about/awards-and-recognition/excellence-awards/winners-2025/) and inspiring both this open source and internal shared-tech.
+Thanks to my colleagues in the Telco industry.
 
-Thanks to the [Ash Core](https://github.com/ash-project) for [ash](https://github.com/ash-project/ash) 🚀
+Thanks to the vibrant Elixir and Ash communities, and in particular the [Ash Core](https://github.com/ash-project) for [ash](https://github.com/ash-project/ash) 🚀
 
-Thanks to [Sagastume](https://github.com/sagastume) for [boltx](https://github.com/tiagodavi/ex4j) which is used by the [Ash Neo4j DataLayer](https://github.com/diffo-dev/ash_neo4j)
+Thanks to [Florin Patrascu](https://github.com/florinpatrascu) for [bolt_sips](https://github.com/florinpatrascu/bolt_sips) and[Luis Sagastume](https://github.com/sagastume) for [boltx](https://github.com/sagastume/boltx), both forerunners of [bolty](https://github.com/diffo-dev/bolty) the bolt driver for neo4j.
 
 Thanks to the [Neo4j Core](https://github.com/neo4j) for [neo4j](https://github.com/neo4j/neo4j) and pioneering work on graph databases.
 
 ## Links
 
 [Diffo TMF Service and Resource Manager](https://github.com/diffo-dev/diffo)
+[Diffo.dev](https://www.diffo.dev)
 [Ash Neo4j Datalayer](https://github.com/diffo-dev/ash_neo4j)
+[bolty](https://github.com/diffo-dev/bolty)
+[Neo4j Deployment Centre](https://neo4j.com/deployment-center/)
 [Ash Outstanding Extension](https://github.com/diffo-dev/ash_outstanding)
 [Outstanding Elixir Protocol](https://github.com/diffo-dev/outstanding)
-[Diffo.dev](https://www.diffo.dev)
-[Neo4j Deployment Centre](https://neo4j.com/deployment-center/)
 [TMF](https://www.tmforum.org)
 
