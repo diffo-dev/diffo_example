@@ -13,7 +13,7 @@ defmodule DiffoExample.Access.CardTest do
   alias DiffoExample.Test.Characteristics
 
   setup_all do
-    AshNeo4j.BoltxHelper.start()
+    AshNeo4j.BoltyHelper.start()
   end
 
   setup do

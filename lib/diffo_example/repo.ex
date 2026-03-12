@@ -16,7 +16,7 @@ defmodule DiffoExample.Repo do
   end
 
   def start_link(_stack) do
-    config = Application.get_env(:boltx, Bolt)
-    Boltx.start_link(config)
+    config = Application.get_env(:bolty, Bolt)
+    Bolty.start_link(config)
   end
 end

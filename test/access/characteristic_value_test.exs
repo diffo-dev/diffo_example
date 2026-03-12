@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
   alias DiffoExample.Access.BandwidthProfile
 
   setup_all do
-    AshNeo4j.BoltxHelper.start()
+    AshNeo4j.BoltyHelper.start()
   end
 
   setup do
