@@ -21,7 +21,12 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 ### Maintenance:
 * updated to diffo 0.1.3
 
-## [v0.0.3](https://github.com/diffo-dev/diffo/compare/v0.0.1..v0.0.2) (2026-03-13)
+## [v0.0.3](https://github.com/diffo-dev/diffo/compare/v0.0.2..v0.0.3) (2026-03-13)
 
 ### Maintenance:
 * updated to diffo 0.1.4, using ash_neo4j 0.2.13 using fork bolty 0.0.7 rather than boltx 0.0.6
+
+## [v0.0.4](https://github.com/diffo-dev/diffo/compare/v0.0.3..v0.0.4) (2026-03-19)
+
+### Fixes:
+* fixed relationship enrichment inconsistent across neo4j versions
