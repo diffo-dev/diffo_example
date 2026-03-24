@@ -46,7 +46,7 @@ defmodule DiffoExample.Nbn.NniGroup do
   actions do
     create :build do
       description "creates a new NNI Group resource instance"
-      accept [:id, :name, :type, :which]
+      accept [:id, :name, :which]
       argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
       argument :features, {:array, :uuid}, public?: false

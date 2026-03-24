@@ -9,7 +9,7 @@ defmodule DiffoExample.Nbn.Uni do
   Uni - User Network Interface Resource Instance
 
   A UNI is the physical/logical interface at the customer premises. It is
-  related to an NTD resource and to its parent NBN Ethernet circuit.
+  related to an NTD resource and to its parent NBN Ethernet access.
   It is related to an AVC resource, which is in turn aggregated by a CVC.
   """
 
@@ -33,7 +33,7 @@ defmodule DiffoExample.Nbn.Uni do
     id "a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
     name "uni"
     type :resourceSpecification
-    description "A UNI Resource Instance related to an NTD and an NBN Ethernet circuit"
+    description "A UNI Resource Instance related to an NTD and an NBN Ethernet access"
     category "Network Resource"
   end
 
@@ -44,7 +44,7 @@ defmodule DiffoExample.Nbn.Uni do
   actions do
     create :build do
       description "creates a new UNI resource instance"
-      accept [:id, :name, :type, :which]
+      accept [:id, :which]
       argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
       argument :features, {:array, :uuid}, public?: false
@@ -53,6 +53,8 @@ defmodule DiffoExample.Nbn.Uni do
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
+
+      change set_attribute(:name, &DiffoExample.Nbn.Uni.identifier/0)
 
       change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
@@ -76,7 +78,7 @@ defmodule DiffoExample.Nbn.Uni do
     end
 
     update :relate do
-      description "relates the UNI with other instances (e.g. NTD, NBN Ethernet circuit)"
+      description "relates the UNI with other instances (e.g. NTD, NBN Ethernet access)"
       argument :relationships, {:array, :struct}
 
       change after_action(fn changeset, result, _context ->
@@ -85,5 +87,9 @@ defmodule DiffoExample.Nbn.Uni do
                     do: {:ok, result}
              end)
     end
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("UNI")
   end
 end

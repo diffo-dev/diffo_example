@@ -34,7 +34,9 @@ defmodule DiffoExample.Nbn.Cvc do
     id "d4e5f6a7-8b9c-4d0e-bf1a-3b4c5d6e7f8a"
     name "cvc"
     type :resourceSpecification
+
     description "A Connectivity Virtual Circuit Resource Instance that aggregates AVCs and terminates at an NNI Group"
+
     category "Network Resource"
   end
 
@@ -46,13 +48,15 @@ defmodule DiffoExample.Nbn.Cvc do
   actions do
     create :build do
       description "creates a new CVC resource instance"
-      accept [:id, :name, :type, :which]
+      accept [:id, :which]
       argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
       argument :features, {:array, :uuid}, public?: false
       argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
+
+      change set_attribute(:name, &DiffoExample.Nbn.Cvc.identifier/0)
 
       change set_attribute(:type, :resource)
 
@@ -98,5 +102,15 @@ defmodule DiffoExample.Nbn.Cvc do
                     do: {:ok, result}
              end)
     end
+  end
+
+  attributes do
+    attribute :cvcid, :string do
+      default &DiffoExample.Nbn.Cvc.identifier/0
+    end
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("CVC")
   end
 end

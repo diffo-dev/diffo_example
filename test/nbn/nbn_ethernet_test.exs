@@ -16,47 +16,49 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
   alias DiffoExample.Nbn.NniGroup
   alias DiffoExample.Nbn.Nni
   alias DiffoExample.Test.Characteristics
+  alias Diffo.Provider.Instance.Relationship
 
   setup_all do
     AshNeo4j.BoltyHelper.start()
   end
 
   setup do
-    on_exit(fn ->
-      AshNeo4j.Neo4jHelper.delete_all()
-    end)
+    # on_exit(fn ->
+    #  AshNeo4j.Neo4jHelper.delete_all()
+    # end)
+    :ok
   end
 
   describe "build nbn_ethernet" do
-    test "create an nbn_ethernet circuit" do
-      {:ok, circuit} = Nbn.build_nbn_ethernet(%{})
+    test "create an nbn_ethernet access" do
+      {:ok, access} = Nbn.build_nbn_ethernet(%{})
 
       # check the instance is an NbnEthernet
-      assert is_struct(circuit, NbnEthernet)
+      assert is_struct(access, NbnEthernet)
 
       # check specification resource enrichment and node relationship
-      refute is_nil(circuit.specification_id)
-      assert is_struct(circuit.specification, Specification)
+      refute is_nil(access.specification_id)
+      assert is_struct(access.specification, Specification)
 
       assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
                :Instance,
-               %{uuid: circuit.id},
+               %{uuid: access.id},
                :Specification,
-               %{uuid: circuit.specification_id},
+               %{uuid: access.specification_id},
                :SPECIFIED_BY,
                :outgoing
              )
 
       # check characteristic resource enrichment and node relationships
-      assert is_list(circuit.characteristics)
-      assert length(circuit.characteristics) == 1
+      assert is_list(access.characteristics)
+      assert length(access.characteristics) == 1
 
-      Enum.each(circuit.characteristics, fn characteristic ->
+      Enum.each(access.characteristics, fn characteristic ->
         assert is_struct(characteristic, Characteristic)
 
         assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
                  :Instance,
-                 %{uuid: circuit.id},
+                 %{uuid: access.id},
                  :Characteristic,
                  %{uuid: characteristic.id},
                  :HAS,
@@ -64,25 +66,47 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
                )
       end)
 
-      encoding = Jason.encode!(circuit) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({"id":"#{circuit.id}","href":"resourceInventoryManagement/v4/resource/nbnEthernet/#{circuit.id}","category":"Network Resource","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"nbn_ethernet","value":{}}]})
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/nbnEthernet/#{access.id}","category":"Network Resource",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{\"technology\":\"FTTP\"}}]})
     end
 
-    test "define nbn_ethernet circuit" do
-      {:ok, circuit} = Nbn.build_nbn_ethernet(%{})
+    test "define nbn_ethernet access" do
+      {:ok, access} = Nbn.build_nbn_ethernet(%{})
 
       updates = [
-        nbn_ethernet: [circuit_id: "NBN-CID-123456", speed: 1000, technology: :FTTP]
+        pri: [avcid: "AVC000910202941", uniid: "UNI000302814545", speed: 1000, technology: :FTTP]
       ]
 
-      {:ok, circuit} = Nbn.define_nbn_ethernet(circuit, %{characteristic_value_updates: updates})
+      {:ok, access} = Nbn.define_nbn_ethernet(access, %{characteristic_value_updates: updates})
 
       Characteristics.check_values(
-        [nbn_ethernet: [circuit_id: "NBN-CID-123456", speed: 1000, technology: :FTTP]],
-        circuit
+        [pri: [avcid: "AVC000910202941", uniid: "UNI000302814545", speed: 1000, technology: :FTTP]],
+        access
       )
+    end
+
+    test "relate nbn_ethernet" do
+      {:ok, access} = Nbn.build_nbn_ethernet(%{})
+
+      {:ok, avc} = Nbn.build_avc(%{})
+
+      {:ok, uni} = Nbn.build_uni(%{})
+
+      relationships = [
+        %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :avc},
+        %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :uni}
+      ]
+
+      {:ok, access} = Nbn.relate_nbn_ethernet(access, %{relationships: relationships})
+
+      {:ok, access} = Nbn.mine_nbn_ethernet(access)
+
+      encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
+
+      assert encoding ==
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/nbnEthernet/#{access.id}","category":"Network Resource","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/avc/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/uni/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/avc/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/uni/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"avcid":"#{avc.name}","uniid":"#{uni.name}","technology":"FTTP"}}]})
     end
   end
 
@@ -214,7 +238,6 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
   end
 
   describe "build nni" do
-    @tag debug2: true
     test "create an nni" do
       {:ok, nni} = Nbn.build_nni(%{})
 

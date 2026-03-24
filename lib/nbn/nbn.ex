@@ -33,6 +33,7 @@ defmodule DiffoExample.Nbn do
       define :build_nbn_ethernet, action: :build
       define :define_nbn_ethernet, action: :define
       define :relate_nbn_ethernet, action: :relate
+      define :mine_nbn_ethernet, action: :mine
     end
 
     resource Uni do

@@ -44,7 +44,7 @@ defmodule DiffoExample.Nbn.Nni do
   actions do
     create :build do
       description "creates a new NNI resource instance"
-      accept [:id, :name, :type, :which]
+      accept [:id, :which]
       argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
       argument :features, {:array, :uuid}, public?: false
@@ -53,6 +53,8 @@ defmodule DiffoExample.Nbn.Nni do
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
+
+      change set_attribute(:name, &DiffoExample.Nbn.Nni.identifier/0)
 
       change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
 
@@ -84,6 +86,10 @@ defmodule DiffoExample.Nbn.Nni do
                     {:ok, result} <- Nbn.get_nni_by_id(result.id),
                     do: {:ok, result}
              end)
+    end
+
+    def identifier() do
+      DiffoExample.Nbn.Util.identifier("NNI")
     end
   end
 end

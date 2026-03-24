@@ -43,13 +43,15 @@ defmodule DiffoExample.Nbn.Avc do
   actions do
     create :build do
       description "creates a new AVC resource instance"
-      accept [:id, :name, :type, :which]
+      accept [:id, :which]
       argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
       argument :features, {:array, :uuid}, public?: false
       argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
+
+      change set_attribute(:name, &DiffoExample.Nbn.Avc.identifier/0)
 
       change set_attribute(:type, :resource)
 
@@ -84,5 +86,9 @@ defmodule DiffoExample.Nbn.Avc do
                     do: {:ok, result}
              end)
     end
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("AVC")
   end
 end

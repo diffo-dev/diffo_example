@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule DiffoExample.Nbn.NbnEthernetValue do
+defmodule DiffoExample.Nbn.PriValue do
   @moduledoc """
   Diffo - TMF Service and Resource Management with a difference
 
-  NbnEthernetValue - AshTyped Struct for NBN Ethernet Circuit Characteristic Value
+  NbnEthernetValue - AshTyped Struct for NBN Ethernet Access Characteristic Value
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
+  @technologies [:FTTP, :FTTN, :FTTB, :FTTC, :HFC, :FixedWireless, :Satellite]
+
   jason do
-    pick [:circuit_id, :speed, :technology]
+    pick [:avcid, :uniid, :speed, :technology]
     compact(true)
   end
 
@@ -20,12 +22,16 @@ defmodule DiffoExample.Nbn.NbnEthernetValue do
   end
 
   typed_struct do
-    field :circuit_id, :string, description: "the unique NBN circuit identifier"
+    field :avcid, :string, description: "the avcid from the owne Avc Resource"
+
+    field :uniid, :string, description: "the uniid from the owned Uni Resource"
 
     field :speed, :integer, description: "the circuit download speed in Mbps"
 
     field :technology, :atom,
-      description: "the access technology (:FTTP, :FTTN, :HFC, :Fixed_Wireless)"
+      description: "the access technology",
+      constraints: [one_of: @technologies],
+      default: :FTTP
   end
 
   defimpl String.Chars do
