@@ -10,19 +10,21 @@ defmodule DiffoExample.Nbn.AvcValue do
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
+  alias DiffoExample.Nbn.BandwidthProfile
+
   jason do
-    pick [:cir, :pir]
+    pick [:cvlan, :bandwidth_profile]
     compact(true)
   end
 
   outstanding do
-    expect [:cir, :pir]
+    expect [:cvlan, :bandwidth_profile]
   end
 
   typed_struct do
-    field :cir, :integer, description: "Committed Information Rate in Mbps"
+    field :cvlan, :string, description: "the cvlan of the AVC, assigned by the related CVC"
 
-    field :pir, :integer, description: "Peak Information Rate in Mbps"
+    field :bandwidth_profile, BandwidthProfile, description: "the bandwidth profile of the AVC"
   end
 
   defimpl String.Chars do

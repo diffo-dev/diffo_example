@@ -10,28 +10,29 @@ defmodule DiffoExample.Nbn.PriValue do
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
-  @technologies [:FTTP, :FTTN, :FTTB, :FTTC, :HFC, :FixedWireless, :Satellite]
+  alias DiffoExample.Nbn.Technology
+  alias DiffoExample.Nbn.BandwidthProfile
+  alias DiffoExample.Nbn.Speeds
 
   jason do
-    pick [:avcid, :uniid, :speed, :technology]
+    pick [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
     compact(true)
   end
 
   outstanding do
-    expect [:circuit_id, :speed]
+    expect [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
   end
 
   typed_struct do
-    field :avcid, :string, description: "the avcid from the owne Avc Resource"
+    field :avcid, :string, description: "the avcid from the owned Avc Resource"
 
     field :uniid, :string, description: "the uniid from the owned Uni Resource"
 
-    field :speed, :integer, description: "the circuit download speed in Mbps"
+    field :technology, Technology, description: "the technology type"
 
-    field :technology, :atom,
-      description: "the access technology",
-      constraints: [one_of: @technologies],
-      default: :FTTP
+    field :bandwidth_profile, BandwidthProfile, description: "the bandwidth profile"
+
+    field :speeds, Speeds, description: "the downstream and upstream speeds in Mbps"
   end
 
   defimpl String.Chars do

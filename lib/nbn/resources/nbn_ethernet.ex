@@ -8,9 +8,7 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   NbnEthernet - NBN Ethernet access Resource Instance
 
-  An NBN Ethernet access comprising a dedicated UNI and AVC resource.
-  The access is related to its UNI, which in turn is aggregated by a CVC
-  that terminates at an NNI Group.
+  An NBN Ethernet access comprises of dedicated UNI and AVC resources.
   """
 
   alias Diffo.Provider.BaseInstance
@@ -19,6 +17,7 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
+  alias DiffoExample.Nbn.Util
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -117,12 +116,25 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     forward_relationships = Ash.Changeset.get_attribute(changeset, :forward_relationships)
 
     pri_updates =
-      Enum.into(forward_relationships, [], fn forward_relationship ->
+      Enum.reduce(forward_relationships, [], fn forward_relationship, acc ->
         {:ok, related} = Diffo.Provider.get_instance_by_id(forward_relationship.target_id)
-        {alias_to_id(forward_relationship.alias), related.name}
+        related_name = {alias_to_id(forward_relationship.alias), related.name}
+        case forward_relationship.alias do
+          :uni ->
+            # extract technology from uni characteristic
+            [{:technology, Util.extract(related.characteristics, :uni, :technology)} | [ related_name | acc]]
+          :avc ->
+            # extract bandwidth_profile from avc characteristic
+            [{:bandwidth_profile, Util.extract(related.characteristics, :avc, :bandwidth_profile)} | [ related_name | acc]]
+          _ ->
+           [ related_name | acc]
+        end
       end)
 
-    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, pri: pri_updates)
+    # calculate the speeds from the extracted technology and bandwidth_profile
+    speeds = {:speeds, Util.speeds(Keyword.get(pri_updates, :bandwidth_profile), Keyword.get(pri_updates, :technology))}
+
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, pri: [speeds | pri_updates])
   end
 
   defp alias_to_id(alias) when is_atom(alias) do

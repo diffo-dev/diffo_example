@@ -38,6 +38,7 @@ defmodule DiffoExample.Nbn.Avc do
 
   characteristics do
     characteristic :avc, DiffoExample.Nbn.AvcValue
+    characteristic :cvc, DiffoExample.Nbn.CvcValue
   end
 
   actions do
@@ -86,9 +87,33 @@ defmodule DiffoExample.Nbn.Avc do
                     do: {:ok, result}
              end)
     end
+
+    update :mine do
+      description "updates the AVC with data mined from related instances"
+      argument :characteristic_value_updates, {:array, :term}
+
+      change before_action(fn changeset, context ->
+               DiffoExample.Nbn.Avc.mine_related(changeset, context)
+             end)
+
+      change after_action(fn changeset, result, _context ->
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Nbn.get_avc_by_id(result.id),
+                    do: {:ok, result}
+             end)
+    end
   end
 
   def identifier() do
     DiffoExample.Nbn.Util.identifier("AVC")
+  end
+
+  # mines related resource to characteristics
+  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
+    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+
+    cvlan = {:cvlan, hd(hd(reverse_relationships).characteristics).value}
+
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, avc: [cvlan])
   end
 end

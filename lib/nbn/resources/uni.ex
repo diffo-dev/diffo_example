@@ -19,6 +19,7 @@ defmodule DiffoExample.Nbn.Uni do
   alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
+  alias DiffoExample.Nbn.Util
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -87,9 +88,37 @@ defmodule DiffoExample.Nbn.Uni do
                     do: {:ok, result}
              end)
     end
+
+    update :mine do
+      description "updates the UNI with data mined from related instances"
+      argument :characteristic_value_updates, {:array, :term}
+
+      change before_action(fn changeset, context ->
+               DiffoExample.Nbn.Uni.mine_related(changeset, context)
+             end)
+
+      change after_action(fn changeset, result, _context ->
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Nbn.get_uni_by_id(result.id),
+                    do: {:ok, result}
+             end)
+    end
   end
 
   def identifier() do
     DiffoExample.Nbn.Util.identifier("UNI")
+  end
+
+  # mines related resource to characteristics
+  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
+    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+
+    ntd_relationship = hd(reverse_relationships)
+
+    port = {:port, hd(ntd_relationship.characteristics).value}
+    {:ok, ntd} = Diffo.Provider.get_instance_by_id(ntd_relationship.source_id)
+    technology = {:technology, Util.extract(ntd.characteristics, :ntd, :technology)}
+
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, uni: [port, technology])
   end
 end

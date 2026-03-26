@@ -10,6 +10,7 @@ defmodule DiffoExample.Nbn.NniGroup do
 
   An NNI Group is the Point of Interconnect (PoI) grouping where a CVC
   terminates. It comprises multiple NNI resources.
+  The NNI Group assigns svlan to CVC.
   """
 
   alias Diffo.Provider.BaseInstance
@@ -40,7 +41,7 @@ defmodule DiffoExample.Nbn.NniGroup do
 
   characteristics do
     characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
-    characteristic :svlan_ids, Diffo.Provider.AssignableValue
+    characteristic :svlans, Diffo.Provider.AssignableValue
   end
 
   actions do
@@ -82,7 +83,7 @@ defmodule DiffoExample.Nbn.NniGroup do
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :svlan_ids, :svlan_id),
+               with {:ok, result} <- Assigner.assign(result, changeset, :svlans, :svlan),
                     {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)

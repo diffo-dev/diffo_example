@@ -11,16 +11,16 @@ defmodule DiffoExample.Nbn.CvcValue do
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
   jason do
-    pick [:cvc_id, :bandwidth]
+    pick [:svlan, :bandwidth]
     compact(true)
   end
 
   outstanding do
-    expect [:cvc_id, :bandwidth]
+    expect [:svlan, :bandwidth]
   end
 
   typed_struct do
-    field :cvc_id, :string, description: "the unique CVC identifier"
+    field :svlan, :string, description: "the svlan of the CVC, assigned by the related NNI Group"
 
     field :bandwidth, :integer, description: "total CVC bandwidth in Mbps"
   end

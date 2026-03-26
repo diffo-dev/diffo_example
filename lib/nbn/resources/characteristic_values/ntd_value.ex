@@ -10,6 +10,8 @@ defmodule DiffoExample.Nbn.NtdValue do
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
+  alias DiffoExample.Nbn.Technology
+
   jason do
     pick [:model, :serial_number, :technology]
     compact(true)
@@ -24,8 +26,7 @@ defmodule DiffoExample.Nbn.NtdValue do
 
     field :serial_number, :string, description: "the NTD serial number"
 
-    field :technology, :atom,
-      description: "the access technology (:FTTP, :FTTN, :HFC, :Fixed_Wireless)"
+    field :technology, Technology, description: "the access technology type", default: Technology.default
   end
 
   defimpl String.Chars do

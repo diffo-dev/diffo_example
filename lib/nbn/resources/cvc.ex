@@ -8,8 +8,8 @@ defmodule DiffoExample.Nbn.Cvc do
 
   Cvc - Connectivity Virtual Circuit Resource Instance
 
-  A CVC is the wholesale bandwidth product that aggregates one or more AVC
-  resources and terminates at an NNI Group resource. Each AVC has a related UNI.
+  A CVC is the wholesale bandwidth product that supports AVC and terminates at an NNI Group.
+  The CVC assigns cvlan to AVC.
   """
 
   alias Diffo.Provider.BaseInstance
@@ -42,7 +42,7 @@ defmodule DiffoExample.Nbn.Cvc do
 
   characteristics do
     characteristic :cvc, DiffoExample.Nbn.CvcValue
-    characteristic :cvlan_ids, Diffo.Provider.AssignableValue
+    characteristic :cvlans, Diffo.Provider.AssignableValue
   end
 
   actions do
@@ -86,7 +86,7 @@ defmodule DiffoExample.Nbn.Cvc do
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :cvlan_ids, :cvlan_id),
+               with {:ok, result} <- Assigner.assign(result, changeset, :cvlans, :cvlan),
                     {:ok, result} <- Nbn.get_cvc_by_id(result.id),
                     do: {:ok, result}
              end)
@@ -102,15 +102,33 @@ defmodule DiffoExample.Nbn.Cvc do
                     do: {:ok, result}
              end)
     end
-  end
 
-  attributes do
-    attribute :cvcid, :string do
-      default &DiffoExample.Nbn.Cvc.identifier/0
+    update :mine do
+      description "updates the CVC with data mined from related instances"
+      argument :characteristic_value_updates, {:array, :term}
+
+      change before_action(fn changeset, context ->
+               DiffoExample.Nbn.Cvc.mine_related(changeset, context)
+             end)
+
+      change after_action(fn changeset, result, _context ->
+               with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Nbn.get_cvc_by_id(result.id),
+                    do: {:ok, result}
+             end)
     end
   end
 
   def identifier() do
     DiffoExample.Nbn.Util.identifier("CVC")
+  end
+
+  # mines related resource to characteristics
+  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
+    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+
+    svlan = {:svlan, hd(hd(reverse_relationships).characteristics).value}
+
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, cvc: [svlan])
   end
 end

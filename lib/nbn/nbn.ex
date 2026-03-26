@@ -41,6 +41,7 @@ defmodule DiffoExample.Nbn do
       define :build_uni, action: :build
       define :define_uni, action: :define
       define :relate_uni, action: :relate
+      define :mine_uni, action: :mine
     end
 
     resource Avc do
@@ -48,12 +49,14 @@ defmodule DiffoExample.Nbn do
       define :build_avc, action: :build
       define :define_avc, action: :define
       define :relate_avc, action: :relate
+      define :mine_avc, action: :mine
     end
 
     resource Ntd do
       define :get_ntd_by_id, action: :read, get_by: :id
       define :build_ntd, action: :build
       define :define_ntd, action: :define
+      define :assign_port, action: :assign_port
       define :relate_ntd, action: :relate
     end
 
@@ -63,6 +66,7 @@ defmodule DiffoExample.Nbn do
       define :define_cvc, action: :define
       define :assign_cvlan, action: :assign_cvlan
       define :relate_cvc, action: :relate
+      define :mine_cvc, action: :mine
     end
 
     resource NniGroup do

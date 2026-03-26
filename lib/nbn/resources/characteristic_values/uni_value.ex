@@ -10,22 +10,23 @@ defmodule DiffoExample.Nbn.UniValue do
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
+  alias DiffoExample.Nbn.Technology
+
   jason do
-    pick [:vlan_id, :bandwidth_profile, :technology]
+    pick [:port, :encapsulation, :technology]
     compact(true)
   end
 
   outstanding do
-    expect [:vlan_id, :technology]
+    expect [:port, :encapsulation, :technology]
   end
 
   typed_struct do
-    field :vlan_id, :integer, description: "the VLAN ID for the UNI"
+    field :port, :integer, description: "the port of the UNI, assigned by the related NTD"
 
-    field :bandwidth_profile, :string, description: "the bandwidth profile name for the UNI"
+    field :encapsulation, :string, description: "the encapsulation of the UNI"
 
-    field :technology, :atom,
-      description: "the access technology (:FTTP, :FTTN, :HFC, :Fixed_Wireless)"
+    field :technology, Technology, description: "the access technology type"
   end
 
   defimpl String.Chars do

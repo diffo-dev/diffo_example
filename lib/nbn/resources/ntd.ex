@@ -9,13 +9,15 @@ defmodule DiffoExample.Nbn.Ntd do
   Ntd - Network Termination Device Resource Instance
 
   An NTD is the device installed at the customer premises that connects
-  the premises to the NBN network. It is related to a UNI resource.
+  the premises to the NBN network. The NTD can assign ports to UNI.
   """
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
   alias Diffo.Provider.Instance.ActionHelper
+  alias Diffo.Provider.Assigner
+  alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
 
@@ -38,6 +40,7 @@ defmodule DiffoExample.Nbn.Ntd do
 
   characteristics do
     characteristic :ntd, DiffoExample.Nbn.NtdValue
+    characteristic :ports, Diffo.Provider.AssignableValue
   end
 
   actions do
@@ -71,6 +74,17 @@ defmodule DiffoExample.Nbn.Ntd do
 
       change after_action(fn changeset, result, _context ->
                with {:ok, result} <- Characteristic.update_values(result, changeset),
+                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
+                    do: {:ok, result}
+             end)
+    end
+
+    update :assign_port do
+      description "assigns a port from the NTD pool to a UNI"
+      argument :assignment, :struct, constraints: [instance_of: Assignment]
+
+      change after_action(fn changeset, result, _context ->
+               with {:ok, result} <- Assigner.assign(result, changeset, :ports, :port),
                     {:ok, result} <- Nbn.get_ntd_by_id(result.id),
                     do: {:ok, result}
              end)
