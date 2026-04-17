@@ -41,8 +41,7 @@ defmodule DiffoExample.Access.Circuit do
       constraints: [one_of: [:PPPoA, :PPPoE, :IPoE]],
       description: "the circuit encapsulation"
 
-    field :bandwidth_profile, :struct,
-      constraints: [instance_of: BandwidthProfile],
+    field :bandwidth_profile, BandwidthProfile,
       description: "the circuit bandwidth profile"
   end
 

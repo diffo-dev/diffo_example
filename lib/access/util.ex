@@ -16,6 +16,7 @@ defmodule DiffoExample.Access.Util do
   def assignments(instance, type) do
     Enum.reduce(instance.reverse_relationships, [], fn reverse_relationship, acc ->
       IO.inspect(reverse_relationship, label: :reverse_relationship)
+
       case reverse_relationship.type do
         :assignedTo ->
           characteristic =
@@ -28,8 +29,8 @@ defmodule DiffoExample.Access.Util do
             _ ->
               [
                 %Assignment{
-                  id: characteristic.value,
-                  type: type,
+                  id: Diffo.Unwrap.unwrap(characteristic.value),
+                  assignable_type: type,
                   assignee_id: reverse_relationship.source_id
                 }
                 | acc
