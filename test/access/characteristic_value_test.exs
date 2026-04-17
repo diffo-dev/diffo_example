@@ -33,7 +33,7 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
 
   describe "DiffoExample.Access create Characteristics" do
     test "create characteristics" do
-      dslam_value = Value.dynamic(Dslam, Dslam.new!(%{name: @dslam, model: @model}))
+      dslam_value = Value.dynamic(Dslam.new!(%{name: @dslam, model: @model}))
 
       dslam =
         Diffo.Provider.create_characteristic!(%{
@@ -47,7 +47,7 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
       assert encoding ==
                ~s({\"name\":\"dslam\",\"value\":{\"name\":\"#{@dslam}\",\"family\":\"ISAM",\"model\":\"#{@model}\",\"technology\":\"eth\"}})
 
-      aggregate_interface_value = Value.dynamic(AggregateInterface,
+      aggregate_interface_value = Value.dynamic(
         AggregateInterface.new!(%{
           name: "F DONC BOXH 010J",
           physical_interface: "1000BASE-LX",
@@ -69,7 +69,7 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
       assert Jason.encode!(bandwidth_profile) ==
                ~s({\"downstream\":24,\"upstream\":1,\"units\":\"Mbps\"})
 
-      circuit_value = Value.dynamic(Circuit,
+      circuit_value = Value.dynamic(
         Circuit.new!%{
           circuit_id: @circuit_id,
           cvlan_id: @cvlan_id,
@@ -86,7 +86,7 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
       assert Jason.encode!(circuit) ==
                ~s({\"name\":\"circuit\",\"value\":{\"circuit_id\":\"#{@circuit_id}\",\"cvlan_id\":82,\"vci\":0,\"encapsulation\":\"IPoE\",\"bandwidth_profile\":{\"downstream\":24,\"upstream\":1,\"units\":\"Mbps\"}}})
 
-      line_value = Value.dynamic(Line,
+      line_value = Value.dynamic(
         Line.new!(%{port: @port, slot: @slot, standard: :ADSL2plus, profile: @profile})
       )
 
