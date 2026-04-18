@@ -11,6 +11,9 @@ defmodule DiffoExample.Test.Characteristics do
   import Outstand
   import ExUnit.Assertions
 
+  @doc"""
+  uses Outstanding to check expected values within instance characteristics
+  """
   def check_values(expected_values, instance)
       when is_list(expected_values) and is_struct(instance) do
     Enum.each(
