@@ -28,10 +28,4 @@ defmodule DiffoExample.Nbn.UniValue do
 
     field :technology, Technology, description: "the access technology type"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

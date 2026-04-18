@@ -24,10 +24,4 @@ defmodule DiffoExample.Nbn.NniGroupValue do
 
     field :location, :string, description: "the Point of Interconnect (PoI) location"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

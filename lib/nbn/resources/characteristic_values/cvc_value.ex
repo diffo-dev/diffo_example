@@ -28,10 +28,4 @@ defmodule DiffoExample.Nbn.CvcValue do
       constraints: [min: 0, max: 10000],
       description: "total CVC bandwidth in Mbps"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

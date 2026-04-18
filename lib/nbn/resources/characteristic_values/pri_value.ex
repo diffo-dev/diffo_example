@@ -35,10 +35,4 @@ defmodule DiffoExample.Nbn.PriValue do
 
     field :speeds, Speeds, description: "the downstream and upstream speeds in Mbps"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

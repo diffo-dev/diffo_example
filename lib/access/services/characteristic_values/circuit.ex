@@ -44,10 +44,4 @@ defmodule DiffoExample.Access.Circuit do
 
     field :bandwidth_profile, BandwidthProfile, description: "the circuit bandwidth profile"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

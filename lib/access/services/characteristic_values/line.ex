@@ -35,10 +35,4 @@ defmodule DiffoExample.Access.Line do
 
     field :profile, :string, description: "the line port profile"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

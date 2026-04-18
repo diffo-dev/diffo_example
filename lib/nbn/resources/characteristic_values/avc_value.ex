@@ -28,10 +28,4 @@ defmodule DiffoExample.Nbn.AvcValue do
 
     field :bandwidth_profile, BandwidthProfile, description: "the bandwidth profile of the AVC"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

@@ -27,10 +27,4 @@ defmodule DiffoExample.Nbn.NniValue do
 
     field :technology, :atom, description: "the NNI technology (:Ethernet, :Fibre)"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

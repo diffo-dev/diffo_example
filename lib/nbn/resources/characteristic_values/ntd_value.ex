@@ -30,10 +30,4 @@ defmodule DiffoExample.Nbn.NtdValue do
       description: "the access technology type",
       default: Technology.default()
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

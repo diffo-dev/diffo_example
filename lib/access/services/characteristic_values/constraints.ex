@@ -29,10 +29,4 @@ defmodule DiffoExample.Access.Constraints do
       constraints: [instance_of: BandwidthProfile],
       description: "the circuit bandwidth profile"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end
