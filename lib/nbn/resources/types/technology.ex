@@ -8,17 +8,10 @@ defmodule DiffoExample.Nbn.Technology do
   Technology type for NBN domain
   """
 
-  require Ash.Type.NewType
-
-  use Ash.Type.NewType,
-    subtype_of: :atom,
-    constraints: [one_of: technology()]
+  use Ash.Type.Enum,
+    values: [:FTTP, :FTTN, :FTTB, :FTTC, :HFC, :FixedWireless, :Satellite]
 
   def default do
     :FTTP
-  end
-
-  def technology do
-    [:FTTP, :FTTN, :FTTB, :FTTC, :HFC, :FixedWireless, :Satellite]
   end
 end

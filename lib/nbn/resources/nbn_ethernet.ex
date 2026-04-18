@@ -18,6 +18,7 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Util
+  alias DiffoExample.Nbn.Speeds
 
   use Ash.Resource,
     fragments: [BaseInstance],
@@ -144,7 +145,7 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     # calculate the speeds from the extracted technology and bandwidth_profile
     speeds =
       {:speeds,
-       Util.speeds(
+       Speeds.speeds(
          Keyword.get(pri_updates, :bandwidth_profile),
          Keyword.get(pri_updates, :technology)
        )}

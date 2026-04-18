@@ -7,4 +7,5 @@ defmodule DiffoExampleTest do
   use ExUnit.Case
   doctest DiffoExample.Access.Util
   doctest DiffoExample.Nbn.Util
+  doctest DiffoExample.Nbn.Speeds
 end

@@ -8,18 +8,8 @@ defmodule DiffoExample.Nbn.BandwidthProfile do
   BandwidthProfile type for NBN domain
   """
 
-  require Ash.Type.NewType
-
-  use Ash.Type.NewType,
-    subtype_of: :atom,
-    constraints: [one_of: bandwidth_profiles()]
-
-  def default do
-    :home_fast
-  end
-
-  def bandwidth_profiles do
-    [
+  use Ash.Type.Enum,
+    values: [
       :D12_U1,
       :D25_U5,
       :D25_U10,
@@ -36,5 +26,6 @@ defmodule DiffoExample.Nbn.BandwidthProfile do
       :home_ultrafast,
       :home_hyperfast
     ]
-  end
+
+  def default, do: :home_fast
 end
