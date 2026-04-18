@@ -20,9 +20,13 @@ defmodule DiffoExample.Nbn.CvcValue do
   end
 
   typed_struct do
-    field :svlan, :string, description: "the svlan of the CVC, assigned by the related NNI Group"
+    field :svlan, :integer,
+      constraints: [min: 0, max: 4000],
+      description: "the svlan of the CVC, assigned by the related NNI Group"
 
-    field :bandwidth, :integer, description: "total CVC bandwidth in Mbps"
+    field :bandwidth, :integer,
+      constraints: [min: 0, max: 10000],
+      description: "total CVC bandwidth in Mbps"
   end
 
   defimpl String.Chars do

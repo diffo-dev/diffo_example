@@ -22,7 +22,9 @@ defmodule DiffoExample.Nbn.AvcValue do
   end
 
   typed_struct do
-    field :cvlan, :string, description: "the cvlan of the AVC, assigned by the related CVC"
+    field :cvlan, :integer,
+      constraints: [min: 0, max: 4000],
+      description: "the cvlan of the AVC, assigned by the related CVC"
 
     field :bandwidth_profile, BandwidthProfile, description: "the bandwidth profile of the AVC"
   end

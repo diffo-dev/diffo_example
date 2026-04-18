@@ -26,7 +26,9 @@ defmodule DiffoExample.Nbn.NtdValue do
 
     field :serial_number, :string, description: "the NTD serial number"
 
-    field :technology, Technology, description: "the access technology type", default: Technology.default
+    field :technology, Technology,
+      description: "the access technology type",
+      default: Technology.default()
   end
 
   defimpl String.Chars do

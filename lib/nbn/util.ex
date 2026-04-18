@@ -41,27 +41,21 @@ defmodule DiffoExample.Nbn.Util do
   end
 
   @doc """
-  Extracts a field value from a named item in a list
+  Extracts a field value from a named item value map in a list, each value map is unwrapped with Diffo.Unwrap protocol
 
   ## Examples
     iex> DiffoExample.Nbn.Util.extract([%{name: :avc, value: %{cvlan: 1}}], :avc, :cvlan)
     1
   """
   def extract(items, name, field) when is_list(items) and is_atom(name) and is_atom(field) do
-    Enum.reduce_while(items, nil, fn item, acc ->
-      if name == item.name do
-        if item.value != nil do
-          {:halt, Map.get(item.value, field)}
-        else
-          {:halt, nil}
-        end
-      else
-        {:cont, acc}
-      end
-    end)
+    case Enum.find(items, &(&1.name == name)) do
+      nil -> nil
+      %{value: nil} -> nil
+      %{value: value} -> value |> Diffo.Unwrap.unwrap() |> Map.get(field)
+    end
   end
 
-  @doc"""
+  @doc """
   Returns a tuple of maximum downstream and upstream speeds in Mbps
   given the bandwidth_profile and technology, or :error
 
@@ -111,10 +105,13 @@ defmodule DiffoExample.Nbn.Util do
     case bandwidth_profile do
       :wireless_plus ->
         {100, 20}
+
       :wireless_fast ->
         {250, 20}
+
       :wireless_superfast ->
         {400, 40}
+
       _ ->
         :error
     end
@@ -124,14 +121,19 @@ defmodule DiffoExample.Nbn.Util do
     case bandwidth_profile do
       :home_fast ->
         {500, 50}
+
       :home_superfast ->
         {750, 50}
+
       :home_ultrafast ->
         {1000, 100}
+
       :home_hyperfast ->
         {2000, 100}
+
       :U100_D40 ->
         {100, 40}
+
       _ ->
         :error
     end
@@ -141,20 +143,28 @@ defmodule DiffoExample.Nbn.Util do
     case bandwidth_profile do
       :home_fast ->
         {500, 50}
+
       :home_superfast ->
         {750, 50}
+
       :home_ultrafast ->
         {1000, 100}
+
       :home_hyperfast ->
         {2000, 200}
+
       :D100_U40 ->
         {100, 40}
+
       :D250_U100 ->
         {250, 100}
+
       :D500_200 ->
         {500, 200}
+
       :D1000_400 ->
         {1000, 400}
+
       _ ->
         :error
     end

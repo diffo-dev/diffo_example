@@ -11,7 +11,7 @@ defmodule DiffoExample.Test.Characteristics do
   import Outstand
   import ExUnit.Assertions
 
-  @doc"""
+  @doc """
   uses Outstanding to check expected values within instance characteristics
   """
   def check_values(expected_values, instance)

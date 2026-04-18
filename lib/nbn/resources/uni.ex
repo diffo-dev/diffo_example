@@ -115,10 +115,12 @@ defmodule DiffoExample.Nbn.Uni do
 
     ntd_relationship = hd(reverse_relationships)
 
-    port = {:port, hd(ntd_relationship.characteristics).value}
+    port = {:port, Diffo.Unwrap.unwrap(hd(ntd_relationship.characteristics).value)}
     {:ok, ntd} = Diffo.Provider.get_instance_by_id(ntd_relationship.source_id)
     technology = {:technology, Util.extract(ntd.characteristics, :ntd, :technology)}
 
-    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, uni: [port, technology])
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
+      uni: [port, technology]
+    )
   end
 end

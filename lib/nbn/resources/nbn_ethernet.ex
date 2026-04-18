@@ -119,22 +119,39 @@ defmodule DiffoExample.Nbn.NbnEthernet do
       Enum.reduce(forward_relationships, [], fn forward_relationship, acc ->
         {:ok, related} = Diffo.Provider.get_instance_by_id(forward_relationship.target_id)
         related_name = {alias_to_id(forward_relationship.alias), related.name}
+
         case forward_relationship.alias do
           :uni ->
             # extract technology from uni characteristic
-            [{:technology, Util.extract(related.characteristics, :uni, :technology)} | [ related_name | acc]]
+            [
+              {:technology, Util.extract(related.characteristics, :uni, :technology)}
+              | [related_name | acc]
+            ]
+
           :avc ->
             # extract bandwidth_profile from avc characteristic
-            [{:bandwidth_profile, Util.extract(related.characteristics, :avc, :bandwidth_profile)} | [ related_name | acc]]
+            [
+              {:bandwidth_profile,
+               Util.extract(related.characteristics, :avc, :bandwidth_profile)}
+              | [related_name | acc]
+            ]
+
           _ ->
-           [ related_name | acc]
+            [related_name | acc]
         end
       end)
 
     # calculate the speeds from the extracted technology and bandwidth_profile
-    speeds = {:speeds, Util.speeds(Keyword.get(pri_updates, :bandwidth_profile), Keyword.get(pri_updates, :technology))}
+    speeds =
+      {:speeds,
+       Util.speeds(
+         Keyword.get(pri_updates, :bandwidth_profile),
+         Keyword.get(pri_updates, :technology)
+       )}
 
-    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, pri: [speeds | pri_updates])
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
+      pri: [speeds | pri_updates]
+    )
   end
 
   defp alias_to_id(alias) when is_atom(alias) do

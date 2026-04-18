@@ -69,14 +69,19 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/nbnEthernet/#{access.id}","category":"Network Resource",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{}}]})
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{}}]})
     end
 
     test "define nbn_ethernet access" do
       {:ok, access} = Nbn.build_nbn_ethernet(%{})
 
       updates = [
-        pri: [avcid: "AVC000910202941", uniid: "UNI000302814545", speed: 1000, technology: :FTTP]
+        pri: [
+          avcid: "AVC000910202941",
+          uniid: "UNI000302814545",
+          speeds: {500, 50},
+          technology: :FTTP
+        ]
       ]
 
       {:ok, access} = Nbn.define_nbn_ethernet(access, %{characteristic_value_updates: updates})
@@ -86,7 +91,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
           pri: [
             avcid: "AVC000910202941",
             uniid: "UNI000302814545",
-            speed: 1000,
+            speeds: {500, 50},
             technology: :FTTP
           ]
         ],
@@ -94,26 +99,47 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       )
     end
 
-    @tag debug: true
     test "relate nbn_ethernet" do
       {:ok, access} = Nbn.build_nbn_ethernet(%{})
 
       {:ok, nni_group} = Nbn.build_nni_group(%{})
       {:ok, cvc} = Nbn.build_cvc(%{})
-      {:ok, _nni_group} = Nbn.assign_svlan(nni_group, %{assignment: %Assignment{assignee_id: cvc.id, operation: :auto_assign}})
+
+      {:ok, _nni_group} =
+        Nbn.assign_svlan(nni_group, %{
+          assignment: %Assignment{assignee_id: cvc.id, operation: :auto_assign}
+        })
+
       {:ok, cvc} = Nbn.get_cvc_by_id(cvc.id, load: [:reverse_relationships])
       {:ok, cvc} = Nbn.mine_cvc(cvc)
 
       {:ok, avc} = Nbn.build_avc(%{})
-      {:ok, avc} = Nbn.define_avc(avc, %{characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]})
-      {:ok, _cvc} = Nbn.assign_cvlan(cvc, %{assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}})
+
+      {:ok, avc} =
+        Nbn.define_avc(avc, %{
+          characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+        })
+
+      {:ok, _cvc} =
+        Nbn.assign_cvlan(cvc, %{
+          assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}
+        })
+
       {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:reverse_relationships])
       {:ok, avc} = Nbn.mine_avc(avc)
 
       {:ok, ntd} = Nbn.build_ntd(%{})
-      {:ok, ntd} = Nbn.define_ntd(ntd, %{characteristic_value_updates: [ntd: [technology: :FTTP]]})
+
+      {:ok, ntd} =
+        Nbn.define_ntd(ntd, %{characteristic_value_updates: [ntd: [technology: :FTTP]]})
+
       {:ok, uni} = Nbn.build_uni(%{})
-      {:ok, _ntd} = Nbn.assign_port(ntd, %{assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}})
+
+      {:ok, _ntd} =
+        Nbn.assign_port(ntd, %{
+          assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
+        })
+
       {:ok, uni} = Nbn.get_uni_by_id(uni.id, load: [:reverse_relationships])
       {:ok, uni} = Nbn.mine_uni(uni)
 
@@ -129,7 +155,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/nbnEthernet/#{access.id}","category":"Network Resource","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/avc/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/uni/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/avc/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/uni/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"avcid":"#{avc.name}","uniid":"#{uni.name}","technology":"FTTP","bandwidth_profile":"home_fast","speeds":[500,50]}}]})
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"AVCID":"#{avc.name}","UNIID":"#{uni.name}","technology":"FTTP","bandwidthProfile":"home_fast","speeds":[500,50]}}]})
     end
   end
 
@@ -148,13 +174,13 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       {:ok, uni} = Nbn.build_uni(%{})
 
       updates = [
-        uni: [vlan_id: 101, bandwidth_profile: "TC4", technology: :FTTP]
+        uni: [port: 1, encapsulation: "DSCP Mapped", technology: :FTTP]
       ]
 
       {:ok, uni} = Nbn.define_uni(uni, %{characteristic_value_updates: updates})
 
       Characteristics.check_values(
-        [uni: [vlan_id: 101, bandwidth_profile: "TC4", technology: :FTTP]],
+        [uni: [port: 1, encapsulation: "DSCP Mapped", technology: :FTTP]],
         uni
       )
     end
@@ -200,7 +226,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
       updates = [
         ntd: [model: "Sercomm CG4000A", serial_number: "SCOMA1A057A2", technology: :FTTP],
-        ports: [first: 1, last: 4, free: 4, type: "port"]
+        ports: [first: 1, last: 4, free: 4, assignable_type: "port"]
       ]
 
       {:ok, ntd} = Nbn.define_ntd(ntd, %{characteristic_value_updates: updates})
@@ -208,7 +234,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           ntd: [model: "Sercomm CG4000A", serial_number: "SCOMA1A057A2", technology: :FTTP],
-          ports: [first: 1, last: 4, free: 4, type: "port"]
+          ports: [first: 1, last: 4, free: 4, assignable_type: "port"]
         ],
         ntd
       )
@@ -219,7 +245,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           ntd: [model: "Sercomm CG4000A", serial_number: "SCOMA1A057A2", technology: :FTTP],
-          ports: [first: 1, last: 4, free: 2, type: "port"]
+          ports: [first: 1, last: 4, free: 2, assignable_type: "port"]
         ],
         ntd
       )
@@ -255,7 +281,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
       updates = [
         cvc: [svlan: 1, bandwidth: 10000],
-        cvlans: [first: 1, last: 4000, free: 4000, type: "cvlan"]
+        cvlans: [first: 1, last: 4000, free: 4000, assignable_type: "cvlan"]
       ]
 
       {:ok, cvc} = Nbn.define_cvc(cvc, %{characteristic_value_updates: updates})
@@ -263,7 +289,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           cvc: [svlan: 1, bandwidth: 10000],
-          cvlans: [first: 1, last: 4000, free: 4000, type: "cvlan"]
+          cvlans: [first: 1, last: 4000, free: 4000, assignable_type: "cvlan"]
         ],
         cvc
       )
@@ -274,7 +300,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           cvc: [svlan: 1, bandwidth: 10000],
-          cvlans: [first: 1, last: 4000, free: 3998, type: "cvlan"]
+          cvlans: [first: 1, last: 4000, free: 3998, assignable_type: "cvlan"]
         ],
         cvc
       )
@@ -311,7 +337,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
       updates = [
         nni_group: [name: "SYD-POI-01", location: "Sydney Olympic Park"],
-        svlans: [first: 1, last: 4000, free: 4000, type: "svlan"]
+        svlans: [first: 1, last: 4000, free: 4000, assignable_type: "svlan"]
       ]
 
       {:ok, nni_group} =
@@ -320,7 +346,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           nni_group: [name: "SYD-POI-01", location: "Sydney Olympic Park"],
-          svlans: [first: 1, last: 4000, free: 4000, type: "svlan"]
+          svlans: [first: 1, last: 4000, free: 4000, assignable_type: "svlan"]
         ],
         nni_group
       )
@@ -331,7 +357,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       Characteristics.check_values(
         [
           nni_group: [name: "SYD-POI-01", location: "Sydney Olympic Park"],
-          svlans: [first: 1, last: 4000, free: 3998, type: "svlan"]
+          svlans: [first: 1, last: 4000, free: 3998, assignable_type: "svlan"]
         ],
         nni_group
       )

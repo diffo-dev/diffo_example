@@ -127,7 +127,7 @@ defmodule DiffoExample.Nbn.Cvc do
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
     reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
 
-    svlan = {:svlan, hd(hd(reverse_relationships).characteristics).value}
+    svlan = {:svlan, Diffo.Unwrap.unwrap(hd(hd(reverse_relationships).characteristics).value)}
 
     Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, cvc: [svlan])
   end

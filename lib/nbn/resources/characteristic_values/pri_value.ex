@@ -17,6 +17,7 @@ defmodule DiffoExample.Nbn.PriValue do
   jason do
     pick [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
     compact(true)
+    rename avcid: "AVCID", uniid: "UNIID", bandwidth_profile: "bandwidthProfile"
   end
 
   outstanding do

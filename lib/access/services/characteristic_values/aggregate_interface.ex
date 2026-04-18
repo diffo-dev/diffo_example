@@ -13,6 +13,12 @@ defmodule DiffoExample.Access.AggregateInterface do
   jason do
     pick [:name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
     compact(true)
+
+    rename physical_interface: "physicalInterface",
+           physical_layer: "physicalLayer",
+           link_layer: "linkLayer",
+           svlan_id: "svlanId",
+           vpi: "VPI"
   end
 
   outstanding do
