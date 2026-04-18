@@ -13,6 +13,7 @@ defmodule DiffoExample.Access.Constraints do
   jason do
     pick [:max_latency, :min_profile]
     compact(true)
+    rename max_latency: "maxLatency", min_profile: "minProfile"
   end
 
   outstanding do
@@ -27,11 +28,5 @@ defmodule DiffoExample.Access.Constraints do
     field :min_profile, :struct,
       constraints: [instance_of: BandwidthProfile],
       description: "the circuit bandwidth profile"
-  end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
   end
 end

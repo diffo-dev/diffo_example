@@ -33,10 +33,4 @@ defmodule DiffoExample.Access.PathValue do
 
     field :technology, :atom, description: "the path technology"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

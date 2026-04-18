@@ -28,10 +28,4 @@ defmodule DiffoExample.Access.CardValue do
 
     field :technology, :atom, description: "the card technology"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

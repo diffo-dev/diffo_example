@@ -2,26 +2,26 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule DiffoExample.Access.IntegerUnit do
+defmodule DiffoExample.Nbn.NniGroupValue do
   @moduledoc """
   Diffo - TMF Service and Resource Management with a difference
 
-  IntegerUnit - AshTyped Struct for Integer with Unit
+  NniGroupValue - AshTyped Struct for NNI Group Characteristic Value
   """
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
   jason do
-    pick [:amount, :unit]
+    pick [:name, :location]
     compact(true)
   end
 
   outstanding do
-    expect [:amount, :unit]
+    expect [:name, :location]
   end
 
   typed_struct do
-    field :amount, :integer, description: "the amount"
+    field :name, :string, description: "the NNI group name"
 
-    field :unit, :atom, description: "the unit"
+    field :location, :string, description: "the Point of Interconnect (PoI) location"
   end
 end

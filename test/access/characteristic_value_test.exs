@@ -47,12 +47,14 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
       assert encoding ==
                ~s({\"name\":\"dslam\",\"value\":{\"name\":\"#{@dslam}\",\"family\":\"ISAM",\"model\":\"#{@model}\",\"technology\":\"eth\"}})
 
-      aggregate_interface_value = Value.dynamic(
-        AggregateInterface.new!(%{
-          name: "F DONC BOXH 010J",
-          physical_interface: "1000BASE-LX",
-          svlan_id: @svlan_id
-        }))
+      aggregate_interface_value =
+        Value.dynamic(
+          AggregateInterface.new!(%{
+            name: "F DONC BOXH 010J",
+            physical_interface: "1000BASE-LX",
+            svlan_id: @svlan_id
+          })
+        )
 
       aggregate_interface =
         Diffo.Provider.create_characteristic!(%{
@@ -62,19 +64,21 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
         })
 
       assert Jason.encode!(aggregate_interface) ==
-               ~s({\"name\":\"aggregate_interface\",\"value\":{\"name\":\"F DONC BOXH 010J\",\"physical_interface\":\"1000BASE-LX\",\"physical_layer\":\"GbE\",\"link_layer\":\"QinQ\",\"svlan_id\":3108,\"vpi\":0}})
+               ~s({\"name\":\"aggregate_interface\",\"value\":{\"name\":\"F DONC BOXH 010J\",\"physicalInterface\":\"1000BASE-LX\",\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":3108,\"VPI\":0}})
 
       bandwidth_profile = BandwidthProfile.new!(%{downstream: 24, upstream: 1})
 
       assert Jason.encode!(bandwidth_profile) ==
                ~s({\"downstream\":24,\"upstream\":1,\"units\":\"Mbps\"})
 
-      circuit_value = Value.dynamic(
-        Circuit.new!%{
-          circuit_id: @circuit_id,
-          cvlan_id: @cvlan_id,
-          bandwidth_profile: bandwidth_profile
-        })
+      circuit_value =
+        Value.dynamic(
+          Circuit.new!(%{
+            circuit_id: @circuit_id,
+            cvlan_id: @cvlan_id,
+            bandwidth_profile: bandwidth_profile
+          })
+        )
 
       circuit =
         Diffo.Provider.create_characteristic!(%{
@@ -84,11 +88,12 @@ defmodule DiffoExample.Access.CharacteristicValueTest do
         })
 
       assert Jason.encode!(circuit) ==
-               ~s({\"name\":\"circuit\",\"value\":{\"circuit_id\":\"#{@circuit_id}\",\"cvlan_id\":82,\"vci\":0,\"encapsulation\":\"IPoE\",\"bandwidth_profile\":{\"downstream\":24,\"upstream\":1,\"units\":\"Mbps\"}}})
+               ~s({\"name\":\"circuit\",\"value\":{\"circuitId\":\"#{@circuit_id}\",\"cvlan_id\":82,\"VCI\":0,\"encapsulation\":\"IPoE\",\"bandwidthProfile\":{\"downstream\":24,\"upstream\":1,\"units\":\"Mbps\"}}})
 
-      line_value = Value.dynamic(
-        Line.new!(%{port: @port, slot: @slot, standard: :ADSL2plus, profile: @profile})
-      )
+      line_value =
+        Value.dynamic(
+          Line.new!(%{port: @port, slot: @slot, standard: :ADSL2plus, profile: @profile})
+        )
 
       line =
         Diffo.Provider.create_characteristic!(%{

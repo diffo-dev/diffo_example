@@ -13,10 +13,11 @@ defmodule DiffoExample.Access.Util do
 
   alias Diffo.Provider.Assignment
 
-  def assignments(instance, type) do
+  @doc """
+  Lists things that are assigned_to an Instance, as Assignments
+  """
+  def assignments(instance, type) when is_struct(instance, Ash.Resource) and is_atom(type) do
     Enum.reduce(instance.reverse_relationships, [], fn reverse_relationship, acc ->
-      IO.inspect(reverse_relationship, label: :reverse_relationship)
-
       case reverse_relationship.type do
         :assignedTo ->
           characteristic =

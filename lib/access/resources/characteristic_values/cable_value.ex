@@ -30,10 +30,4 @@ defmodule DiffoExample.Access.CableValue do
 
     field :technology, :atom, description: "the cable technology"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end
