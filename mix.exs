@@ -78,7 +78,8 @@ defmodule DiffoExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:diffo, diffo_version("~> 0.1.6")},
+      # {:diffo, diffo_version("~> 0.1.6")},
+      {:diffo, github: "diffo-dev/diffo", branch: "dev"},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]

@@ -30,8 +30,8 @@ defmodule DiffoExample.Access.Util do
             _ ->
               [
                 %Assignment{
-                  id: characteristic.value,
-                  type: type,
+                  id: Diffo.Unwrap.unwrap(characteristic.value),
+                  assignable_type: type,
                   assignee_id: reverse_relationship.source_id
                 }
                 | acc
