@@ -9,7 +9,21 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.0"}
+    {:diffo_example, "~> 0.2.0"},
+    {:req, "~> 0.5"}
+  ],
+    config: [
+    bolty: [{Bolt, [
+      uri: "bolt://localhost:7687",
+      auth: [username: "neo4j", password: "password"],
+      user_agent: "diffoExampleLivebook/1",
+      pool_size: 15,
+      max_overflow: 3,
+      prefix: :default,
+      name: Bolt,
+      log: false,
+      log_hex: false
+    ]}]
   ],
   consolidate_protocols: false
 )
@@ -37,25 +51,9 @@ The NBN domain models a fictional NBN Ethernet access circuit and its constituen
 
 ## Installing Neo4j and Configuring Bolty
 
-Update the configuration below to match your Neo4j installation and evaluate.
+Bolty is configured in the `Mix.install` block above — update the Neo4j credentials there if needed before evaluating.
 
-```elixir
-config = [
-  uri: "bolt://localhost:7687",
-  auth: [username: "neo4j", password: "password"],
-  user_agent: "diffoExampleLivebook/1",
-  pool_size: 15,
-  max_overflow: 3,
-  prefix: :default,
-  name: Bolt,
-  log: false,
-  log_hex: false
-]
-```
-
-```elixir
-AshNeo4j.BoltyHelper.start(config)
-```
+You need [Neo4j](https://neo4j.com/deployment-center/) installed and running. Verify the connection:
 
 ```elixir
 AshNeo4j.BoltyHelper.is_connected()
@@ -148,11 +146,11 @@ nni_group |> Jason.encode!(pretty: true) |> IO.puts
 Define the NNI Group with an SVLAN assignment and relate the NNI:
 
 ```elixir
-nni_group = Nbn.define_nni_group!(%{
+nni_group = Nbn.define_nni_group!(nni_group, %{
   characteristic_value_updates: [nni_group: [svlan: 100]]
 })
 nni_group = Nbn.relate_nni_group!(nni_group, %{
-  relationships: [%{alias: :nni, target_id: nni.id, type: :isAssigned}]
+  relationships: [%Diffo.Provider.Instance.Relationship{id: nni.id, alias: :nni, type: :isAssigned}]
 })
 nni_group |> Jason.encode!(pretty: true) |> IO.puts
 ```
@@ -162,7 +160,7 @@ Build a CVC — the aggregation virtual circuit that terminates at the NNI Group
 ```elixir
 cvc = Nbn.build_cvc!(%{})
 cvc = Nbn.relate_cvc!(cvc, %{
-  relationships: [%{alias: :nni_group, target_id: nni_group.id, type: :isAssigned}]
+  relationships: [%Diffo.Provider.Instance.Relationship{id: nni_group.id, alias: :nni_group, type: :isAssigned}]
 })
 cvc |> Jason.encode!(pretty: true) |> IO.puts
 ```
@@ -187,7 +185,7 @@ Build a UNI — the interface at the customer premises — and assign a port fro
 uni = Nbn.build_uni!(%{})
 alias Diffo.Provider.Assignment
 ntd = Nbn.assign_port!(ntd, %{
-  assignment: %Assignment{assignee_id: uni.id, value: 1}
+  assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
 })
 ntd |> Jason.encode!(pretty: true) |> IO.puts
 ```
@@ -196,7 +194,7 @@ Relate the UNI back to the NTD so it can mine technology and port from it:
 
 ```elixir
 uni = Nbn.relate_uni!(uni, %{
-  relationships: [%{alias: :ntd, target_id: ntd.id, type: :isAssigned}]
+  relationships: [%Diffo.Provider.Instance.Relationship{id: ntd.id, alias: :ntd, type: :isAssigned}]
 })
 uni = Nbn.mine_uni!(uni, %{})
 uni |> Jason.encode!(pretty: true) |> IO.puts
@@ -210,7 +208,7 @@ avc = Nbn.define_avc!(avc, %{
   characteristic_value_updates: [avc: [bandwidth_profile: :home_ultrafast]]
 })
 cvc = Nbn.assign_cvlan!(cvc, %{
-  assignment: %Assignment{assignee_id: avc.id, value: 200}
+  assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}
 })
 avc = Nbn.mine_avc!(avc, %{})
 avc |> Jason.encode!(pretty: true) |> IO.puts
@@ -222,8 +220,8 @@ Now build the top-level NBN Ethernet access and relate it to both the UNI and AV
 pri = Nbn.build_nbn_ethernet!(%{})
 pri = Nbn.relate_nbn_ethernet!(pri, %{
   relationships: [
-    %{alias: :uni, target_id: uni.id, type: :isAssigned},
-    %{alias: :avc, target_id: avc.id, type: :isAssigned}
+    %Diffo.Provider.Instance.Relationship{id: uni.id, alias: :uni, type: :isAssigned},
+    %Diffo.Provider.Instance.Relationship{id: avc.id, alias: :avc, type: :isAssigned}
   ]
 })
 pri = Nbn.mine_nbn_ethernet!(pri, %{})
@@ -244,6 +242,28 @@ Or from Elixir:
 
 ```elixir
 AshNeo4j.Cypher.run("MATCH (n1)-[r]->(n2) RETURN r, n1, n2 LIMIT 50")
+```
+
+## JSON API
+
+The NBN domain exposes a JSON API via `Plug.Cowboy` on port 4000. Start the server in your application before evaluating these cells.
+
+First check the catalog — all NBN specifications are initialised on startup:
+
+```elixir
+Req.get!("http://localhost:4000/catalog").body |> Jason.encode!(pretty: true) |> IO.puts()
+```
+
+Now retrieve all NBN Ethernet instances:
+
+```elixir
+Req.get!("http://localhost:4000/nbnEthernet").body |> Jason.encode!(pretty: true) |> IO.puts()
+```
+
+Or fetch the one we provisioned above by id:
+
+```elixir
+Req.get!("http://localhost:4000/nbnEthernet/#{pri.id}").body |> Jason.encode!(pretty: true) |> IO.puts()
 ```
 
 ## What Next?

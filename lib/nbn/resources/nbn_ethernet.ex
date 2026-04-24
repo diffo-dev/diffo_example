@@ -22,7 +22,12 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "nbnEthernet"
+  end
 
   resource do
     description "An Ash Resource representing an NBN Ethernet access"
@@ -114,7 +119,8 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    forward_relationships = Ash.Changeset.get_attribute(changeset, :forward_relationships)
+    pri = Ash.load!(changeset.data, [:forward_relationships])
+    forward_relationships = pri.forward_relationships
 
     pri_updates =
       Enum.reduce(forward_relationships, [], fn forward_relationship, acc ->

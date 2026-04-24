@@ -81,6 +81,9 @@ defmodule DiffoExample.MixProject do
   defp deps do
     [
       {:diffo, diffo_version("~> 0.2.0")},
+      {:ash_json_api, "~> 1.6"},
+      {:plug_cowboy, "~> 2.7"},
+      {:req, "~> 0.5", only: [:dev, :test]},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]

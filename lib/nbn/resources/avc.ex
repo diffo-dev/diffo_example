@@ -21,7 +21,12 @@ defmodule DiffoExample.Nbn.Avc do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "avc"
+  end
 
   resource do
     description "An Ash Resource representing an Access Virtual Circuit (AVC)"
@@ -110,9 +115,9 @@ defmodule DiffoExample.Nbn.Avc do
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+    avc = Ash.load!(changeset.data, [reverse_relationships: [:characteristics]])
 
-    cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(reverse_relationships).characteristics).value)}
+    cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(avc.reverse_relationships).characteristics).value)}
 
     Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, avc: [cvlan])
   end

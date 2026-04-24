@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mix deps.get)",
+      "Bash(git -C /Users/beanlanda/git/diffo_example status)",
+      "Read(//Users/beanlanda/git/**)",
+      "Read(//Users/beanlanda/.mix/**)"
+    ]
+  }
+}

@@ -13,7 +13,8 @@ defmodule DiffoExample.Nbn do
   CVC (aggregates AVCs, terminates at NNI Group), NNI Group, and NNI.
   """
   use Ash.Domain,
-    otp_app: :diffo
+    otp_app: :diffo,
+    extensions: [AshJsonApi.Domain]
 
   alias DiffoExample.Nbn.NbnEthernet
   alias DiffoExample.Nbn.Uni
@@ -25,6 +26,78 @@ defmodule DiffoExample.Nbn do
 
   domain do
     description "An example showing how TMF Resources for a fictional NBN domain can be extended from the Provider domain"
+  end
+
+  json_api do
+    routes do
+      base_route "/nbnEthernet", NbnEthernet do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        patch :mine, route: "/:id/mine"
+        delete :destroy
+      end
+
+      base_route "/uni", Uni do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        patch :mine, route: "/:id/mine"
+        delete :destroy
+      end
+
+      base_route "/avc", Avc do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        patch :mine, route: "/:id/mine"
+        delete :destroy
+      end
+
+      base_route "/ntd", Ntd do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        delete :destroy
+      end
+
+      base_route "/cvc", Cvc do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        patch :mine, route: "/:id/mine"
+        delete :destroy
+      end
+
+      base_route "/nniGroup", NniGroup do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        delete :destroy
+      end
+
+      base_route "/nni", Nni do
+        index :read
+        get :read
+        post :build
+        patch :define
+        patch :relate, route: "/:id/relate"
+        delete :destroy
+      end
+
+    end
   end
 
   resources do
@@ -83,5 +156,6 @@ defmodule DiffoExample.Nbn do
       define :define_nni, action: :define
       define :relate_nni, action: :relate
     end
+
   end
 end

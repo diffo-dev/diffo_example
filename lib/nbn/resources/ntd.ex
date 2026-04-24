@@ -23,7 +23,12 @@ defmodule DiffoExample.Nbn.Ntd do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "ntd"
+  end
 
   resource do
     description "An Ash Resource representing a Network Termination Device (NTD)"

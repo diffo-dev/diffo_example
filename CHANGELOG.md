@@ -37,6 +37,4 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 * updated to diffo 0.2.0
 
 ### Features:
-* new NBN domain modelling NBN Ethernet access and constituent resources (UNI, AVC, NTD, CVC, NNI Group, NNI)
-* NBN Technology and Speeds as Ash Enum types
-* speeds derived from NTD technology and AVC bandwidth_profile via mine action
+* new NBN domain modelling NBN Ethernet access and constituent resources (UNI, AVC, NTD, CVC, NNI Group, NNI), JSON API and livebook
