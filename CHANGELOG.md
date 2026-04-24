@@ -30,3 +30,13 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Fixes:
 * fixed relationship enrichment inconsistent across neo4j versions
+
+## [v0.2.0](https://github.com/diffo-dev/diffo/compare/v0.0.4..v0.2.0) (2026-04-24)
+
+### Maintenance:
+* updated to diffo 0.2.0
+
+### Features:
+* new NBN domain modelling NBN Ethernet access and constituent resources (UNI, AVC, NTD, CVC, NNI Group, NNI)
+* NBN Technology and Speeds as Ash Enum types
+* speeds derived from NTD technology and AVC bandwidth_profile via mine action

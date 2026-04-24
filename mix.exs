@@ -6,7 +6,7 @@ defmodule DiffoExample.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "0.0.4"
+  @version "0.2.0"
   @name "DiffoExample"
   @description "Examples for Diffo TMF Service and Resource Manager"
   @github_url "https://github.com/diffo-dev/diffo-example"
@@ -45,6 +45,7 @@ defmodule DiffoExample.MixProject do
       nil -> default_version
       "local" -> [path: "../diffo"]
       "main" -> [git: "https://github.com/diffo-dev/diffo.git"]
+      "0.2.0" -> [git: "https://github.com/diffo-dev/diffo.git", tag: "v0.2.0"]
       version -> "~> #{version}"
     end
   end
@@ -58,6 +59,7 @@ defmodule DiffoExample.MixProject do
       logo: "logos/diffo.jpg",
       extras: [
         "README.md": [title: "Guide"],
+        "diffo_example.livemd": [title: "Livebook Tutorial"],
         "LICENSES/MIT.md": [title: "License"]
       ]
     ]
@@ -78,8 +80,7 @@ defmodule DiffoExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:diffo, diffo_version("~> 0.1.6")},
-      {:diffo, github: "diffo-dev/diffo", branch: "dev"},
+      {:diffo, diffo_version("~> 0.2.0")},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]

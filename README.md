@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT
 
 [![Module Version](https://img.shields.io/hexpm/v/diffo)](https://hex.pm/packages/diffo_example)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen)](https://hexdocs.pm/diffo_example/)
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run?url=https%3A%2F%2Fgithub.com%2Fdiffo-dev%2Fdiffo_example%2Fblob%2Fmain%2Fdiffo_example.livemd)
 [![License](https://img.shields.io/hexpm/l/diffo)](https://github.com/diffo-dev/diffo_example/blob/master/LICENSES/MIT.md)
 [![REUSE status](https://api.reuse.software/badge/github.com/diffo-dev/diffo_example)](https://api.reuse.software/info/github.com/diffo-dev/diffo_example)
 
@@ -33,7 +34,9 @@ You need [Neo4j](https://github.com/neo4j/neo4j) available. We recommend the Neo
 
 ## Tutorial
 
-Diffo has a livebook and you should use this as an introduction.
+Click the **Run in Livebook** badge above to open the interactive tutorial, or find it at [diffo_example.livemd](diffo_example.livemd).
+
+The diffo_example livebook walks through provisioning a complete NBN Ethernet access circuit — NTD, UNI, AVC, CVC, NNI Group, and NNI — showing how the `mine` actions propagate technology, speeds, CVLAN, and port assignments up the resource hierarchy.
 
 
 ## Contributions
