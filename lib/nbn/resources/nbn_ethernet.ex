@@ -23,7 +23,8 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource]
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
 
   json_api do
     type "nbnEthernet"
@@ -50,6 +51,14 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     # end
   end
 
+  attributes do
+    attribute :rsp_id, :uuid do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
+  end
+
   actions do
     create :build do
       description "creates a new NBN Ethernet access resource instance"
@@ -70,6 +79,8 @@ defmodule DiffoExample.Nbn.NbnEthernet do
       change after_action(fn changeset, result, _context ->
                ActionHelper.build_after(changeset, result, Nbn, :get_nbn_ethernet_by_id)
              end)
+
+      change DiffoExample.Nbn.Changes.SetRspId
 
       change load [:href]
       upsert? false
@@ -165,4 +176,6 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     (Atom.to_string(alias) <> "id")
     |> String.to_atom()
   end
+
+  use DiffoExample.Nbn.RspOwnership
 end

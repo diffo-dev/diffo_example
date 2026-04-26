@@ -24,7 +24,8 @@ defmodule DiffoExample.Nbn.Uni do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource]
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
 
   json_api do
     type "uni"
@@ -127,5 +128,19 @@ defmodule DiffoExample.Nbn.Uni do
     Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
       uni: [port, technology]
     )
+  end
+
+  policies do
+    bypass DiffoExample.Nbn.Checks.NoActor do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 end

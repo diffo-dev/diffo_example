@@ -24,7 +24,8 @@ defmodule DiffoExample.Nbn.Cvc do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource]
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
 
   json_api do
     type "cvc"
@@ -50,6 +51,14 @@ defmodule DiffoExample.Nbn.Cvc do
     characteristic :cvlans, Diffo.Provider.AssignableValue
   end
 
+  attributes do
+    attribute :rsp_id, :uuid do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
+  end
+
   actions do
     create :build do
       description "creates a new CVC resource instance"
@@ -70,6 +79,8 @@ defmodule DiffoExample.Nbn.Cvc do
       change after_action(fn changeset, result, _context ->
                ActionHelper.build_after(changeset, result, Nbn, :get_cvc_by_id)
              end)
+
+      change DiffoExample.Nbn.Changes.SetRspId
 
       change load [:href]
       upsert? false
@@ -127,6 +138,8 @@ defmodule DiffoExample.Nbn.Cvc do
   def identifier() do
     DiffoExample.Nbn.Util.identifier("CVC")
   end
+
+  use DiffoExample.Nbn.RspOwnership
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do

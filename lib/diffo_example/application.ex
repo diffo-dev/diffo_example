@@ -9,10 +9,13 @@ defmodule DiffoExample.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      {Plug.Cowboy, scheme: :http, plug: DiffoExample.Nbn.Router, options: [port: 4000]},
-      {Task, &DiffoExample.Nbn.Initializer.init/0}
-    ]
+    children =
+      [
+        {Task, &DiffoExample.Nbn.Initializer.init/0}
+      ] ++
+        if Mix.env() == :test,
+          do: [],
+          else: [{Plug.Cowboy, scheme: :http, plug: DiffoExample.Nbn.Router, options: [port: 4000]}]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: DiffoExample.Supervisor)
   end

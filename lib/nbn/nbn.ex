@@ -23,6 +23,7 @@ defmodule DiffoExample.Nbn do
   alias DiffoExample.Nbn.Cvc
   alias DiffoExample.Nbn.NniGroup
   alias DiffoExample.Nbn.Nni
+  alias DiffoExample.Nbn.Rsp
 
   domain do
     description "An example showing how TMF Resources for a fictional NBN domain can be extended from the Provider domain"
@@ -97,6 +98,10 @@ defmodule DiffoExample.Nbn do
         delete :destroy
       end
 
+      base_route "/rsp", Rsp do
+        get :read
+      end
+
     end
   end
 
@@ -155,6 +160,16 @@ defmodule DiffoExample.Nbn do
       define :build_nni, action: :build
       define :define_nni, action: :define
       define :relate_nni, action: :relate
+    end
+
+    resource Rsp do
+      define :list_rsps, action: :list
+      define :get_rsp_by_epid, action: :read, get_by: :epid
+      define :get_rsp_by_short_name, action: :read, get_by: :short_name
+      define :create_rsp, action: :create
+      define :activate_rsp, action: :activate
+      define :suspend_rsp, action: :suspend
+      define :deactivate_rsp, action: :deactivate
     end
 
   end
