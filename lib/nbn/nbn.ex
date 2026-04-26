@@ -163,10 +163,10 @@ defmodule DiffoExample.Nbn do
     end
 
     resource Rsp do
-      define :list_rsps, action: :list
-      define :get_rsp_by_epid, action: :read, get_by: :epid
+      define :list_rsps, action: :inventory
+      define :get_rsp_by_epid, action: :read, get_by: :id
       define :get_rsp_by_short_name, action: :read, get_by: :short_name
-      define :create_rsp, action: :create
+      define :create_rsp, action: :build
       define :activate_rsp, action: :activate
       define :suspend_rsp, action: :suspend
       define :deactivate_rsp, action: :deactivate

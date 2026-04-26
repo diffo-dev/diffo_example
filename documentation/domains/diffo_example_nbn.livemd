@@ -9,7 +9,9 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.0"},
+    # {:diffo_example, "~> 0.3.0"},
+    {:diffo_example, github: "diffo-dev/diffo_example", branch: "dev"},
+    {:diffo, github: "diffo-dev/diffo", branch: "dev", override: true},
     {:kino, "~> 0.14"},
     {:req, "~> 0.5"}
   ],
@@ -117,7 +119,9 @@ Speeds.speeds(:home_fast, :FixedWireless)
 
 ## Multi-tenancy
 
-Each RSP operates in isolation — they can only see and manage the resources they own. This multi-tenancy is enforced at the Ash policy layer: every NBN resource is stamped with the owning RSP's id at creation, and subsequent reads, updates, and destroys are scoped to the record owner.
+Each RSP operates in isolation — they can only see and manage the resources they own. This multi-tenancy is enforced at the Ash policy layer: every NBN resource is stamped with the owning RSP's EPID at creation, and subsequent reads, updates, and destroys are scoped to the record owner.
+
+RSP is modelled as a Party (using the `Diffo.Provider.BaseParty` fragment), with its EPID as the Party id. This means the `rsp_id` stamped on owned resources is a human-readable four-digit identifier rather than a UUID.
 
 Select the RSP you want to operate as for the rest of this livebook. All resources you build will be owned by that RSP and isolated from resources owned by others.
 
@@ -127,7 +131,7 @@ alias DiffoExample.Nbn.Rsp
 import Jason, only: [encode: 2]
 DiffoExample.Nbn.Initializer.init()
 rsps = Nbn.list_rsps!()
-Kino.DataTable.new(rsps, keys: [:epid, :name, :short_name, :state])
+Kino.DataTable.new(rsps, keys: [:id, :name, :short_name, :state])
 ```
 
 ```elixir
