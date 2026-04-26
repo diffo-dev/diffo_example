@@ -52,7 +52,7 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   end
 
   attributes do
-    attribute :rsp_id, :uuid do
+    attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
       public? true
