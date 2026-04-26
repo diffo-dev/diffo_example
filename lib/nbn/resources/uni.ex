@@ -23,7 +23,13 @@ defmodule DiffoExample.Nbn.Uni do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
+
+  json_api do
+    type "uni"
+  end
 
   resource do
     description "An Ash Resource representing a User Network Interface (UNI)"
@@ -111,9 +117,9 @@ defmodule DiffoExample.Nbn.Uni do
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+    uni = Ash.load!(changeset.data, [reverse_relationships: [:characteristics]])
 
-    ntd_relationship = hd(reverse_relationships)
+    ntd_relationship = hd(uni.reverse_relationships)
 
     port = {:port, Diffo.Unwrap.unwrap(hd(ntd_relationship.characteristics).value)}
     {:ok, ntd} = Diffo.Provider.get_instance_by_id(ntd_relationship.source_id)
@@ -122,5 +128,19 @@ defmodule DiffoExample.Nbn.Uni do
     Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
       uni: [port, technology]
     )
+  end
+
+  policies do
+    bypass DiffoExample.Nbn.Checks.NoActor do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 end

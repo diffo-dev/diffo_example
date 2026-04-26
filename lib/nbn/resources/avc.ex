@@ -21,7 +21,13 @@ defmodule DiffoExample.Nbn.Avc do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
+
+  json_api do
+    type "avc"
+  end
 
   resource do
     description "An Ash Resource representing an Access Virtual Circuit (AVC)"
@@ -39,6 +45,14 @@ defmodule DiffoExample.Nbn.Avc do
   characteristics do
     characteristic :avc, DiffoExample.Nbn.AvcValue
     characteristic :cvc, DiffoExample.Nbn.CvcValue
+  end
+
+  attributes do
+    attribute :rsp_id, :uuid do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
   end
 
   actions do
@@ -61,6 +75,8 @@ defmodule DiffoExample.Nbn.Avc do
       change after_action(fn changeset, result, _context ->
                ActionHelper.build_after(changeset, result, Nbn, :get_avc_by_id)
              end)
+
+      change DiffoExample.Nbn.Changes.SetRspId
 
       change load [:href]
       upsert? false
@@ -110,10 +126,12 @@ defmodule DiffoExample.Nbn.Avc do
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    reverse_relationships = Ash.Changeset.get_attribute(changeset, :reverse_relationships)
+    avc = Ash.load!(changeset.data, [reverse_relationships: [:characteristics]])
 
-    cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(reverse_relationships).characteristics).value)}
+    cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(avc.reverse_relationships).characteristics).value)}
 
     Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, avc: [cvlan])
   end
+
+  use DiffoExample.Nbn.RspOwnership
 end

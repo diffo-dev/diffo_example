@@ -24,7 +24,13 @@ defmodule DiffoExample.Nbn.NniGroup do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
+
+  json_api do
+    type "nniGroup"
+  end
 
   resource do
     description "An Ash Resource representing an NNI Group"
@@ -42,6 +48,14 @@ defmodule DiffoExample.Nbn.NniGroup do
   characteristics do
     characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
     characteristic :svlans, Diffo.Provider.AssignableValue
+  end
+
+  attributes do
+    attribute :rsp_id, :uuid do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
   end
 
   actions do
@@ -62,6 +76,8 @@ defmodule DiffoExample.Nbn.NniGroup do
       change after_action(fn changeset, result, _context ->
                ActionHelper.build_after(changeset, result, Nbn, :get_nni_group_by_id)
              end)
+
+      change DiffoExample.Nbn.Changes.SetRspId
 
       change load [:href]
       upsert? false
@@ -100,4 +116,6 @@ defmodule DiffoExample.Nbn.NniGroup do
              end)
     end
   end
+
+  use DiffoExample.Nbn.RspOwnership
 end

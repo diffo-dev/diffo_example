@@ -22,7 +22,13 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   use Ash.Resource,
     fragments: [BaseInstance],
-    domain: Nbn
+    domain: Nbn,
+    extensions: [AshJsonApi.Resource],
+    authorizers: [Ash.Policy.Authorizer]
+
+  json_api do
+    type "nbnEthernet"
+  end
 
   resource do
     description "An Ash Resource representing an NBN Ethernet access"
@@ -45,6 +51,14 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     # end
   end
 
+  attributes do
+    attribute :rsp_id, :uuid do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
+  end
+
   actions do
     create :build do
       description "creates a new NBN Ethernet access resource instance"
@@ -65,6 +79,8 @@ defmodule DiffoExample.Nbn.NbnEthernet do
       change after_action(fn changeset, result, _context ->
                ActionHelper.build_after(changeset, result, Nbn, :get_nbn_ethernet_by_id)
              end)
+
+      change DiffoExample.Nbn.Changes.SetRspId
 
       change load [:href]
       upsert? false
@@ -114,7 +130,8 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    forward_relationships = Ash.Changeset.get_attribute(changeset, :forward_relationships)
+    pri = Ash.load!(changeset.data, [:forward_relationships])
+    forward_relationships = pri.forward_relationships
 
     pri_updates =
       Enum.reduce(forward_relationships, [], fn forward_relationship, acc ->
@@ -159,4 +176,6 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     (Atom.to_string(alias) <> "id")
     |> String.to_atom()
   end
+
+  use DiffoExample.Nbn.RspOwnership
 end

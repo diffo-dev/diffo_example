@@ -9,7 +9,25 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.0"}
+    {:diffo_example, "~> 0.2.0"},
+    {:kino, "~> 0.14"},
+    {:req, "~> 0.5"}
+  ],
+  config: [
+    bolty: [
+      {Bolt,
+       [
+         uri: "bolt://localhost:7687",
+         auth: [username: "neo4j", password: "password"],
+         user_agent: "diffoExampleLivebook/1",
+         pool_size: 15,
+         max_overflow: 3,
+         prefix: :default,
+         name: Bolt,
+         log: false,
+         log_hex: false
+       ]}
+    ]
   ],
   consolidate_protocols: false
 )
@@ -37,25 +55,9 @@ The NBN domain models a fictional NBN Ethernet access circuit and its constituen
 
 ## Installing Neo4j and Configuring Bolty
 
-Update the configuration below to match your Neo4j installation and evaluate.
+Bolty is configured in the `Mix.install` block above — update the Neo4j credentials there if needed before evaluating.
 
-```elixir
-config = [
-  uri: "bolt://localhost:7687",
-  auth: [username: "neo4j", password: "password"],
-  user_agent: "diffoExampleLivebook/1",
-  pool_size: 15,
-  max_overflow: 3,
-  prefix: :default,
-  name: Bolt,
-  log: false,
-  log_hex: false
-]
-```
-
-```elixir
-AshNeo4j.BoltyHelper.start(config)
-```
+You need [Neo4j](https://neo4j.com/deployment-center/) installed and running. Verify the connection:
 
 ```elixir
 AshNeo4j.BoltyHelper.is_connected()
@@ -69,26 +71,11 @@ It is helpful to have a Neo4j browser open locally, typically at http://localhos
 AshNeo4j.Neo4jHelper.delete_all()
 ```
 
-## Setup Aliases
-
-```elixir
-require Ash.Query
-alias DiffoExample.Nbn
-alias DiffoExample.Nbn.NbnEthernet
-alias DiffoExample.Nbn.Uni
-alias DiffoExample.Nbn.Avc
-alias DiffoExample.Nbn.Ntd
-alias DiffoExample.Nbn.Cvc
-alias DiffoExample.Nbn.NniGroup
-alias DiffoExample.Nbn.Nni
-alias DiffoExample.Nbn.Technology
-alias DiffoExample.Nbn.Speeds
-import Jason, only: [encode: 2]
-```
-
-## About NBN
+## About NBN Co
 
 NBN (National Broadband Network) is Australia's wholesale fixed-line access network, operated by NBN Co. It provides standardised access products to Retail Service Providers (RSPs), who in turn deliver internet and other services to end customers.
+
+For the purpose of this example we are going to refer to a simplified, and re-imagined NBN Co as NBN.
 
 An RSP typically combines:
 
@@ -96,15 +83,16 @@ An RSP typically combines:
 * A **home gateway** device installed at the UNI, which provides the customer's LAN, Wi-Fi, and sometimes voice
 * Transport, aggregation, and edge infrastructure connecting the NNI to the RSP's network and on to the internet
 
-NBN Co connects the customer premises to the RSP's network via a Point of Interconnect (POI). The NNI sits at the POI, grouped into NNI Groups. AVCs carrying customer traffic are aggregated onto a CVC, which terminates at the NNI Group. The RSP purchases CVC capacity to carry the aggregate traffic of its customers at that POI.
+NBN connects the customer premises to the RSP's network via a Point of Interconnect (POI). The NNI sits at the POI, grouped into NNI Groups. AVCs carrying customer traffic are aggregated onto a CVC, which terminates at the NNI Group. The RSP purchases CVC capacity to carry the aggregate traffic of its customers at that POI.
 
-NBN is delivered over several access technologies — FTTP, FTTN, FTTB, FTTC, HFC, Fixed Wireless, and Satellite — which determine which bandwidth profiles and speeds are available to a given premises.
+NBN delivers over several access technologies — FTTP, FTTN, FTTB, FTTC, HFC, Fixed Wireless, and Satellite — which determine which bandwidth profiles and speeds are available to a given premises.
 
-## Technology and Speeds
+## NBN Ethernet Technology and Speeds
 
 The NBN domain defines Technology as an Ash Enum covering all NBN access types:
 
 ```elixir
+alias DiffoExample.Nbn.{Technology,Speeds}
 Technology.values()
 ```
 
@@ -127,53 +115,86 @@ Speeds.speeds(:wireless_superfast, :FixedWireless)
 Speeds.speeds(:home_fast, :FixedWireless)
 ```
 
-## Building the Network Hinterland
+## Multi-tenancy
 
-Before we can provision an NBN Ethernet access we need the shared network resources: NNI, NNI Group, and CVC.
+Each RSP operates in isolation — they can only see and manage the resources they own. This multi-tenancy is enforced at the Ash policy layer: every NBN resource is stamped with the owning RSP's id at creation, and subsequent reads, updates, and destroys are scoped to the record owner.
 
-Build an NNI — the physical interconnect between the RSP and NBN Co:
+Select the RSP you want to operate as for the rest of this livebook. All resources you build will be owned by that RSP and isolated from resources owned by others.
 
 ```elixir
-nni = Nbn.build_nni!(%{})
+alias DiffoExample.Nbn
+alias DiffoExample.Nbn.Rsp
+import Jason, only: [encode: 2]
+DiffoExample.Nbn.Initializer.init()
+rsps = Nbn.list_rsps!()
+Kino.DataTable.new(rsps, keys: [:epid, :name, :short_name, :state])
+```
+
+```elixir
+rsp_input = Kino.Input.select(
+  "Operate as RSP",
+  Enum.map(rsps, fn rsp -> {rsp.name, Atom.to_string(rsp.short_name)} end)
+)
+```
+
+```elixir
+actor = Enum.find(rsps, fn rsp -> rsp.name == Kino.Input.read(rsp_input) end)
+actor
+```
+
+## Maintaining Shareable Resources
+
+As an RSP we need maintain some shareable network resources: NNI, NNI Group, and CVC.
+
+We'll need these everywhere we operate, in advance of and sufficient for all the NBN Ethernet Accesses we have. We'll just build one of each right now.
+
+Build an NNI — the physical interconnect between the RSP and NBN:
+
+```elixir
+alias DiffoExample.Nbn.{Nni, NniGroup, CVC}
+nni = Nbn.build_nni!(%{}, actor: actor)
 nni |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
 Build an NNI Group — a logical grouping of NNIs at a point of interconnect:
 
 ```elixir
-nni_group = Nbn.build_nni_group!(%{})
+nni_group = Nbn.build_nni_group!(%{}, actor: actor)
 nni_group |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
 Define the NNI Group with an SVLAN assignment and relate the NNI:
 
 ```elixir
-nni_group = Nbn.define_nni_group!(%{
+nni_group = Nbn.define_nni_group!(nni_group, %{
   characteristic_value_updates: [nni_group: [svlan: 100]]
-})
+}, actor: actor)
 nni_group = Nbn.relate_nni_group!(nni_group, %{
-  relationships: [%{alias: :nni, target_id: nni.id, type: :isAssigned}]
-})
+  relationships: [%Diffo.Provider.Instance.Relationship{id: nni.id, alias: :nni, type: :isAssigned}]
+}, actor: actor)
 nni_group |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
 Build a CVC — the aggregation virtual circuit that terminates at the NNI Group:
 
 ```elixir
-cvc = Nbn.build_cvc!(%{})
+cvc = Nbn.build_cvc!(%{}, actor: actor)
 cvc = Nbn.relate_cvc!(cvc, %{
-  relationships: [%{alias: :nni_group, target_id: nni_group.id, type: :isAssigned}]
-})
+  relationships: [%Diffo.Provider.Instance.Relationship{id: nni_group.id, alias: :nni_group, type: :isAssigned}]
+}, actor: actor)
 cvc |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
-## Provisioning an NBN Ethernet Access
+## Provisioning NBN Ethernet
 
-With the hinterland in place we can provision a customer-facing NBN Ethernet access.
+For each customer site we want to provide service to, we need an NBN Ethernet composite resource, involving an NTD, UNI, AVC and CVC.
+
+The NTD is NBN infrastructure — built and managed by NBN, visible to any RSP. It may not exist at a new or existing customer site, so may be built on demand by NBN.
 
 Build an NTD — the device installed at the customer premises:
 
 ```elixir
+alias DiffoExample.Nbn.{Ntd, Uni, Avc, NbnEthernet}
 ntd = Nbn.build_ntd!(%{})
 ntd = Nbn.define_ntd!(ntd, %{
   characteristic_value_updates: [ntd: [technology: :FTTP, ports: [1, 2, 3, 4]]]
@@ -187,7 +208,7 @@ Build a UNI — the interface at the customer premises — and assign a port fro
 uni = Nbn.build_uni!(%{})
 alias Diffo.Provider.Assignment
 ntd = Nbn.assign_port!(ntd, %{
-  assignment: %Assignment{assignee_id: uni.id, value: 1}
+  assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
 })
 ntd |> Jason.encode!(pretty: true) |> IO.puts
 ```
@@ -196,7 +217,7 @@ Relate the UNI back to the NTD so it can mine technology and port from it:
 
 ```elixir
 uni = Nbn.relate_uni!(uni, %{
-  relationships: [%{alias: :ntd, target_id: ntd.id, type: :isAssigned}]
+  relationships: [%Diffo.Provider.Instance.Relationship{id: ntd.id, alias: :ntd, type: :isAssigned}]
 })
 uni = Nbn.mine_uni!(uni, %{})
 uni |> Jason.encode!(pretty: true) |> IO.puts
@@ -205,28 +226,28 @@ uni |> Jason.encode!(pretty: true) |> IO.puts
 Build an AVC and assign it a CVLAN from the CVC:
 
 ```elixir
-avc = Nbn.build_avc!(%{})
+avc = Nbn.build_avc!(%{}, actor: actor)
 avc = Nbn.define_avc!(avc, %{
   characteristic_value_updates: [avc: [bandwidth_profile: :home_ultrafast]]
-})
+}, actor: actor)
 cvc = Nbn.assign_cvlan!(cvc, %{
-  assignment: %Assignment{assignee_id: avc.id, value: 200}
-})
-avc = Nbn.mine_avc!(avc, %{})
+  assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}
+}, actor: actor)
+avc = Nbn.mine_avc!(avc, %{}, actor: actor)
 avc |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
 Now build the top-level NBN Ethernet access and relate it to both the UNI and AVC:
 
 ```elixir
-pri = Nbn.build_nbn_ethernet!(%{})
+pri = Nbn.build_nbn_ethernet!(%{}, actor: actor)
 pri = Nbn.relate_nbn_ethernet!(pri, %{
   relationships: [
-    %{alias: :uni, target_id: uni.id, type: :isAssigned},
-    %{alias: :avc, target_id: avc.id, type: :isAssigned}
+    %Diffo.Provider.Instance.Relationship{id: uni.id, alias: :uni, type: :isAssigned},
+    %Diffo.Provider.Instance.Relationship{id: avc.id, alias: :avc, type: :isAssigned}
   ]
-})
-pri = Nbn.mine_nbn_ethernet!(pri, %{})
+}, actor: actor)
+pri = Nbn.mine_nbn_ethernet!(pri, %{}, actor: actor)
 pri |> Jason.encode!(pretty: true) |> IO.puts
 ```
 
@@ -244,6 +265,28 @@ Or from Elixir:
 
 ```elixir
 AshNeo4j.Cypher.run("MATCH (n1)-[r]->(n2) RETURN r, n1, n2 LIMIT 50")
+```
+
+## JSON API
+
+The NBN domain exposes a JSON API via `Plug.Cowboy` on port 4000. Start the server in your application before evaluating these cells.
+
+First check the catalog — all NBN specifications are initialised on startup:
+
+```elixir
+Req.get!("http://localhost:4000/catalog", decode_body: false).body |> IO.puts()
+```
+
+Now retrieve all NBN Ethernet instances:
+
+```elixir
+Req.get!("http://localhost:4000/nbnEthernet", decode_body: false).body |> IO.puts()
+```
+
+Or fetch the one we provisioned above by id:
+
+```elixir
+Req.get!("http://localhost:4000/nbnEthernet/#{pri.id}", decode_body: false).body |> IO.puts()
 ```
 
 ## What Next?

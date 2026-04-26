@@ -59,8 +59,14 @@ defmodule DiffoExample.MixProject do
       logo: "logos/diffo.jpg",
       extras: [
         "README.md": [title: "Guide"],
-        "diffo_example.livemd": [title: "Livebook Tutorial"],
+        "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
+        "documentation/domains/nbn.md": [title: "The NBN Domain"],
         "LICENSES/MIT.md": [title: "License"]
+      ],
+      groups_for_extras: [
+        Domains: ~r"documentation/domains",
+        "How To": ~r"documentation/how_to",
+        DSLs: ~r"documentation/dsls"
       ]
     ]
   end
@@ -81,6 +87,11 @@ defmodule DiffoExample.MixProject do
   defp deps do
     [
       {:diffo, diffo_version("~> 0.2.0")},
+      {:ash_json_api, "~> 1.6"},
+      {:plug_cowboy, "~> 2.7"},
+      {:req, "~> 0.5", only: [:dev, :test]},
+      {:picosat_elixir, "~> 0.2.0"},
+      {:simple_sat, ">= 0.0.0"},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]
