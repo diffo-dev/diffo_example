@@ -30,3 +30,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Fixes:
 * fixed relationship enrichment inconsistent across neo4j versions
+
+## [v0.2.0](https://github.com/diffo-dev/diffo/compare/v0.0.4..v0.2.0) (2026-04-26)
+
+### Maintenance:
+* updated to diffo 0.2.0
+
+### Features:
+* new NBN domain modelling NBN Ethernet access and constituent resources (UNI, AVC, NTD, CVC, NNI Group, NNI)
+* JSON API via AshJsonApi and Plug.Cowboy
+* RSP resource with AshStateMachine lifecycle (inactive/active/suspended) and Ash Policy authorisation
+* RSP multi-tenancy: SetRspId change, OwnedByActor and NoActor policy checks, RspOwnership macro shared across RSP-owned resources
+* NTD and UNI modelled as NBN-owned infrastructure — readable by any RSP, mutable only by internal calls
+* Interactive NBN livebook with Kino RSP selector and actor-scoped provisioning flow
+* NBN domain documentation including Perentie ecosystem narrative

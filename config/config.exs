@@ -16,6 +16,7 @@ config :spark,
         :characteristics,
         :neo4j,
         :jason,
+        :json_api,
         :outstanding,
         :actions,
         :state_machine,
@@ -37,5 +38,5 @@ config :spark,
   ]
 
 config :diffo, ash_domains: [Diffo.Provider]
-config :diffo_example, ash_domains: [DiffoExample.Access]
+config :diffo_example, ash_domains: [DiffoExample.Access, DiffoExample.Nbn]
 import_config "#{config_env()}.exs"

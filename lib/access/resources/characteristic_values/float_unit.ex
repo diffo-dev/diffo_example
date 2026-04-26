@@ -24,10 +24,4 @@ defmodule DiffoExample.Access.FloatUnit do
 
     field :unit, :atom, description: "the unit"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

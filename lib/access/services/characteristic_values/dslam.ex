@@ -36,10 +36,4 @@ defmodule DiffoExample.Access.Dslam do
       default: :eth,
       description: "the DSLAM technology"
   end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
-  end
 end

@@ -11,10 +11,21 @@ SPDX-License-Identifier: MIT
 [![License](https://img.shields.io/hexpm/l/diffo)](https://github.com/diffo-dev/diffo_example/blob/master/LICENSES/MIT.md)
 [![REUSE status](https://api.reuse.software/badge/github.com/diffo-dev/diffo_example)](https://api.reuse.software/info/github.com/diffo-dev/diffo_example)
 
-This repo contains Diffo Examples.
-
 [Diffo](https://github.com/diffo-dev/diffo) is a Telecommunications Management Forum (TMF) Service and Resource Manager, built for autonomous networks.
 
+This repo contains two independent example domains, each modelling a different slice of a telco network.
+
+## NBN Domain
+
+A declarative model of a fictional NBN Ethernet access hierarchy — NbnEthernet, UNI, AVC, NTD, CVC, NNI Group, and NNI — built entirely with the Diffo Provider Instance DSL. Includes multi-tenancy via Ash Policy: each RSP can only see and manage the resources they own.
+
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run?url=https%3A%2F%2Fgithub.com%2Fdiffo-dev%2Fdiffo_example%2Fblob%2Fdev%2Fdocumentation%2Fdomains%2Fdiffo_example_nbn.livemd)
+
+The livebook walks through provisioning a complete NBN Ethernet access circuit, selecting an RSP to operate as, and demonstrating how the `mine` actions propagate technology, speeds, CVLAN, and port assignments up the resource hierarchy.
+
+## Access Domain
+
+A copper-network equivalent covering DSL access services — Cable, Card, Path, and Shelf. Explore `lib/access/` for the domain model.
 
 ## Installation
 
@@ -30,11 +41,6 @@ end
 ```
 
 You need [Neo4j](https://github.com/neo4j/neo4j) available. We recommend the Neo4j Community 5 latest, available at [Neo4j Deploymnent Centre](https://neo4j.com/deployment-center/) which can be installed locally. You can also configure connection to a cloud based database service such as [Neo4j AuraDB](https://neo4j.com/product/auradb/).
-
-## Tutorial
-
-Diffo has a livebook and you should use this as an introduction.
-
 
 ## Contributions
 

@@ -15,6 +15,7 @@ defmodule DiffoExample.Access.Circuit do
   jason do
     pick [:circuit_id, :cvlan_id, :vci, :encapsulation, :bandwidth_profile]
     compact(true)
+    rename circuit_id: "circuitId", vci: "VCI", bandwidth_profile: "bandwidthProfile"
   end
 
   outstanding do
@@ -41,14 +42,6 @@ defmodule DiffoExample.Access.Circuit do
       constraints: [one_of: [:PPPoA, :PPPoE, :IPoE]],
       description: "the circuit encapsulation"
 
-    field :bandwidth_profile, :struct,
-      constraints: [instance_of: BandwidthProfile],
-      description: "the circuit bandwidth profile"
-  end
-
-  defimpl String.Chars do
-    def to_string(struct) do
-      inspect(struct)
-    end
+    field :bandwidth_profile, BandwidthProfile, description: "the circuit bandwidth profile"
   end
 end
