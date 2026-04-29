@@ -171,7 +171,10 @@ Define the NNI Group with an SVLAN assignment and relate the NNI:
 
 ```elixir
 nni_group = Nbn.define_nni_group!(nni_group, %{
-  characteristic_value_updates: [nni_group: [svlan: 100]]
+  characteristic_value_updates: [
+    nni_group: [name: "SYD-POI-01", location: "Sydney Olympic Park"],
+    svlans: [first: 1, last: 4000, free: 4000, assignable_type: "svlan"]
+  ]
 }, actor: actor)
 nni_group = Nbn.relate_nni_group!(nni_group, %{
   relationships: [%Diffo.Provider.Instance.Relationship{id: nni.id, alias: :nni, type: :isAssigned}]
@@ -201,7 +204,10 @@ Build an NTD — the device installed at the customer premises:
 alias DiffoExample.Nbn.{Ntd, Uni, Avc, NbnEthernet}
 ntd = Nbn.build_ntd!(%{})
 ntd = Nbn.define_ntd!(ntd, %{
-  characteristic_value_updates: [ntd: [technology: :FTTP, ports: [1, 2, 3, 4]]]
+  characteristic_value_updates: [
+    ntd: [technology: :FTTP],
+    ports: [first: 1, last: 4, free: 4, assignable_type: "port"]
+  ]
 })
 ntd |> Jason.encode!(pretty: true) |> IO.puts
 ```

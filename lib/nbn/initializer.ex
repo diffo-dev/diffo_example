@@ -7,11 +7,9 @@ defmodule DiffoExample.Nbn.Initializer do
   Diffo - TMF Service and Resource Management with a difference
 
   Initializes the NBN domain on application startup:
-  - upserts all resource specifications into the catalog
   - seeds RSP records in historical EPID sequence
   """
 
-  alias Diffo.Provider.Instance.Specification
   alias DiffoExample.Nbn
 
   @rsps [
@@ -25,16 +23,6 @@ defmodule DiffoExample.Nbn.Initializer do
   ]
 
   def init do
-    Nbn
-    |> Ash.Domain.Info.resources()
-    |> Enum.each(fn module ->
-      try do
-        Specification.upsert_specification(module)
-      rescue
-        _ -> :ok
-      end
-    end)
-
     seed_rsps()
   end
 

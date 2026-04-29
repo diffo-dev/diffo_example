@@ -16,7 +16,6 @@ defmodule DiffoExample.Nbn.Nni do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
 
@@ -35,16 +34,24 @@ defmodule DiffoExample.Nbn.Nni do
     plural_name :Nnis
   end
 
-  specification do
-    id "f6a7b8c9-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
-    name "nni"
-    type :resourceSpecification
-    description "An NNI Resource Instance that is part of an NNI Group"
-    category "Network Resource"
+  structure do
+    specification do
+      id "f6a7b8c9-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
+      name "nni"
+      type :resourceSpecification
+      description "An NNI Resource Instance that is part of an NNI Group"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :nni, DiffoExample.Nbn.NniValue
+    end
   end
 
-  characteristics do
-    characteristic :nni, DiffoExample.Nbn.NniValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   attributes do
@@ -59,25 +66,13 @@ defmodule DiffoExample.Nbn.Nni do
     create :build do
       description "creates a new NNI resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
       change set_attribute(:name, &DiffoExample.Nbn.Nni.identifier/0)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_nni_by_id)
-             end)
-
       change DiffoExample.Nbn.Changes.SetRspId
-
       change load [:href]
       upsert? false
     end
@@ -103,10 +98,10 @@ defmodule DiffoExample.Nbn.Nni do
                     do: {:ok, result}
              end)
     end
+  end
 
-    def identifier() do
-      DiffoExample.Nbn.Util.identifier("NNI")
-    end
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("NNI")
   end
 
   use DiffoExample.Nbn.RspOwnership

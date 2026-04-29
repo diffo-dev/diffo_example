@@ -27,9 +27,9 @@ defmodule DiffoExample.Nbn.Rsp do
   #   data_layer: AshNeo4j.DataLayer
   #   extensions: AshJason.Resource, AshOutstanding.Resource, Diffo.Provider.Party.Extension
   #   Neo4j label :Party (RSP nodes are Party nodes)
-  #   attributes: id (string/key), name, kind, created_at, updated_at
+  #   attributes: id (string/key), name, type, referred_type, created_at, updated_at
   #   relationships: party_refs
-  #   actions: :read (primary), :destroy, :create (accept [:id,:name,:kind]),
+  #   actions: :read (primary), :destroy, :create (accept [:id,:name,:type,:referred_type]),
   #            :update (name), :list (unsorted), :find_by_name
 
   json_api do
@@ -63,11 +63,19 @@ defmodule DiffoExample.Nbn.Rsp do
     end
   end
 
+  instances do
+    role :owner, DiffoExample.Nbn.Avc
+    role :owner, DiffoExample.Nbn.Cvc
+    role :owner, DiffoExample.Nbn.Nni
+    role :owner, DiffoExample.Nbn.NniGroup
+    role :owner, DiffoExample.Nbn.NbnEthernet
+  end
+
   actions do
     create :build do
       accept [:name, :short_name, :id]
       upsert? true
-      change set_attribute(:kind, :organization)
+      change set_attribute(:type, :Organization)
       validate match(:id, ~r/^\d{4}$/) do
         message "must be a four-digit EPID"
       end
