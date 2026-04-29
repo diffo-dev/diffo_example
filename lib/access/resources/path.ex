@@ -12,7 +12,6 @@ defmodule DiffoExample.Access.Path do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Access
 
@@ -25,37 +24,35 @@ defmodule DiffoExample.Access.Path do
     plural_name :Paths
   end
 
-  specification do
-    id "1d507914-8f76-48cb-aa0e-3a8f92951ab0"
-    name "path"
-    type :resourceSpecification
-    description "A Path Resource Instance"
-    category "Network Resource"
+  structure do
+    specification do
+      id "1d507914-8f76-48cb-aa0e-3a8f92951ab0"
+      name "path"
+      type :resourceSpecification
+      description "A Path Resource Instance"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :path, DiffoExample.Access.PathValue
+    end
   end
 
-  characteristics do
-    characteristic :path, DiffoExample.Access.PathValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   actions do
     create :build do
       description "creates a new Path resource instance for build"
       accept [:id, :name, :type, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Access, :get_path_by_id)
-             end)
-
       change load [:href]
       upsert? false
     end

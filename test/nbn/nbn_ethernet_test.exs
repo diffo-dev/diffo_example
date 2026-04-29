@@ -69,7 +69,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{}}]})
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","description":"An NBN Ethernet access comprising a dedicated UNI and AVC",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{}}]})
     end
 
     test "define nbn_ethernet access" do
@@ -155,7 +155,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding = Jason.encode!(access) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"AVCID":"#{avc.name}","UNIID":"#{uni.name}","technology":"FTTP","bandwidthProfile":"home_fast","speeds":[500,50]}}]})
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","description":"An NBN Ethernet access comprising a dedicated UNI and AVC","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"AVCID":"#{avc.name}","UNIID":"#{uni.name}","technology":"FTTP","bandwidthProfile":"home_fast","speeds":[500,50]}}]})
     end
   end
 

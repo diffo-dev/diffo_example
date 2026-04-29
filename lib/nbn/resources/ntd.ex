@@ -15,7 +15,6 @@ defmodule DiffoExample.Nbn.Ntd do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
@@ -36,40 +35,37 @@ defmodule DiffoExample.Nbn.Ntd do
     plural_name :Ntds
   end
 
-  specification do
-    id "c3d4e5f6-7a8b-4c9d-ae0f-2a3b4c5d6e7f"
-    name "ntd"
-    type :resourceSpecification
-    description "An NTD Resource Instance related to a UNI"
-    category "Network Resource"
+  structure do
+    specification do
+      id "c3d4e5f6-7a8b-4c9d-ae0f-2a3b4c5d6e7f"
+      name "ntd"
+      type :resourceSpecification
+      description "An NTD Resource Instance related to a UNI"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :ntd, DiffoExample.Nbn.NtdValue
+      characteristic :ports, Diffo.Provider.AssignableValue
+    end
   end
 
-  characteristics do
-    characteristic :ntd, DiffoExample.Nbn.NtdValue
-    characteristic :ports, Diffo.Provider.AssignableValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   actions do
     create :build do
       description "creates a new NTD resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
       change set_attribute(:name, &DiffoExample.Nbn.Ntd.identifier/0)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_ntd_by_id)
-             end)
-
       change load [:href]
       upsert? false
     end

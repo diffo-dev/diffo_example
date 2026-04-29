@@ -86,7 +86,7 @@ defmodule DiffoExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:diffo, diffo_version([git: "https://github.com/diffo-dev/diffo.git", branch: "dev"])},
+      {:diffo, diffo_version([path: "../diffo"])},
       {:ash_json_api, "~> 1.6"},
       {:plug_cowboy, "~> 2.7"},
       {:req, "~> 0.5", only: [:dev, :test]},

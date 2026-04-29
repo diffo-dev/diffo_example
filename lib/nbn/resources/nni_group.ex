@@ -16,7 +16,6 @@ defmodule DiffoExample.Nbn.NniGroup do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
@@ -37,17 +36,25 @@ defmodule DiffoExample.Nbn.NniGroup do
     plural_name :NniGroups
   end
 
-  specification do
-    id "e5f6a7b8-9c0d-4e1f-8a2b-4c5d6e7f8a9b"
-    name "nniGroup"
-    type :resourceSpecification
-    description "An NNI Group Resource Instance comprising multiple NNI resources"
-    category "Network Resource"
+  structure do
+    specification do
+      id "e5f6a7b8-9c0d-4e1f-8a2b-4c5d6e7f8a9b"
+      name "nniGroup"
+      type :resourceSpecification
+      description "An NNI Group Resource Instance comprising multiple NNI resources"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
+      characteristic :svlans, Diffo.Provider.AssignableValue
+    end
   end
 
-  characteristics do
-    characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
-    characteristic :svlans, Diffo.Provider.AssignableValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   attributes do
@@ -62,23 +69,12 @@ defmodule DiffoExample.Nbn.NniGroup do
     create :build do
       description "creates a new NNI Group resource instance"
       accept [:id, :name, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_nni_group_by_id)
-             end)
-
       change DiffoExample.Nbn.Changes.SetRspId
-
       change load [:href]
       upsert? false
     end

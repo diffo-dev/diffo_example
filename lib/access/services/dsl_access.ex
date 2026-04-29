@@ -12,7 +12,6 @@ defmodule DiffoExample.Access.DslAccess do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Characteristic
   alias Diffo.Provider.Instance.Place
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Access
 
@@ -25,25 +24,33 @@ defmodule DiffoExample.Access.DslAccess do
     plural_name :DslAccesses
   end
 
-  specification do
-    id "da9b207a-26c3-451d-8abd-0640c6349979"
-    name "dslAccess"
-    description "A DSL Access Network Service connecting a subscriber premises to an NNI"
-    category "Network Service"
-  end
+  structure do
+    specification do
+      id "da9b207a-26c3-451d-8abd-0640c6349979"
+      name "dslAccess"
+      description "A DSL Access Network Service connecting a subscriber premises to an NNI"
+      category "Network Service"
+    end
 
-  features do
-    feature :dynamic_line_management do
-      is_enabled? true
-      characteristic :constraints, DiffoExample.Access.Constraints
+    features do
+      feature :dynamic_line_management do
+        is_enabled? true
+        characteristic :constraints, DiffoExample.Access.Constraints
+      end
+    end
+
+    characteristics do
+      characteristic :dslam, DiffoExample.Access.Dslam
+      characteristic :aggregate_interface, DiffoExample.Access.AggregateInterface
+      characteristic :circuit, DiffoExample.Access.Circuit
+      characteristic :line, DiffoExample.Access.Line
     end
   end
 
-  characteristics do
-    characteristic :dslam, DiffoExample.Access.Dslam
-    characteristic :aggregate_interface, DiffoExample.Access.AggregateInterface
-    characteristic :circuit, DiffoExample.Access.Circuit
-    characteristic :line, DiffoExample.Access.Line
+  behaviour do
+    actions do
+      create :qualify
+    end
   end
 
   state_machine do
@@ -59,15 +66,6 @@ defmodule DiffoExample.Access.DslAccess do
       accept [:id, :name, :type, :which]
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
-      argument :specified_by, :uuid, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
-      argument :features, {:array, :uuid}, public?: false
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Access, :get_dsl_by_id)
-             end)
 
       change load [:href]
       upsert? false

@@ -15,7 +15,6 @@ defmodule DiffoExample.Nbn.Avc do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
 
@@ -34,17 +33,25 @@ defmodule DiffoExample.Nbn.Avc do
     plural_name :Avcs
   end
 
-  specification do
-    id "b2c3d4e5-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
-    name "avc"
-    type :resourceSpecification
-    description "An AVC Resource Instance dedicated to an NBN Ethernet circuit"
-    category "Network Resource"
+  structure do
+    specification do
+      id "b2c3d4e5-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
+      name "avc"
+      type :resourceSpecification
+      description "An AVC Resource Instance dedicated to an NBN Ethernet circuit"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :avc, DiffoExample.Nbn.AvcValue
+      characteristic :cvc, DiffoExample.Nbn.CvcValue
+    end
   end
 
-  characteristics do
-    characteristic :avc, DiffoExample.Nbn.AvcValue
-    characteristic :cvc, DiffoExample.Nbn.CvcValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   attributes do
@@ -59,25 +66,13 @@ defmodule DiffoExample.Nbn.Avc do
     create :build do
       description "creates a new AVC resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:name, &DiffoExample.Nbn.Avc.identifier/0)
-
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_avc_by_id)
-             end)
-
       change DiffoExample.Nbn.Changes.SetRspId
-
       change load [:href]
       upsert? false
     end
