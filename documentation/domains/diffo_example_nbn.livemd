@@ -9,9 +9,8 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    # {:diffo_example, "~> 0.3.0"},
-    {:diffo_example, github: "diffo-dev/diffo_example", branch: "dev"},
-    {:diffo, github: "diffo-dev/diffo", branch: "dev", override: true},
+    {:diffo_example, "~> 0.2.1"},
+    {:diffo, "~> 0.4.1"},
     {:kino, "~> 0.14"},
     {:req, "~> 0.5"}
   ],
