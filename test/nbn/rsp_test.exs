@@ -8,14 +8,9 @@ defmodule DiffoExample.Nbn.RspTest do
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Rsp
 
-  setup_all do
-    AshNeo4j.BoltyHelper.start()
-  end
-
   setup do
-    on_exit(fn ->
-      AshNeo4j.Neo4jHelper.delete_all()
-    end)
+    AshNeo4j.Sandbox.checkout()
+    on_exit(&AshNeo4j.Sandbox.rollback/0)
   end
 
   defp create_rsp(attrs) do

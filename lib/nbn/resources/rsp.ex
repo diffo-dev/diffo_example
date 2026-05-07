@@ -65,10 +65,11 @@ defmodule DiffoExample.Nbn.Rsp do
 
   instances do
     role :owner, DiffoExample.Nbn.Avc
-    role :owner, DiffoExample.Nbn.Cvc
-    role :owner, DiffoExample.Nbn.Nni
-    role :owner, DiffoExample.Nbn.NniGroup
-    role :owner, DiffoExample.Nbn.NbnEthernet
+    # pending resolution of /diffo-dev/diffo#101
+    #role :owner, DiffoExample.Nbn.Cvc
+    #role :owner, DiffoExample.Nbn.Nni
+    #role :owner, DiffoExample.Nbn.NniGroup
+    #role :owner, DiffoExample.Nbn.NbnEthernet
   end
 
   actions do
