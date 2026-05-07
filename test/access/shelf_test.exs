@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Access.ShelfTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Diffo.Provider
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Characteristic

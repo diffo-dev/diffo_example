@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Nbn.NbnEthernetTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Characteristic
   alias DiffoExample.Nbn

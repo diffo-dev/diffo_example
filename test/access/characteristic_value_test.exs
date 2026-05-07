@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Access.CharacteristicValueTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias DiffoExample.Access.AggregateInterface
   alias DiffoExample.Access.Circuit
   alias DiffoExample.Access.Dslam

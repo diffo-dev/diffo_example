@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Access.CableTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Characteristic
   alias Diffo.Provider.Assignment
