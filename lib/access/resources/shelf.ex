@@ -12,7 +12,6 @@ defmodule DiffoExample.Access.Shelf do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
@@ -27,38 +26,36 @@ defmodule DiffoExample.Access.Shelf do
     plural_name :Shelves
   end
 
-  specification do
-    id "ef016d85-9dbd-429c-84da-1df56cc7dda5"
-    name "shelf"
-    type :resourceSpecification
-    description "A Shelf Resource Instance which contain cards"
-    category "Network Resource"
+  structure do
+    specification do
+      id "ef016d85-9dbd-429c-84da-1df56cc7dda5"
+      name "shelf"
+      type :resourceSpecification
+      description "A Shelf Resource Instance which contain cards"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :shelf, DiffoExample.Access.ShelfValue
+      characteristic :slots, Diffo.Provider.AssignableValue
+    end
   end
 
-  characteristics do
-    characteristic :shelf, DiffoExample.Access.ShelfValue
-    characteristic :slots, Diffo.Provider.AssignableValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   actions do
     create :build do
       description "creates a new Shelf resource instance for build"
       accept [:id, :name, :type, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Access, :get_shelf_by_id)
-             end)
-
       change load [:href]
       upsert? false
     end

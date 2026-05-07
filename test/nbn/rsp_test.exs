@@ -4,18 +4,13 @@
 
 defmodule DiffoExample.Nbn.RspTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true, async: true
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Rsp
 
-  setup_all do
-    AshNeo4j.BoltyHelper.start()
-  end
-
   setup do
-    on_exit(fn ->
-      AshNeo4j.Neo4jHelper.delete_all()
-    end)
+    AshNeo4j.Sandbox.checkout()
+    on_exit(&AshNeo4j.Sandbox.rollback/0)
   end
 
   defp create_rsp(attrs) do
@@ -26,11 +21,11 @@ defmodule DiffoExample.Nbn.RspTest do
 
   describe "RSP resource" do
     test "create and activate an RSP" do
-      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, epid: "8001"})
+      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
 
       assert is_struct(rsp, Rsp)
       assert rsp.state == :inactive
-      assert rsp.epid == "8001"
+      assert rsp.id == "8001"
       assert rsp.short_name == :wedgetail
 
       {:ok, rsp} = Nbn.activate_rsp(rsp)
@@ -38,7 +33,7 @@ defmodule DiffoExample.Nbn.RspTest do
     end
 
     test "RSP state machine: activate → suspend → deactivate" do
-      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, epid: "8001"})
+      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
 
       {:ok, rsp} = Nbn.activate_rsp(rsp)
       assert rsp.state == :active
@@ -50,22 +45,22 @@ defmodule DiffoExample.Nbn.RspTest do
       assert rsp.state == :inactive
     end
 
-    test "epid must be exactly 4 digits" do
-      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, epid: "123"})
-      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, epid: "12345"})
-      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, epid: "abcd"})
+    test "id must be a four-digit EPID" do
+      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, id: "123"})
+      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, id: "12345"})
+      assert {:error, _} = Nbn.create_rsp(%{name: "Bad RSP", short_name: :bad, id: "abcd"})
     end
 
     test "get RSP by short_name" do
-      create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, epid: "8001"})
+      create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
 
       {:ok, rsp} = Nbn.get_rsp_by_short_name(:wedgetail)
       assert rsp.short_name == :wedgetail
-      assert rsp.epid == "8001"
+      assert rsp.id == "8001"
     end
 
     test "get RSP by epid" do
-      create_rsp(%{name: "Quokka Connect", short_name: :quokka, epid: "8002"})
+      create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "8002"})
 
       {:ok, rsp} = Nbn.get_rsp_by_epid("8002")
       assert rsp.short_name == :quokka
@@ -74,8 +69,8 @@ defmodule DiffoExample.Nbn.RspTest do
 
   describe "RSP multi-tenancy" do
     setup do
-      wedgetail = create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, epid: "8001"})
-      quokka = create_rsp(%{name: "Quokka Connect", short_name: :quokka, epid: "8002"})
+      wedgetail = create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+      quokka = create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "8002"})
       %{wedgetail: wedgetail, quokka: quokka}
     end
 

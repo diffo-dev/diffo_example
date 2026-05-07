@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Access.ShelfTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Diffo.Provider
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Characteristic
@@ -18,14 +18,9 @@ defmodule DiffoExample.Access.ShelfTest do
   alias DiffoExample.Test.Parties
   alias DiffoExample.Test.Places
 
-  setup_all do
-    AshNeo4j.BoltyHelper.start()
-  end
-
   setup do
-    on_exit(fn ->
-      AshNeo4j.Neo4jHelper.delete_all()
-    end)
+    AshNeo4j.Sandbox.checkout()
+    on_exit(&AshNeo4j.Sandbox.rollback/0)
   end
 
   describe "build shelf" do
@@ -74,7 +69,7 @@ defmodule DiffoExample.Access.ShelfTest do
       encoding = Jason.encode!(shelf) |> Diffo.Util.summarise_dates()
 
       assert encoding ==
-               ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":1,\"free\":1,\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+               ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"description\":\"A Shelf Resource Instance which contain cards\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":1,\"free\":1,\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
     end
   end
 
@@ -93,7 +88,7 @@ defmodule DiffoExample.Access.ShelfTest do
     encoding = Jason.encode!(shelf) |> Diffo.Util.summarise_dates()
 
     assert encoding ==
-             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":10,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"description\":\"A Shelf Resource Instance which contain cards\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":10,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
   end
 
   test "relate common cards" do
@@ -119,7 +114,7 @@ defmodule DiffoExample.Access.ShelfTest do
 
     # resource relationships are sorted in the create order of the relationships
     assert encoding ==
-             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceRelationship\":[{\"type\":\"contains\",\"resource\":{\"id\":\"#{card0.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card0.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card1.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card1.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card2.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card2.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card3.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card3.id}\"}}],\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":10,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"description\":\"A Shelf Resource Instance which contain cards\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceRelationship\":[{\"type\":\"contains\",\"resource\":{\"id\":\"#{card0.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card0.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card1.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card1.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card2.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card2.id}\"}},{\"type\":\"contains\",\"resource\":{\"id\":\"#{card3.id}\",\"href\":\"resourceInventoryManagement/v4/resource/#{card3.id}\"}}],\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":10,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
   end
 
   test "auto assign line cards" do
@@ -148,7 +143,7 @@ defmodule DiffoExample.Access.ShelfTest do
     lc2 = line_card2.assignee_id
 
     assert encoding ==
-             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceRelationship\":[{\"type\":\"assignedTo\",\"resource\":{\"id\":\"#{lc1}\",\"href\":\"resourceInventoryManagement/v4/resource/#{lc1}\"},\"resourceRelationshipCharacteristic\":[{\"name\":\"slot\",\"value\":1}]},{\"type\":\"assignedTo\",\"resource\":{\"id\":\"#{lc2}\",\"href\":\"resourceInventoryManagement/v4/resource/#{lc2}\"},\"resourceRelationshipCharacteristic\":[{\"name\":\"slot\",\"value\":2}]}],\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":8,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+             ~s({\"id\":\"#{shelf.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{shelf.id}",\"category\":\"Network Resource\",\"description\":\"A Shelf Resource Instance which contain cards\",\"name\":\"QDONC-0001\",\"resourceSpecification\":{\"id\":\"ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ef016d85-9dbd-429c-84da-1df56cc7dda5\",\"name\":\"shelf\",\"version\":\"v1.0.0\"},\"resourceRelationship\":[{\"type\":\"assignedTo\",\"resource\":{\"id\":\"#{lc1}\",\"href\":\"resourceInventoryManagement/v4/resource/#{lc1}\"},\"resourceRelationshipCharacteristic\":[{\"name\":\"slot\",\"value\":1}]},{\"type\":\"assignedTo\",\"resource\":{\"id\":\"#{lc2}\",\"href\":\"resourceInventoryManagement/v4/resource/#{lc2}\"},\"resourceRelationshipCharacteristic\":[{\"name\":\"slot\",\"value\":2}]}],\"resourceCharacteristic\":[{\"name\":\"shelf\",\"value\":{\"name\":\"QDONC-1001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"DSLAM\"}},{\"name\":\"slots\",\"value\":{\"first\":1,\"last\":10,\"free\":8,\"type\":\"LineCard\",\"algorithm\":\"lowest\"}}],\"place\":[{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
   end
 
   defp create_common_cards() do
@@ -179,7 +174,7 @@ defmodule DiffoExample.Access.ShelfTest do
         id: "DONC-0001",
         name: :esaId,
         href: "place/telco/DONC-0001",
-        referredType: :GeographicLocation
+        referred_type: :GeographicLocation
       })
 
     %Place{id: esa.id, role: :ServingArea}
@@ -190,7 +185,7 @@ defmodule DiffoExample.Access.ShelfTest do
       Provider.create_party!(%{
         id: "Access",
         name: :organizationId,
-        referredType: :Organization
+        referred_type: :Organization
       })
 
     %Party{id: provider.id, role: :Provider}

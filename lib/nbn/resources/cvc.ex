@@ -15,7 +15,6 @@ defmodule DiffoExample.Nbn.Cvc do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
@@ -36,23 +35,29 @@ defmodule DiffoExample.Nbn.Cvc do
     plural_name :Cvcs
   end
 
-  specification do
-    id "d4e5f6a7-8b9c-4d0e-bf1a-3b4c5d6e7f8a"
-    name "cvc"
-    type :resourceSpecification
+  structure do
+    specification do
+      id "d4e5f6a7-8b9c-4d0e-bf1a-3b4c5d6e7f8a"
+      name "cvc"
+      type :resourceSpecification
+      description "A Connectivity Virtual Circuit Resource Instance that aggregates AVCs and terminates at an NNI Group"
+      category "Network Resource"
+    end
 
-    description "A Connectivity Virtual Circuit Resource Instance that aggregates AVCs and terminates at an NNI Group"
-
-    category "Network Resource"
+    characteristics do
+      characteristic :cvc, DiffoExample.Nbn.CvcValue
+      characteristic :cvlans, Diffo.Provider.AssignableValue
+    end
   end
 
-  characteristics do
-    characteristic :cvc, DiffoExample.Nbn.CvcValue
-    characteristic :cvlans, Diffo.Provider.AssignableValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   attributes do
-    attribute :rsp_id, :uuid do
+    attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
       public? true
@@ -63,25 +68,13 @@ defmodule DiffoExample.Nbn.Cvc do
     create :build do
       description "creates a new CVC resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:name, &DiffoExample.Nbn.Cvc.identifier/0)
-
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_cvc_by_id)
-             end)
-
       change DiffoExample.Nbn.Changes.SetRspId
-
       change load [:href]
       upsert? false
     end

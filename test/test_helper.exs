@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 Mix.Task.run("app.start")
-ExUnit.start()
 level = Application.get_env(:logger, :console) |> Keyword.get(:level)
 Logger.put_application_level(:diffo, level)
 Logger.put_application_level(:ash_neo4j, :error)
+AshNeo4j.Neo4jHelper.delete_all()
+ExUnit.start()

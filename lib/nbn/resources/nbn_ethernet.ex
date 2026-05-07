@@ -14,7 +14,6 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Util
@@ -35,24 +34,28 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     plural_name :NbnEthernets
   end
 
-  specification do
-    id "f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c"
-    name "nbnEthernet"
-    type :resourceSpecification
-    description "An NBN Ethernet access comprising a dedicated UNI and AVC"
-    category "Network Resource"
+  structure do
+    specification do
+      id "f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c"
+      name "nbnEthernet"
+      type :resourceSpecification
+      description "An NBN Ethernet access comprising a dedicated UNI and AVC"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :pri, DiffoExample.Nbn.PriValue
+    end
   end
 
-  characteristics do
-    characteristic :pri, DiffoExample.Nbn.PriValue
-    # values do
-    #  value :uniid, DiffoExample.Nbn.Uni, :owns, :name
-    #  value :avcid, DiffoExample.Nbn.Avc, :owns, :name
-    # end
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   attributes do
-    attribute :rsp_id, :uuid do
+    attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
       public? true
@@ -63,25 +66,13 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     create :build do
       description "creates a new NBN Ethernet access resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:name, &DiffoExample.Nbn.NbnEthernet.identifier/0)
-
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_nbn_ethernet_by_id)
-             end)
-
       change DiffoExample.Nbn.Changes.SetRspId
-
       change load [:href]
       upsert? false
     end

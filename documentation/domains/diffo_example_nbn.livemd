@@ -9,7 +9,8 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.0"},
+    {:diffo_example, "~> 0.2.1"},
+    {:diffo, "~> 0.4.1"},
     {:kino, "~> 0.14"},
     {:req, "~> 0.5"}
   ],
@@ -117,7 +118,9 @@ Speeds.speeds(:home_fast, :FixedWireless)
 
 ## Multi-tenancy
 
-Each RSP operates in isolation — they can only see and manage the resources they own. This multi-tenancy is enforced at the Ash policy layer: every NBN resource is stamped with the owning RSP's id at creation, and subsequent reads, updates, and destroys are scoped to the record owner.
+Each RSP operates in isolation — they can only see and manage the resources they own. This multi-tenancy is enforced at the Ash policy layer: every NBN resource is stamped with the owning RSP's EPID at creation, and subsequent reads, updates, and destroys are scoped to the record owner.
+
+RSP is modelled as a Party (using the `Diffo.Provider.BaseParty` fragment), with its EPID as the Party id. This means the `rsp_id` stamped on owned resources is a human-readable four-digit identifier rather than a UUID.
 
 Select the RSP you want to operate as for the rest of this livebook. All resources you build will be owned by that RSP and isolated from resources owned by others.
 
@@ -127,7 +130,7 @@ alias DiffoExample.Nbn.Rsp
 import Jason, only: [encode: 2]
 DiffoExample.Nbn.Initializer.init()
 rsps = Nbn.list_rsps!()
-Kino.DataTable.new(rsps, keys: [:epid, :name, :short_name, :state])
+Kino.DataTable.new(rsps, keys: [:id, :name, :short_name, :state])
 ```
 
 ```elixir
@@ -167,7 +170,10 @@ Define the NNI Group with an SVLAN assignment and relate the NNI:
 
 ```elixir
 nni_group = Nbn.define_nni_group!(nni_group, %{
-  characteristic_value_updates: [nni_group: [svlan: 100]]
+  characteristic_value_updates: [
+    nni_group: [name: "SYD-POI-01", location: "Sydney Olympic Park"],
+    svlans: [first: 1, last: 4000, free: 4000, assignable_type: "svlan"]
+  ]
 }, actor: actor)
 nni_group = Nbn.relate_nni_group!(nni_group, %{
   relationships: [%Diffo.Provider.Instance.Relationship{id: nni.id, alias: :nni, type: :isAssigned}]
@@ -197,7 +203,10 @@ Build an NTD — the device installed at the customer premises:
 alias DiffoExample.Nbn.{Ntd, Uni, Avc, NbnEthernet}
 ntd = Nbn.build_ntd!(%{})
 ntd = Nbn.define_ntd!(ntd, %{
-  characteristic_value_updates: [ntd: [technology: :FTTP, ports: [1, 2, 3, 4]]]
+  characteristic_value_updates: [
+    ntd: [technology: :FTTP],
+    ports: [first: 1, last: 4, free: 4, assignable_type: "port"]
+  ]
 })
 ntd |> Jason.encode!(pretty: true) |> IO.puts
 ```

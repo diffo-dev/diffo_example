@@ -11,27 +11,29 @@ defmodule DiffoExample.Nbn.Rsp do
   An RSP is a licensed provider operating within the Perentie ecosystem.
   Each RSP is assigned an EPID (four-digit regulator-assigned identifier)
   and a short_name atom used as their actor identity for authorisation.
+
+  RSP is a Party of kind :organization. The EPID is used as the Party id (Neo4j key).
   """
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
     domain: Nbn,
-    data_layer: AshNeo4j.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshStateMachine, AshJason.Resource, AshJsonApi.Resource]
+    extensions: [AshStateMachine, AshJsonApi.Resource],
+    fragments: [Diffo.Provider.BaseParty]
 
-  neo4j do
-    label :Rsp
-  end
+  # BaseParty provides:
+  #   data_layer: AshNeo4j.DataLayer
+  #   extensions: AshJason.Resource, AshOutstanding.Resource, Diffo.Provider.Party.Extension
+  #   Neo4j label :Party (RSP nodes are Party nodes)
+  #   attributes: id (string/key), name, type, referred_type, created_at, updated_at
+  #   relationships: party_refs
+  #   actions: :read (primary), :destroy, :create (accept [:id,:name,:type,:referred_type]),
+  #            :update (name), :list (unsorted), :find_by_name
 
   json_api do
     type "rsp"
-  end
-
-  jason do
-    pick [:id, :name, :short_name, :epid, :state]
-    compact true
   end
 
   state_machine do
@@ -47,31 +49,10 @@ defmodule DiffoExample.Nbn.Rsp do
   end
 
   attributes do
-    attribute :id, :uuid do
-      primary_key? true
-      allow_nil? false
-      public? true
-      default &Ash.UUID.generate/0
-      source :uuid
-    end
-
-    attribute :name, :string do
-      description "the RSP's registered trading name"
-      allow_nil? false
-      public? true
-    end
-
     attribute :short_name, :atom do
       description "atom identifier used as the actor for authorisation"
       allow_nil? false
       public? true
-    end
-
-    attribute :epid, :string do
-      description "four-digit regulator-assigned provider identifier, in historical sequence"
-      allow_nil? false
-      public? true
-      constraints [match: ~r/^\d{4}$/]
     end
 
     attribute :state, :atom do
@@ -80,26 +61,29 @@ defmodule DiffoExample.Nbn.Rsp do
       public? true
       constraints [one_of: [:active, :suspended, :inactive]]
     end
+  end
 
-    create_timestamp :created_at
-    update_timestamp :updated_at
+  instances do
+    role :owner, DiffoExample.Nbn.Avc
+    # pending resolution of /diffo-dev/diffo#101
+    #role :owner, DiffoExample.Nbn.Cvc
+    #role :owner, DiffoExample.Nbn.Nni
+    #role :owner, DiffoExample.Nbn.NniGroup
+    #role :owner, DiffoExample.Nbn.NbnEthernet
   end
 
   actions do
-    defaults [:destroy]
-
-    read :read do
-      primary? true
-    end
-
-    read :list do
-      prepare build(sort: [epid: :asc])
-    end
-
-    create :create do
-      accept [:name, :short_name, :epid]
+    create :build do
+      accept [:name, :short_name, :id]
       upsert? true
-      upsert_identity :unique_epid
+      change set_attribute(:type, :Organization)
+      validate match(:id, ~r/^\d{4}$/) do
+        message "must be a four-digit EPID"
+      end
+    end
+
+    read :inventory do
+      prepare build(sort: [id: :asc])
     end
 
     update :activate do
@@ -119,7 +103,6 @@ defmodule DiffoExample.Nbn.Rsp do
   end
 
   identities do
-    identity :unique_epid, [:epid]
     identity :unique_name, [:name]
     identity :unique_short_name, [:short_name]
   end

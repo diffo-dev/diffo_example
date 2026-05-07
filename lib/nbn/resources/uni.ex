@@ -16,7 +16,6 @@ defmodule DiffoExample.Nbn.Uni do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
 
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Util
@@ -36,39 +35,36 @@ defmodule DiffoExample.Nbn.Uni do
     plural_name :Unis
   end
 
-  specification do
-    id "a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
-    name "uni"
-    type :resourceSpecification
-    description "A UNI Resource Instance related to an NTD and an NBN Ethernet access"
-    category "Network Resource"
+  structure do
+    specification do
+      id "a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+      name "uni"
+      type :resourceSpecification
+      description "A UNI Resource Instance related to an NTD and an NBN Ethernet access"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :uni, DiffoExample.Nbn.UniValue
+    end
   end
 
-  characteristics do
-    characteristic :uni, DiffoExample.Nbn.UniValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   actions do
     create :build do
       description "creates a new UNI resource instance"
       accept [:id, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
       change set_attribute(:name, &DiffoExample.Nbn.Uni.identifier/0)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Nbn, :get_uni_by_id)
-             end)
-
       change load [:href]
       upsert? false
     end

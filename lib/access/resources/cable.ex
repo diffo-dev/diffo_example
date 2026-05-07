@@ -12,7 +12,6 @@ defmodule DiffoExample.Access.Cable do
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
   alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Instance.ActionHelper
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
@@ -27,38 +26,36 @@ defmodule DiffoExample.Access.Cable do
     plural_name :Cables
   end
 
-  specification do
-    id "ce0a567a-6abb-4862-9e33-851fd79fa595"
-    name "cable"
-    type :resourceSpecification
-    description "A Cable Resource Instance"
-    category "Network Resource"
+  structure do
+    specification do
+      id "ce0a567a-6abb-4862-9e33-851fd79fa595"
+      name "cable"
+      type :resourceSpecification
+      description "A Cable Resource Instance"
+      category "Network Resource"
+    end
+
+    characteristics do
+      characteristic :cable, DiffoExample.Access.CableValue
+      characteristic :pairs, Diffo.Provider.AssignableValue
+    end
   end
 
-  characteristics do
-    characteristic :cable, DiffoExample.Access.CableValue
-    characteristic :pairs, Diffo.Provider.AssignableValue
+  behaviour do
+    actions do
+      create :build
+    end
   end
 
   actions do
     create :build do
       description "creates a new Cable resource instance for build"
       accept [:id, :name, :type, :which]
-      argument :specified_by, :uuid, public?: false
       argument :relationships, {:array, :struct}
-      argument :features, {:array, :uuid}, public?: false
-      argument :characteristics, {:array, :uuid}, public?: false
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-
-      change before_action(fn changeset, _context -> ActionHelper.build_before(changeset) end)
-
-      change after_action(fn changeset, result, _context ->
-               ActionHelper.build_after(changeset, result, Access, :get_cable_by_id)
-             end)
-
       change load [:href]
       upsert? false
     end
