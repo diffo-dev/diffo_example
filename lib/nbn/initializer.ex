@@ -19,7 +19,7 @@ defmodule DiffoExample.Nbn.Initializer do
     %{name: "Taipan Group",       short_name: :taipan,    id: "0004"},
     %{name: "Echidna Networks",   short_name: :echidna,   id: "0005"},
     %{name: "Dugong Digital",     short_name: :dugong,    id: "0006"},
-    %{name: "Lyrebird",           short_name: :lyrebird,  id: "0007"}
+    #%{name: "Lyrebird",           short_name: :lyrebird,  id: "0007"}
   ]
 
   def init do
