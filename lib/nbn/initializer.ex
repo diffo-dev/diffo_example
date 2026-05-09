@@ -14,12 +14,12 @@ defmodule DiffoExample.Nbn.Initializer do
 
   @rsps [
     %{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "0001"},
-    %{name: "Quokka Connect",     short_name: :quokka,    id: "0002"},
-    %{name: "Ibis Telecom",       short_name: :ibis,      id: "0003"},
-    %{name: "Taipan Group",       short_name: :taipan,    id: "0004"},
-    %{name: "Echidna Networks",   short_name: :echidna,   id: "0005"},
-    %{name: "Dugong Digital",     short_name: :dugong,    id: "0006"},
-    #%{name: "Lyrebird",           short_name: :lyrebird,  id: "0007"}
+    %{name: "Quokka Connect", short_name: :quokka, id: "0002"},
+    %{name: "Ibis Telecom", short_name: :ibis, id: "0003"},
+    %{name: "Taipan Group", short_name: :taipan, id: "0004"},
+    %{name: "Echidna Networks", short_name: :echidna, id: "0005"},
+    %{name: "Dugong Digital", short_name: :dugong, id: "0006"}
+    # %{name: "Lyrebird",           short_name: :lyrebird,  id: "0007"}
   ]
 
   def init do
@@ -35,7 +35,9 @@ defmodule DiffoExample.Nbn.Initializer do
           {:error, _} -> seed_rsp(attrs)
         end
       rescue
-        e -> require Logger; Logger.error("Exception seeding RSP #{attrs.id}: #{inspect(e)}")
+        e ->
+          require Logger
+          Logger.error("Exception seeding RSP #{attrs.id}: #{inspect(e)}")
       end
     end)
   end

@@ -26,13 +26,13 @@ defmodule DiffoExample.Nbn.Cvc do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "cvc"
-  end
-
   resource do
     description "An Ash Resource representing a Connectivity Virtual Circuit (CVC)"
     plural_name :Cvcs
+  end
+
+  json_api do
+    type "cvc"
   end
 
   structure do
@@ -40,7 +40,9 @@ defmodule DiffoExample.Nbn.Cvc do
       id "d4e5f6a7-8b9c-4d0e-bf1a-3b4c5d6e7f8a"
       name "cvc"
       type :resourceSpecification
+
       description "A Connectivity Virtual Circuit Resource Instance that aggregates AVCs and terminates at an NNI Group"
+
       category "Network Resource"
     end
 
@@ -53,14 +55,6 @@ defmodule DiffoExample.Nbn.Cvc do
   behaviour do
     actions do
       create :build
-    end
-  end
-
-  attributes do
-    attribute :rsp_id, :string do
-      description "the owning RSP's id — nil for Perentie-managed infrastructure"
-      allow_nil? true
-      public? true
     end
   end
 
@@ -125,6 +119,14 @@ defmodule DiffoExample.Nbn.Cvc do
                     {:ok, result} <- Nbn.get_cvc_by_id(result.id),
                     do: {:ok, result}
              end)
+    end
+  end
+
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
     end
   end
 

@@ -25,13 +25,13 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "nbnEthernet"
-  end
-
   resource do
     description "An Ash Resource representing an NBN Ethernet access"
     plural_name :NbnEthernets
+  end
+
+  json_api do
+    type "nbnEthernet"
   end
 
   structure do
@@ -51,14 +51,6 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   behaviour do
     actions do
       create :build
-    end
-  end
-
-  attributes do
-    attribute :rsp_id, :string do
-      description "the owning RSP's id — nil for Perentie-managed infrastructure"
-      allow_nil? true
-      public? true
     end
   end
 
@@ -112,6 +104,14 @@ defmodule DiffoExample.Nbn.NbnEthernet do
                     {:ok, result} <- Nbn.get_nbn_ethernet_by_id(result.id),
                     do: {:ok, result}
              end)
+    end
+  end
+
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
     end
   end
 

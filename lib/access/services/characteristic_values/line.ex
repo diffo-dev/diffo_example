@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.Line do
 
   jason do
     pick [:port, :slot, :standard, :profile]
-    compact(true)
+    compact true
   end
 
   outstanding do

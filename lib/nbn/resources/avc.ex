@@ -24,13 +24,13 @@ defmodule DiffoExample.Nbn.Avc do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "avc"
-  end
-
   resource do
     description "An Ash Resource representing an Access Virtual Circuit (AVC)"
     plural_name :Avcs
+  end
+
+  json_api do
+    type "avc"
   end
 
   structure do
@@ -51,14 +51,6 @@ defmodule DiffoExample.Nbn.Avc do
   behaviour do
     actions do
       create :build
-    end
-  end
-
-  attributes do
-    attribute :rsp_id, :string do
-      description "the owning RSP's id — nil for Perentie-managed infrastructure"
-      allow_nil? true
-      public? true
     end
   end
 
@@ -115,13 +107,21 @@ defmodule DiffoExample.Nbn.Avc do
     end
   end
 
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
+  end
+
   def identifier() do
     DiffoExample.Nbn.Util.identifier("AVC")
   end
 
   # mines related resource to characteristics
   def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    avc = Ash.load!(changeset.data, [reverse_relationships: [:characteristics]])
+    avc = Ash.load!(changeset.data, reverse_relationships: [:characteristics])
 
     cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(avc.reverse_relationships).characteristics).value)}
 

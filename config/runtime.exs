@@ -4,6 +4,12 @@
 
 import Config
 
+config :bolty, Bolt,
+  uri: "bolt://localhost:7687",
+  auth: [username: "neo4j", password: "password"],
+  pool_size: 10,
+  name: Bolt
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

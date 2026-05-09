@@ -14,7 +14,7 @@ defmodule DiffoExample.Nbn.NtdValue do
 
   jason do
     pick [:model, :serial_number, :technology]
-    compact(true)
+    compact true
   end
 
   outstanding do

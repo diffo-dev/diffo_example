@@ -101,7 +101,6 @@ defmodule DiffoExample.Nbn do
       base_route "/rsp", Rsp do
         get :read
       end
-
     end
   end
 
@@ -171,6 +170,5 @@ defmodule DiffoExample.Nbn do
       define :suspend_rsp, action: :suspend
       define :deactivate_rsp, action: :deactivate
     end
-
   end
 end

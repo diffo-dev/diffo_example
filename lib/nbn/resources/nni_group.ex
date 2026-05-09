@@ -27,13 +27,13 @@ defmodule DiffoExample.Nbn.NniGroup do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "nniGroup"
-  end
-
   resource do
     description "An Ash Resource representing an NNI Group"
     plural_name :NniGroups
+  end
+
+  json_api do
+    type "nniGroup"
   end
 
   structure do
@@ -54,14 +54,6 @@ defmodule DiffoExample.Nbn.NniGroup do
   behaviour do
     actions do
       create :build
-    end
-  end
-
-  attributes do
-    attribute :rsp_id, :string do
-      description "the owning RSP's id — nil for Perentie-managed infrastructure"
-      allow_nil? true
-      public? true
     end
   end
 
@@ -110,6 +102,14 @@ defmodule DiffoExample.Nbn.NniGroup do
                     {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)
+    end
+  end
+
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
     end
   end
 

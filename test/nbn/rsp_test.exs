@@ -21,7 +21,8 @@ defmodule DiffoExample.Nbn.RspTest do
 
   describe "RSP resource" do
     test "create and activate an RSP" do
-      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+      {:ok, rsp} =
+        Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
 
       assert is_struct(rsp, Rsp)
       assert rsp.state == :inactive
@@ -33,7 +34,8 @@ defmodule DiffoExample.Nbn.RspTest do
     end
 
     test "RSP state machine: activate → suspend → deactivate" do
-      {:ok, rsp} = Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+      {:ok, rsp} =
+        Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
 
       {:ok, rsp} = Nbn.activate_rsp(rsp)
       assert rsp.state == :active
@@ -99,7 +101,9 @@ defmodule DiffoExample.Nbn.RspTest do
       {:ok, resource} = Nbn.build_nbn_ethernet(%{}, actor: wedgetail)
 
       assert {:error, %Ash.Error.Forbidden{}} =
-               Nbn.define_nbn_ethernet(resource, %{characteristic_value_updates: []}, actor: quokka)
+               Nbn.define_nbn_ethernet(resource, %{characteristic_value_updates: []},
+                 actor: quokka
+               )
     end
 
     test "nil actor (internal call) can read any RSP's resource", %{wedgetail: wedgetail} do

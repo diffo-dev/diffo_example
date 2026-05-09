@@ -14,7 +14,7 @@ defmodule DiffoExample.Nbn.UniValue do
 
   jason do
     pick [:port, :encapsulation, :technology]
-    compact(true)
+    compact true
   end
 
   outstanding do

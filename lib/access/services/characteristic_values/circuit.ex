@@ -14,7 +14,7 @@ defmodule DiffoExample.Access.Circuit do
 
   jason do
     pick [:circuit_id, :cvlan_id, :vci, :encapsulation, :bandwidth_profile]
-    compact(true)
+    compact true
     rename circuit_id: "circuitId", vci: "VCI", bandwidth_profile: "bandwidthProfile"
   end
 

@@ -26,13 +26,23 @@ defmodule DiffoExample.Nbn.Uni do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "uni"
-  end
-
   resource do
     description "An Ash Resource representing a User Network Interface (UNI)"
     plural_name :Unis
+  end
+
+  policies do
+    bypass DiffoExample.Nbn.Checks.NoActor do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 
   structure do
@@ -53,6 +63,29 @@ defmodule DiffoExample.Nbn.Uni do
     actions do
       create :build
     end
+  end
+
+  json_api do
+    type "uni"
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("UNI")
+  end
+
+  # mines related resource to characteristics
+  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
+    uni = Ash.load!(changeset.data, reverse_relationships: [:characteristics])
+
+    ntd_relationship = hd(uni.reverse_relationships)
+
+    port = {:port, Diffo.Unwrap.unwrap(hd(ntd_relationship.characteristics).value)}
+    {:ok, ntd} = Diffo.Provider.get_instance_by_id(ntd_relationship.source_id)
+    technology = {:technology, Util.extract(ntd.characteristics, :ntd, :technology)}
+
+    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
+      uni: [port, technology]
+    )
   end
 
   actions do
@@ -104,39 +137,6 @@ defmodule DiffoExample.Nbn.Uni do
                     {:ok, result} <- Nbn.get_uni_by_id(result.id),
                     do: {:ok, result}
              end)
-    end
-  end
-
-  def identifier() do
-    DiffoExample.Nbn.Util.identifier("UNI")
-  end
-
-  # mines related resource to characteristics
-  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    uni = Ash.load!(changeset.data, [reverse_relationships: [:characteristics]])
-
-    ntd_relationship = hd(uni.reverse_relationships)
-
-    port = {:port, Diffo.Unwrap.unwrap(hd(ntd_relationship.characteristics).value)}
-    {:ok, ntd} = Diffo.Provider.get_instance_by_id(ntd_relationship.source_id)
-    technology = {:technology, Util.extract(ntd.characteristics, :ntd, :technology)}
-
-    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates,
-      uni: [port, technology]
-    )
-  end
-
-  policies do
-    bypass DiffoExample.Nbn.Checks.NoActor do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:role, :admin) do
-      authorize_if always()
-    end
-
-    policy action_type(:read) do
-      authorize_if always()
     end
   end
 end
