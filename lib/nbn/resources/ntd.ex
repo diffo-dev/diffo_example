@@ -26,13 +26,23 @@ defmodule DiffoExample.Nbn.Ntd do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "ntd"
-  end
-
   resource do
     description "An Ash Resource representing a Network Termination Device (NTD)"
     plural_name :Ntds
+  end
+
+  policies do
+    bypass DiffoExample.Nbn.Checks.NoActor do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 
   structure do
@@ -54,6 +64,14 @@ defmodule DiffoExample.Nbn.Ntd do
     actions do
       create :build
     end
+  end
+
+  json_api do
+    type "ntd"
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("NTD")
   end
 
   actions do
@@ -101,24 +119,6 @@ defmodule DiffoExample.Nbn.Ntd do
                     {:ok, result} <- Nbn.get_ntd_by_id(result.id),
                     do: {:ok, result}
              end)
-    end
-  end
-
-  def identifier() do
-    DiffoExample.Nbn.Util.identifier("NTD")
-  end
-
-  policies do
-    bypass DiffoExample.Nbn.Checks.NoActor do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:role, :admin) do
-      authorize_if always()
-    end
-
-    policy action_type(:read) do
-      authorize_if always()
     end
   end
 end

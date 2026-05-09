@@ -128,12 +128,14 @@ defmodule DiffoExample.MixProject do
         # build skills that combine multiple usage rules
         build: [
           "ash-framework": [
-            description: "Use this skill working with Ash Framework or any of its extensions. Always consult this when making any domain changes, features or fixes.",
+            description:
+              "Use this skill working with Ash Framework or any of its extensions. Always consult this when making any domain changes, features or fixes.",
             # Include all Ash dependencies
             usage_rules: [:ash, ~r/^ash_/]
           ],
-         "diffo-framework": [
-            description: "Use this skill working with Diffo or any related non-Ash Diffo components. Understand the provider extension and assigner.",
+          "diffo-framework": [
+            description:
+              "Use this skill working with Diffo or any related non-Ash Diffo components. Understand the provider extension and assigner.",
             # Include all Diffo dependencies
             usage_rules: [:diffo, ~r/^diffo_/]
           ]

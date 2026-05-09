@@ -12,7 +12,7 @@ defmodule DiffoExample.Nbn.CvcValue do
 
   jason do
     pick [:svlan, :bandwidth]
-    compact(true)
+    compact true
   end
 
   outstanding do

@@ -14,7 +14,7 @@ defmodule DiffoExample.Nbn.AvcValue do
 
   jason do
     pick [:cvlan, :bandwidth_profile]
-    compact(true)
+    compact true
   end
 
   outstanding do

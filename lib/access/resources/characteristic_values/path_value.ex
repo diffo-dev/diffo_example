@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.PathValue do
 
   jason do
     pick [:name, :sections, :length, :loss, :technology]
-    compact(true)
+    compact true
   end
 
   outstanding do

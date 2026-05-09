@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.CableValue do
 
   jason do
     pick [:name, :pairs, :length, :loss, :technology]
-    compact(true)
+    compact true
   end
 
   outstanding do
