@@ -25,6 +25,8 @@ defmodule DiffoExample.MixProject do
       homepage_url: "http://diffo.dev/diffo_example/",
       docs: [main: "readme", extras: ["README.md"]],
       elixirc_paths: elixirc_paths(Mix.env()),
+      # agent stuff
+      usage_rules: usage_rules(),
       # hex.pm stuff
       deps: deps(),
       docs: &docs/0,
@@ -89,9 +91,10 @@ defmodule DiffoExample.MixProject do
       {:diffo, diffo_version("~> 0.2.2")},
       {:ash_json_api, "~> 1.6"},
       {:plug_cowboy, "~> 2.7"},
-      {:req, "~> 0.5", only: [:dev, :test]},
       {:picosat_elixir, "~> 0.2.0"},
       {:simple_sat, ">= 0.0.0"},
+      {:usage_rules, "~> 1.0", only: [:dev]},
+      {:req, "~> 0.5", only: [:dev, :test]},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]
@@ -113,4 +116,29 @@ defmodule DiffoExample.MixProject do
 
   defp elixirc_paths(:test), do: elixirc_paths(:dev) ++ ["test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp usage_rules do
+    # Example for those using claude.
+    [
+      file: "CLAUDE.md",
+      # rules to include directly in CLAUDE.md
+      usage_rules: ["usage_rules:all"],
+      skills: [
+        location: ".claude/skills",
+        # build skills that combine multiple usage rules
+        build: [
+          "ash-framework": [
+            description: "Use this skill working with Ash Framework or any of its extensions. Always consult this when making any domain changes, features or fixes.",
+            # Include all Ash dependencies
+            usage_rules: [:ash, ~r/^ash_/]
+          ],
+         "diffo-framework": [
+            description: "Use this skill working with Diffo or any related non-Ash Diffo components. Understand the provider extension and assigner.",
+            # Include all Diffo dependencies
+            usage_rules: [:diffo, ~r/^diffo_/]
+          ]
+        ]
+      ]
+    ]
+  end
 end
