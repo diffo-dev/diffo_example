@@ -8,13 +8,13 @@ defmodule DiffoExample.Access.DslAccessTest do
   alias Diffo.Provider
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Feature
-  alias Diffo.Provider.Characteristic
   alias Diffo.Provider.Instance.Place
   alias Diffo.Provider.Instance.Party
   alias DiffoExample.Access
   alias DiffoExample.Access.DslAccess
   alias DiffoExample.Test.Parties
   alias DiffoExample.Test.Places
+  alias DiffoExample.Util
 
   setup do
     AshNeo4j.Sandbox.checkout()
@@ -60,51 +60,25 @@ defmodule DiffoExample.Access.DslAccessTest do
                  :outgoing
                )
 
-        # check feature characteristic resource enrichment and node relationships
+        # typed characteristics are not in feature.characteristics
         assert is_list(feature.characteristics)
-        assert length(feature.characteristics) == 1
-
-        Enum.each(feature.characteristics, fn characteristic ->
-          assert is_struct(characteristic, Characteristic)
-
-          assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
-                   :Feature,
-                   %{uuid: feature.id},
-                   :Characteristic,
-                   %{uuid: characteristic.id},
-                   :HAS,
-                   :outgoing
-                 )
-        end)
+        assert length(feature.characteristics) == 0
       end)
 
-      # check characteristic resource enrichment and node relationships
+      # typed characteristics are not in instance.characteristics
       assert is_list(dsl_access.characteristics)
-      assert length(dsl_access.characteristics) == 4
-
-      Enum.each(dsl_access.characteristics, fn characteristic ->
-        assert is_struct(characteristic, Characteristic)
-
-        assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
-                 :Instance,
-                 %{uuid: dsl_access.id},
-                 :Characteristic,
-                 %{uuid: characteristic.id},
-                 :HAS,
-                 :outgoing
-               )
-      end)
+      assert length(dsl_access.characteristics) == 0
 
       Parties.check_parties(parties, dsl_access)
       Places.check_places(places, dsl_access)
 
-      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(dsl_access)
 
       assert encoding ==
-               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"initial\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":0,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":0,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"family\":\"ISAM\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"initial\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":0,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":0,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"family\":\"ISAM\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]}) |> Util.summarise_characteristics(dsl_access)
     end
 
-    test "advance service to feasibilityChecked" do
+    test "advance service to inactive" do
       initial_parties = create_initial_parties()
       initial_place = create_initial_place()
 
@@ -121,15 +95,15 @@ defmodule DiffoExample.Access.DslAccessTest do
       # check the instance is a DslAccess
       assert is_struct(dsl_access, DslAccess)
 
-      assert dsl_access.service_state == :feasibilityChecked
+      assert dsl_access.service_state == :inactive
       assert dsl_access.service_operating_status == :feasible
 
       Places.check_places([initial_place | [esa_place]], dsl_access)
 
-      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(dsl_access)
 
       assert encoding ==
-               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"feasibilityChecked\",\"operatingStatus\":\"feasible\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":0,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":0,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"family\":\"ISAM\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"inactive\",\"operatingStatus\":\"feasible\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":0,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":0,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"family\":\"ISAM\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]}) |> Util.summarise_characteristics(dsl_access)
     end
   end
 
@@ -150,8 +124,8 @@ defmodule DiffoExample.Access.DslAccessTest do
       # and we allocate the backhaul interface, svlan and cvlan, so can derive the cicuit id
 
       updates = [
-        dslam: [name: :QDONC0001, model: :ISAM7330],
-        aggregate_interface: [name: "eth0", svlan_id: 3108],
+        dslam: [device_name: "QDONC0001", model: "ISAM7330"],
+        aggregate_interface: [interface_name: "eth0", svlan_id: 3108],
         circuit: [cvlan_id: 82],
         line: [slot: 10, port: 5]
       ]
@@ -167,10 +141,10 @@ defmodule DiffoExample.Access.DslAccessTest do
 
       Places.check_places([initial_place | [esa_place]], dsl_access)
 
-      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(dsl_access) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(dsl_access)
 
       assert encoding ==
-               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"reserved\",\"operatingStatus\":\"feasible\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"name\":\"eth0\",\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":3108,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":82,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"name\":\"QDONC0001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"port\":5,\"slot\":10,\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+               ~s({\"id\":\"#{dsl_access.id}",\"href\":\"serviceInventoryManagement/v4/service/#{dsl_access.id}\",\"category\":\"Network Service\",\"description\":\"A DSL Access Network Service connecting a subscriber premises to an NNI\",\"serviceSpecification\":{\"id\":\"da9b207a-26c3-451d-8abd-0640c6349979\",\"href\":\"serviceCatalogManagement/v4/serviceSpecification/da9b207a-26c3-451d-8abd-0640c6349979\",\"name\":\"dslAccess\",\"version\":\"v1.0.0\"},\"serviceDate\":\"now\",\"state\":\"reserved\",\"operatingStatus\":\"feasible\",\"feature\":[{\"name\":\"dynamic_line_management\",\"isEnabled\":true,\"featureCharacteristic\":[{\"name\":\"constraints\",\"value\":{}}]}],\"serviceCharacteristic\":[{\"name\":\"aggregate_interface\",\"value\":{\"name\":\"eth0\",\"physicalLayer\":\"GbE\",\"linkLayer\":\"QinQ\",\"svlanId\":3108,\"VPI\":0}},{\"name\":\"circuit\",\"value\":{\"cvlan_id\":82,\"VCI\":0,\"encapsulation\":\"IPoE\"}},{\"name\":\"dslam\",\"value\":{\"name\":\"QDONC0001\",\"family\":\"ISAM\",\"model\":\"ISAM7330\",\"technology\":\"eth\"}},{\"name\":\"line\",\"value\":{\"port\":5,\"slot\":10,\"standard\":\"ADSL2plus\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"IND000000897354\",\"name\":\"individualId\",\"role\":\"Customer\",\"@referredType\":\"Individual\",\"@type\":\"PartyRef\"},{\"id\":\"ORG000000123456\",\"name\":\"organizationId\",\"role\":\"Reseller\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]}) |> Util.summarise_characteristics(dsl_access)
     end
   end
 

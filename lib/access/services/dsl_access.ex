@@ -10,7 +10,7 @@ defmodule DiffoExample.Access.DslAccess do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
   alias Diffo.Provider.Instance.Place
 
   alias DiffoExample.Access
@@ -24,7 +24,7 @@ defmodule DiffoExample.Access.DslAccess do
     plural_name :DslAccesses
   end
 
-  structure do
+  provider do
     specification do
       id "da9b207a-26c3-451d-8abd-0640c6349979"
       name "dslAccess"
@@ -35,28 +35,28 @@ defmodule DiffoExample.Access.DslAccess do
     features do
       feature :dynamic_line_management do
         is_enabled? true
-        characteristic :constraints, DiffoExample.Access.Constraints
+        characteristic :constraints, DiffoExample.Access.ConstraintsCharacteristic
       end
     end
 
     characteristics do
-      characteristic :dslam, DiffoExample.Access.Dslam
-      characteristic :aggregate_interface, DiffoExample.Access.AggregateInterface
-      characteristic :circuit, DiffoExample.Access.Circuit
-      characteristic :line, DiffoExample.Access.Line
+      characteristic :dslam, DiffoExample.Access.DslamCharacteristic
+      characteristic :aggregate_interface, DiffoExample.Access.AggregateCharacteristic
+      characteristic :circuit, DiffoExample.Access.CircuitCharacteristic
+      characteristic :line, DiffoExample.Access.LineCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :qualify
+    behaviour do
+      actions do
+        create :qualify
+      end
     end
   end
 
   state_machine do
     transitions do
-      transition action: :qualify_result, from: :initial, to: :feasibilityChecked
-      transition action: :design_result, from: [:initial, :feasibilityChecked], to: :reserved
+      transition action: :qualify_result, from: :initial, to: :inactive
+      transition action: :design_result, from: [:initial, :inactive], to: :reserved
     end
   end
 
@@ -77,7 +77,7 @@ defmodule DiffoExample.Access.DslAccess do
       argument :places, {:array, :struct}
       require_atomic? false
 
-      change transition_state(:feasibilityChecked)
+      change transition_state(:inactive)
 
       validate argument_in(:service_operating_status, [
                  nil,
@@ -102,7 +102,8 @@ defmodule DiffoExample.Access.DslAccess do
       change transition_state(:reserved)
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
+               with {:ok, result} <- Ash.load(result, [:characteristics]),
+                    {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Access.get_dsl_by_id(result.id),
                     do: {:ok, result}
              end)

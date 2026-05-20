@@ -11,9 +11,10 @@ defmodule DiffoExample.Access.Card do
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
+  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Access
 
@@ -26,7 +27,7 @@ defmodule DiffoExample.Access.Card do
     plural_name :Cards
   end
 
-  structure do
+  provider do
     specification do
       id "cd29956f-6c68-44cc-bf54-705eb8d2f754"
       name "card"
@@ -36,14 +37,22 @@ defmodule DiffoExample.Access.Card do
     end
 
     characteristics do
-      characteristic :card, DiffoExample.Access.CardValue
-      characteristic :ports, Diffo.Provider.AssignableValue
+      characteristic :card, DiffoExample.Access.CardCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :ports, :port
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -64,8 +73,12 @@ defmodule DiffoExample.Access.Card do
       description "defines the card"
       argument :characteristic_value_updates, {:array, :term}
 
+      change set_attribute(:resource_state, :operating)
+
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
+               with {:ok, result} <- Ash.load(result, [:characteristics]),
+                    {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
                     {:ok, result} <- Access.get_card_by_id(result.id),
                     do: {:ok, result}
              end)
@@ -87,7 +100,7 @@ defmodule DiffoExample.Access.Card do
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports, :port),
+               with {:ok, result} <- Assigner.assign(result, changeset, :ports),
                     {:ok, result} <- Access.get_card_by_id(result.id),
                     do: {:ok, result}
              end)

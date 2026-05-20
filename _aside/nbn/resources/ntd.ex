@@ -14,9 +14,10 @@ defmodule DiffoExample.Nbn.Ntd do
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
+  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Nbn
 
@@ -45,7 +46,7 @@ defmodule DiffoExample.Nbn.Ntd do
     end
   end
 
-  structure do
+  provider do
     specification do
       id "c3d4e5f6-7a8b-4c9d-ae0f-2a3b4c5d6e7f"
       name "ntd"
@@ -55,14 +56,17 @@ defmodule DiffoExample.Nbn.Ntd do
     end
 
     characteristics do
-      characteristic :ntd, DiffoExample.Nbn.NtdValue
-      characteristic :ports, Diffo.Provider.AssignableValue
+      characteristic :ntd, DiffoExample.Nbn.NtdCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :ports, :port
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -93,7 +97,8 @@ defmodule DiffoExample.Nbn.Ntd do
       argument :characteristic_value_updates, {:array, :term}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
+               with {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
                     {:ok, result} <- Nbn.get_ntd_by_id(result.id),
                     do: {:ok, result}
              end)
@@ -104,7 +109,7 @@ defmodule DiffoExample.Nbn.Ntd do
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports, :port),
+               with {:ok, result} <- Assigner.assign(result, changeset, :ports),
                     {:ok, result} <- Nbn.get_ntd_by_id(result.id),
                     do: {:ok, result}
              end)

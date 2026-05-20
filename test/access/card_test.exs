@@ -6,11 +6,11 @@ defmodule DiffoExample.Access.CardTest do
   @moduledoc false
   use ExUnit.Case, async: true
   alias Diffo.Provider.Specification
-  alias Diffo.Provider.Characteristic
   alias Diffo.Provider.Assignment
   alias DiffoExample.Access
   alias DiffoExample.Access.Card
   alias DiffoExample.Test.Characteristics
+  alias DiffoExample.Util
 
   setup do
     AshNeo4j.Sandbox.checkout()
@@ -21,10 +21,8 @@ defmodule DiffoExample.Access.CardTest do
     test "create a card" do
       {:ok, card} = Access.build_card(%{})
 
-      # check the instance is a Card
       assert is_struct(card, Card)
 
-      # check specification resource enrichment and node relationship
       refute is_nil(card.specification_id)
       assert is_struct(card.specification, Specification)
 
@@ -37,27 +35,14 @@ defmodule DiffoExample.Access.CardTest do
                :outgoing
              )
 
-      # check characteristic resource enrichment and node relationships
+      # typed characteristics are not in instance.characteristics
       assert is_list(card.characteristics)
-      assert length(card.characteristics) == 2
+      assert length(card.characteristics) == 0
 
-      Enum.each(card.characteristics, fn characteristic ->
-        assert is_struct(characteristic, Characteristic)
-
-        assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
-                 :Instance,
-                 %{uuid: card.id},
-                 :Characteristic,
-                 %{uuid: characteristic.id},
-                 :HAS,
-                 :outgoing
-               )
-      end)
-
-      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":1,\"free\":1,\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"}}) |> Util.summarise_characteristics(card)
     end
 
     test "define card" do
@@ -65,15 +50,23 @@ defmodule DiffoExample.Access.CardTest do
 
       updates = [
         card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
-        ports: [first: 1, last: 48, free: 48, assignable_type: "ADSL2+"]
+        ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
       ]
 
       {:ok, card} = Access.define_card(card, %{characteristic_value_updates: updates})
 
-      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates()
+      Characteristics.check_values(
+        [
+          card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
+          ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
+        ],
+        card
+      )
+
+      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"free\":48,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\"}) |> Util.summarise_characteristics(card)
     end
 
     test "auto assign port to service" do
@@ -83,7 +76,7 @@ defmodule DiffoExample.Access.CardTest do
 
       updates = [
         card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
-        ports: [first: 1, last: 48, free: 48, assignable_type: "ADSL2+"]
+        ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
       ]
 
       {:ok, card} = Access.define_card(card, %{characteristic_value_updates: updates})
@@ -95,10 +88,10 @@ defmodule DiffoExample.Access.CardTest do
 
       Characteristics.check_values([ports: [free: 47]], card)
 
-      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"free\":47,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]}]}) |> Util.summarise_characteristics(card)
     end
 
     test "auto assign two ports to same service" do
@@ -108,7 +101,7 @@ defmodule DiffoExample.Access.CardTest do
 
       updates = [
         card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
-        ports: [first: 1, last: 48, free: 48, assignable_type: "ADSL2+"]
+        ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
       ]
 
       {:ok, card} = Access.define_card(card, %{characteristic_value_updates: updates})
@@ -125,10 +118,10 @@ defmodule DiffoExample.Access.CardTest do
 
       Characteristics.check_values([ports: [free: 46]], card)
 
-      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":2}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"free\":46,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":2}]}]}) |> Util.summarise_characteristics(card)
     end
 
     test "specific assignment rejects duplicate request" do
@@ -138,7 +131,7 @@ defmodule DiffoExample.Access.CardTest do
 
       updates = [
         card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
-        ports: [first: 1, last: 48, free: 48, assignable_type: "ADSL2+"]
+        ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
       ]
 
       {:ok, card} = Access.define_card(card, %{characteristic_value_updates: updates})
@@ -155,10 +148,10 @@ defmodule DiffoExample.Access.CardTest do
 
       Characteristics.check_values([ports: [free: 47]], card)
 
-      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(card) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":5}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"free\":47,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":5}]}]}) |> Util.summarise_characteristics(card)
     end
   end
 end

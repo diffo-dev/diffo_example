@@ -11,7 +11,7 @@ defmodule DiffoExample.Access.Path do
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
 
   alias DiffoExample.Access
 
@@ -24,7 +24,7 @@ defmodule DiffoExample.Access.Path do
     plural_name :Paths
   end
 
-  structure do
+  provider do
     specification do
       id "1d507914-8f76-48cb-aa0e-3a8f92951ab0"
       name "path"
@@ -34,13 +34,18 @@ defmodule DiffoExample.Access.Path do
     end
 
     characteristics do
-      characteristic :path, DiffoExample.Access.PathValue
+      characteristic :path, DiffoExample.Access.PathCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -62,7 +67,8 @@ defmodule DiffoExample.Access.Path do
       argument :characteristic_value_updates, {:array, :term}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
+               with {:ok, result} <- Ash.load(result, [:characteristics]),
+                    {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Access.get_path_by_id(result.id),
                     do: {:ok, result}
              end)

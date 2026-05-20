@@ -6,12 +6,12 @@ defmodule DiffoExample.Access.CableTest do
   @moduledoc false
   use ExUnit.Case, async: true
   alias Diffo.Provider.Specification
-  alias Diffo.Provider.Characteristic
   alias Diffo.Provider.Assignment
   alias DiffoExample.Access
   alias DiffoExample.Access.Cable
   alias DiffoExample.Access.IntegerUnit
   alias DiffoExample.Test.Characteristics
+  alias DiffoExample.Util
 
   setup do
     AshNeo4j.Sandbox.checkout()
@@ -22,10 +22,8 @@ defmodule DiffoExample.Access.CableTest do
     test "create a cable" do
       {:ok, cable} = Access.build_cable(%{})
 
-      # check the instance is a Cable
       assert is_struct(cable, Cable)
 
-      # check specification resource enrichment and node relationship
       refute is_nil(cable.specification_id)
       assert is_struct(cable.specification, Specification)
 
@@ -38,27 +36,14 @@ defmodule DiffoExample.Access.CableTest do
                :outgoing
              )
 
-      # check characteristic resource enrichment and node relationships
+      # typed characteristics are not in instance.characteristics
       assert is_list(cable.characteristics)
-      assert length(cable.characteristics) == 2
+      assert length(cable.characteristics) == 0
 
-      Enum.each(cable.characteristics, fn characteristic ->
-        assert is_struct(characteristic, Characteristic)
-
-        assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
-                 :Instance,
-                 %{uuid: cable.id},
-                 :Characteristic,
-                 %{uuid: characteristic.id},
-                 :HAS,
-                 :outgoing
-               )
-      end)
-
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"cable\",\"value\":{}},{\"name\":\"pairs\",\"value\":{\"first\":1,\"last\":1,\"free\":1,\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"}}) |> Util.summarise_characteristics(cable)
     end
 
     test "define cable" do
@@ -66,15 +51,23 @@ defmodule DiffoExample.Access.CableTest do
 
       updates = [
         cable: [pairs: 60, length: %IntegerUnit{amount: 600, unit: :m}, technology: :PIUT],
-        pairs: [first: 1, last: 60, free: 60, assignable_type: "copper"]
+        pairs: [first: 1, last: 60, assignable_type: "copper"]
       ]
 
       {:ok, cable} = Access.define_cable(cable, %{characteristic_value_updates: updates})
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates()
+      Characteristics.check_values(
+        [
+          cable: [pairs: 60, technology: :PIUT],
+          pairs: [first: 1, last: 60, assignable_type: "copper"]
+        ],
+        cable
+      )
+
+      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"cable\",\"value\":{\"pairs\":60,\"length\":{\"amount\":600,\"unit\":\"m\"},\"technology\":\"PIUT\"}},{\"name\":\"pairs\",\"value\":{\"first\":1,\"last\":60,\"free\":60,\"type\":\"copper\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\"}) |> Util.summarise_characteristics(cable)
     end
 
     test "auto assign pair to service" do
@@ -84,7 +77,7 @@ defmodule DiffoExample.Access.CableTest do
 
       updates = [
         cable: [pairs: 60, length: %IntegerUnit{amount: 600, unit: :m}, technology: :PIUT],
-        pairs: [first: 1, last: 60, free: 60, assignable_type: "copper"]
+        pairs: [first: 1, last: 60, assignable_type: "copper"]
       ]
 
       {:ok, cable} = Access.define_cable(cable, %{characteristic_value_updates: updates})
@@ -96,10 +89,10 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 59]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]}],\"resourceCharacteristic\":[{\"name\":\"cable\",\"value\":{\"pairs\":60,\"length\":{\"amount\":600,\"unit\":\"m\"},\"technology\":\"PIUT\"}},{\"name\":\"pairs\",\"value\":{\"first\":1,\"last\":60,\"free\":59,\"type\":\"copper\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]}]}) |> Util.summarise_characteristics(cable)
     end
 
     test "auto assign two pairs to same service" do
@@ -109,7 +102,7 @@ defmodule DiffoExample.Access.CableTest do
 
       updates = [
         cable: [pairs: 60, length: %IntegerUnit{amount: 600, unit: :m}, technology: :PIUT],
-        pairs: [first: 1, last: 60, free: 60, assignable_type: "copper"]
+        pairs: [first: 1, last: 60, assignable_type: "copper"]
       ]
 
       {:ok, cable} = Access.define_cable(cable, %{characteristic_value_updates: updates})
@@ -126,10 +119,10 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 58]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":2}]}],\"resourceCharacteristic\":[{\"name\":\"cable\",\"value\":{\"pairs\":60,\"length\":{\"amount\":600,\"unit\":\"m\"},\"technology\":\"PIUT\"}},{\"name\":\"pairs\",\"value\":{\"first\":1,\"last\":60,\"free\":58,\"type\":\"copper\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":2}]}]}) |> Util.summarise_characteristics(cable)
     end
 
     test "specific assignment rejects duplicate request" do
@@ -139,7 +132,7 @@ defmodule DiffoExample.Access.CableTest do
 
       updates = [
         cable: [pairs: 60, length: %IntegerUnit{amount: 600, unit: :m}, technology: :PIUT],
-        pairs: [first: 1, last: 60, free: 60, assignable_type: "copper"]
+        pairs: [first: 1, last: 60, assignable_type: "copper"]
       ]
 
       {:ok, cable} = Access.define_cable(cable, %{characteristic_value_updates: updates})
@@ -156,10 +149,10 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 59]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates()
+      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":5}]}],\"resourceCharacteristic\":[{\"name\":\"cable\",\"value\":{\"pairs\":60,\"length\":{\"amount\":600,\"unit\":\"m\"},\"technology\":\"PIUT\"}},{\"name\":\"pairs\",\"value\":{\"first\":1,\"last\":60,\"free\":59,\"type\":\"copper\",\"algorithm\":\"lowest\"}}]})
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":5}]}]}) |> Util.summarise_characteristics(cable)
     end
   end
 end

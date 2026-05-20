@@ -14,6 +14,7 @@ defmodule DiffoExample.Nbn do
   """
   use Ash.Domain,
     otp_app: :diffo,
+    fragments: [Diffo.Provider.DomainFragment],
     extensions: [AshJsonApi.Domain]
 
   alias DiffoExample.Nbn.NbnEthernet
@@ -24,6 +25,13 @@ defmodule DiffoExample.Nbn do
   alias DiffoExample.Nbn.NniGroup
   alias DiffoExample.Nbn.Nni
   alias DiffoExample.Nbn.Rsp
+  alias DiffoExample.Nbn.AvcCharacteristic
+  alias DiffoExample.Nbn.CvcCharacteristic
+  alias DiffoExample.Nbn.NniGroupCharacteristic
+  alias DiffoExample.Nbn.NniCharacteristic
+  alias DiffoExample.Nbn.NtdCharacteristic
+  alias DiffoExample.Nbn.UniCharacteristic
+  alias DiffoExample.Nbn.PriCharacteristic
 
   domain do
     description "An example showing how TMF Resources for a fictional NBN domain can be extended from the Provider domain"
@@ -37,7 +45,6 @@ defmodule DiffoExample.Nbn do
         post :build
         patch :define
         patch :relate, route: "/:id/relate"
-        patch :mine, route: "/:id/mine"
         delete :destroy
       end
 
@@ -47,7 +54,6 @@ defmodule DiffoExample.Nbn do
         post :build
         patch :define
         patch :relate, route: "/:id/relate"
-        patch :mine, route: "/:id/mine"
         delete :destroy
       end
 
@@ -57,7 +63,6 @@ defmodule DiffoExample.Nbn do
         post :build
         patch :define
         patch :relate, route: "/:id/relate"
-        patch :mine, route: "/:id/mine"
         delete :destroy
       end
 
@@ -76,7 +81,6 @@ defmodule DiffoExample.Nbn do
         post :build
         patch :define
         patch :relate, route: "/:id/relate"
-        patch :mine, route: "/:id/mine"
         delete :destroy
       end
 
@@ -110,7 +114,6 @@ defmodule DiffoExample.Nbn do
       define :build_nbn_ethernet, action: :build
       define :define_nbn_ethernet, action: :define
       define :relate_nbn_ethernet, action: :relate
-      define :mine_nbn_ethernet, action: :mine
     end
 
     resource Uni do
@@ -118,7 +121,6 @@ defmodule DiffoExample.Nbn do
       define :build_uni, action: :build
       define :define_uni, action: :define
       define :relate_uni, action: :relate
-      define :mine_uni, action: :mine
     end
 
     resource Avc do
@@ -126,7 +128,6 @@ defmodule DiffoExample.Nbn do
       define :build_avc, action: :build
       define :define_avc, action: :define
       define :relate_avc, action: :relate
-      define :mine_avc, action: :mine
     end
 
     resource Ntd do
@@ -143,7 +144,6 @@ defmodule DiffoExample.Nbn do
       define :define_cvc, action: :define
       define :assign_cvlan, action: :assign_cvlan
       define :relate_cvc, action: :relate
-      define :mine_cvc, action: :mine
     end
 
     resource NniGroup do
@@ -170,5 +170,13 @@ defmodule DiffoExample.Nbn do
       define :suspend_rsp, action: :suspend
       define :deactivate_rsp, action: :deactivate
     end
+
+    resource AvcCharacteristic
+    resource CvcCharacteristic
+    resource NniGroupCharacteristic
+    resource NniCharacteristic
+    resource NtdCharacteristic
+    resource UniCharacteristic
+    resource PriCharacteristic
   end
 end

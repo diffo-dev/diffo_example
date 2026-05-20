@@ -62,13 +62,14 @@ defmodule DiffoExample.Nbn.Rsp do
     type "rsp"
   end
 
-  instances do
-    role :owner, DiffoExample.Nbn.Avc
-    # pending resolution of /diffo-dev/diffo#101
-    # role :owner, DiffoExample.Nbn.Cvc
-    # role :owner, DiffoExample.Nbn.Nni
-    # role :owner, DiffoExample.Nbn.NniGroup
-    # role :owner, DiffoExample.Nbn.NbnEthernet
+  provider do
+    instances do
+      role :owns_avc, DiffoExample.Nbn.Avc
+      role :owns_cvc, DiffoExample.Nbn.Cvc
+      role :owns_nni, DiffoExample.Nbn.Nni
+      role :owns_nni_group, DiffoExample.Nbn.NniGroup
+      role :owns_nbn_ethernet, DiffoExample.Nbn.NbnEthernet
+    end
   end
 
   actions do

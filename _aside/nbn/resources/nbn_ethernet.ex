@@ -2,20 +2,18 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule DiffoExample.Nbn.Nni do
+defmodule DiffoExample.Nbn.NbnEthernet do
   @moduledoc """
   Diffo - TMF Service and Resource Management with a difference
 
-  Nni - Network-to-Network Interface Resource Instance
+  NbnEthernet - NBN Ethernet access Resource Instance
 
-  An NNI is the physical handover port between the NBN network and the
-  Retail Service Provider (RSP). Multiple NNI resources are grouped within
-  an NNI Group resource.
+  An NBN Ethernet access comprises of dedicated UNI and AVC resources.
   """
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
 
   alias DiffoExample.Nbn
 
@@ -26,67 +24,67 @@ defmodule DiffoExample.Nbn.Nni do
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
-    description "An Ash Resource representing a Network-to-Network Interface (NNI)"
-    plural_name :Nnis
+    description "An Ash Resource representing an NBN Ethernet access"
+    plural_name :NbnEthernets
   end
 
   json_api do
-    type "nni"
+    type "nbnEthernet"
   end
 
-  structure do
+  provider do
     specification do
-      id "f6a7b8c9-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
-      name "nni"
+      id "f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c"
+      name "nbnEthernet"
       type :resourceSpecification
-      description "An NNI Resource Instance that is part of an NNI Group"
+      description "An NBN Ethernet access comprising a dedicated UNI and AVC"
       category "Network Resource"
     end
 
     characteristics do
-      characteristic :nni, DiffoExample.Nbn.NniValue
+      characteristic :pri, DiffoExample.Nbn.PriCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
   actions do
     create :build do
-      description "creates a new NNI resource instance"
+      description "creates a new NBN Ethernet access resource instance"
       accept [:id, :which]
       argument :relationships, {:array, :struct}
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
+      change set_attribute(:name, &DiffoExample.Nbn.NbnEthernet.identifier/0)
       change set_attribute(:type, :resource)
-      change set_attribute(:name, &DiffoExample.Nbn.Nni.identifier/0)
       change DiffoExample.Nbn.Changes.SetRspId
       change load [:href]
       upsert? false
     end
 
     update :define do
-      description "defines the NNI"
+      description "defines the NBN Ethernet access"
       argument :characteristic_value_updates, {:array, :term}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
+               with {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <- Nbn.get_nbn_ethernet_by_id(result.id),
                     do: {:ok, result}
              end)
     end
 
     update :relate do
-      description "relates the NNI with other instances (e.g. its parent NNI Group)"
+      description "relates the NBN Ethernet access with other instances (e.g. UNI)"
       argument :relationships, {:array, :struct}
 
       change after_action(fn changeset, result, _context ->
                with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
+                    {:ok, result} <- Nbn.get_nbn_ethernet_by_id(result.id),
                     do: {:ok, result}
              end)
     end
@@ -101,7 +99,7 @@ defmodule DiffoExample.Nbn.Nni do
   end
 
   def identifier() do
-    DiffoExample.Nbn.Util.identifier("NNI")
+    DiffoExample.Nbn.Util.identifier("PRI")
   end
 
   use DiffoExample.Nbn.RspOwnership

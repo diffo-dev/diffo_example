@@ -15,9 +15,10 @@ defmodule DiffoExample.Nbn.NniGroup do
 
   alias Diffo.Provider.BaseInstance
   alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
+  alias Diffo.Provider.Extension.Characteristic
   alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
+  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Nbn
 
@@ -36,7 +37,7 @@ defmodule DiffoExample.Nbn.NniGroup do
     type "nniGroup"
   end
 
-  structure do
+  provider do
     specification do
       id "e5f6a7b8-9c0d-4e1f-8a2b-4c5d6e7f8a9b"
       name "nniGroup"
@@ -46,14 +47,17 @@ defmodule DiffoExample.Nbn.NniGroup do
     end
 
     characteristics do
-      characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
-      characteristic :svlans, Diffo.Provider.AssignableValue
+      characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :svlans, :svlan
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -76,7 +80,8 @@ defmodule DiffoExample.Nbn.NniGroup do
       argument :characteristic_value_updates, {:array, :term}
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
+               with {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
                     {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)
@@ -87,7 +92,7 @@ defmodule DiffoExample.Nbn.NniGroup do
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :svlans, :svlan),
+               with {:ok, result} <- Assigner.assign(result, changeset, :svlans),
                     {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)

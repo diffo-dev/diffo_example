@@ -16,28 +16,11 @@ defmodule DiffoExample.Access.Util do
   @doc """
   Lists things that are assigned_to an Instance, as Assignments
   """
-  def assignments(instance, type) when is_struct(instance, Ash.Resource) and is_atom(type) do
-    Enum.reduce(instance.reverse_relationships, [], fn reverse_relationship, acc ->
-      case reverse_relationship.type do
-        :assignedTo ->
-          characteristic =
-            Enum.find(reverse_relationship.characteristics, &(&1.name == type))
-
-          case characteristic do
-            nil ->
-              acc
-
-            _ ->
-              [
-                %Assignment{
-                  id: Diffo.Unwrap.unwrap(characteristic.value),
-                  assignable_type: type,
-                  assignee_id: reverse_relationship.source_id
-                }
-                | acc
-              ]
-          end
-      end
+  def assignments(instance, pool) when is_atom(pool) do
+    instance.assignments
+    |> Enum.filter(&(&1.pool == pool))
+    |> Enum.map(fn a ->
+      %Assignment{id: a.assigned, assignable_type: to_string(pool), assignee_id: a.source_id}
     end)
   end
 end
