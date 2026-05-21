@@ -10,8 +10,6 @@ defmodule DiffoExample.Access.Path do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Extension.Characteristic
 
   alias DiffoExample.Access
 
@@ -66,24 +64,14 @@ defmodule DiffoExample.Access.Path do
       description "defines the path"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Access.get_path_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the path with other instances"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_path_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 end

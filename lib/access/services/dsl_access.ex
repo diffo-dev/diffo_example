@@ -10,7 +10,6 @@ defmodule DiffoExample.Access.DslAccess do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Extension.Characteristic
   alias Diffo.Provider.Instance.Place
 
   alias DiffoExample.Access
@@ -100,14 +99,7 @@ defmodule DiffoExample.Access.DslAccess do
       argument :characteristic_value_updates, {:array, :term}
 
       change transition_state(:reserved)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Access.get_dsl_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
   end
 end

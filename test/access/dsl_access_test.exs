@@ -4,7 +4,8 @@
 
 defmodule DiffoExample.Access.DslAccessTest do
   @moduledoc false
-  use ExUnit.Case, async: true
+  use DiffoExample.DataCase, async: true
+
   alias Diffo.Provider
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Feature
@@ -15,11 +16,6 @@ defmodule DiffoExample.Access.DslAccessTest do
   alias DiffoExample.Test.Parties
   alias DiffoExample.Test.Places
   alias DiffoExample.Util
-
-  setup do
-    AshNeo4j.Sandbox.checkout()
-    on_exit(&AshNeo4j.Sandbox.rollback/0)
-  end
 
   describe "service qualification" do
     test "create an initial service for service qualification" do

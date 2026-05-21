@@ -4,46 +4,31 @@
 
 defmodule DiffoExample.Test.Characteristics do
   @moduledoc """
-  Diffo - TMF Service and Resource Management with a difference
+  Test support for Characteristics.
 
-  Characteristics - Test support for Characteristics
+  Pool and typed-characteristic module lookups are derived from the
+  configured Ash domains' Instance resources at runtime via
+  `Ash.Domain.Info.resources/1` and `Diffo.Provider.Extension.Info` —
+  no hand-maintained lists.
   """
   import Outstand
   import ExUnit.Assertions
 
-  @pool_names [:pairs, :ports, :slots, :cvlans, :svlans]
-
-  @characteristic_modules %{
-    cable: DiffoExample.Access.CableCharacteristic,
-    card: DiffoExample.Access.CardCharacteristic,
-    shelf: DiffoExample.Access.ShelfCharacteristic,
-    path: DiffoExample.Access.PathCharacteristic,
-    line: DiffoExample.Access.LineCharacteristic,
-    dslam: DiffoExample.Access.DslamCharacteristic,
-    aggregate_interface: DiffoExample.Access.AggregateCharacteristic,
-    circuit: DiffoExample.Access.CircuitCharacteristic,
-    constraints: DiffoExample.Access.ConstraintsCharacteristic,
-    avc: DiffoExample.Nbn.AvcCharacteristic,
-    cvc: DiffoExample.Nbn.CvcCharacteristic,
-    nni_group: DiffoExample.Nbn.NniGroupCharacteristic,
-    nni: DiffoExample.Nbn.NniCharacteristic,
-    ntd: DiffoExample.Nbn.NtdCharacteristic,
-    uni: DiffoExample.Nbn.UniCharacteristic,
-    pri: DiffoExample.Nbn.PriCharacteristic
-  }
+  alias Diffo.Provider.Extension.Info, as: ProviderInfo
 
   @doc """
   Checks expected values against typed characteristics or pool characteristics
   on the given instance.
 
-  For pool names (#{inspect(@pool_names)}), queries AssignableCharacteristic directly.
-  For typed characteristic names, queries the typed characteristic module directly.
-  Expected values are keyword lists of field-name → Outstanding expectation pairs.
+  For declared pool names, queries `AssignableCharacteristic` directly. For
+  declared typed characteristic names, queries the typed characteristic module
+  directly. Expected values are keyword lists of field-name → Outstanding
+  expectation pairs.
   """
   def check_values(expected_values, instance)
       when is_list(expected_values) and is_struct(instance) do
     Enum.each(expected_values, fn {name, expected} ->
-      if name in @pool_names do
+      if name in pool_names() do
         check_pool(name, expected, instance)
       else
         check_characteristic(name, expected, instance)
@@ -66,7 +51,7 @@ defmodule DiffoExample.Test.Characteristics do
   end
 
   defp check_characteristic(role_name, expected, instance) when is_list(expected) do
-    mod = Map.fetch!(@characteristic_modules, role_name)
+    mod = Map.fetch!(characteristic_modules(), role_name)
 
     {:ok, char} =
       mod
@@ -79,5 +64,26 @@ defmodule DiffoExample.Test.Characteristics do
       actual = char.value |> Map.get(field)
       assert expected_value --- actual == nil
     end)
+  end
+
+  defp characteristic_modules do
+    instance_resources()
+    |> Enum.flat_map(fn mod ->
+      Enum.map(mod.characteristics(), &{&1.name, &1.value_type})
+    end)
+    |> Map.new()
+  end
+
+  defp pool_names do
+    instance_resources()
+    |> Enum.flat_map(fn mod -> Enum.map(mod.pools(), & &1.name) end)
+    |> Enum.uniq()
+  end
+
+  defp instance_resources do
+    :diffo_example
+    |> Application.get_env(:ash_domains, [])
+    |> Enum.flat_map(&Ash.Domain.Info.resources/1)
+    |> Enum.filter(&ProviderInfo.instance?/1)
   end
 end

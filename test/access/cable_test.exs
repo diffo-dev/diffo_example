@@ -4,7 +4,8 @@
 
 defmodule DiffoExample.Access.CableTest do
   @moduledoc false
-  use ExUnit.Case, async: true
+  use DiffoExample.DataCase, async: true
+
   alias Diffo.Provider.Specification
   alias Diffo.Provider.Assignment
   alias DiffoExample.Access
@@ -12,11 +13,6 @@ defmodule DiffoExample.Access.CableTest do
   alias DiffoExample.Access.IntegerUnit
   alias DiffoExample.Test.Characteristics
   alias DiffoExample.Util
-
-  setup do
-    AshNeo4j.Sandbox.checkout()
-    on_exit(&AshNeo4j.Sandbox.rollback/0)
-  end
 
   describe "build cable" do
     test "create a cable" do

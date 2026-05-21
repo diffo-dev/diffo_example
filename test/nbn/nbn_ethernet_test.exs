@@ -4,7 +4,8 @@
 
 defmodule DiffoExample.Nbn.NbnEthernetTest do
   @moduledoc false
-  use ExUnit.Case, async: true
+  use DiffoExample.DataCase, async: true
+
   alias Diffo.Provider.Specification
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.NbnEthernet
@@ -18,11 +19,6 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
   alias DiffoExample.Util
   alias Diffo.Provider.Assignment
   alias Diffo.Provider.Instance.Relationship
-
-  setup do
-    AshNeo4j.Sandbox.checkout()
-    on_exit(&AshNeo4j.Sandbox.rollback/0)
-  end
 
   describe "build nbn_ethernet" do
     test "create an nbn_ethernet access" do

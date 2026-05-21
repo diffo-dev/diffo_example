@@ -13,11 +13,7 @@ defmodule DiffoExample.Nbn.Ntd do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Extension.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
-  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Nbn
 
@@ -102,37 +98,21 @@ defmodule DiffoExample.Nbn.Ntd do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :assign_port do
       description "assigns a port from the NTD pool to a UNI"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :ports}
     end
 
     update :relate do
       description "relates the NTD with other instances (e.g. UNI)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 end

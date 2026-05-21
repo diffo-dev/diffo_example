@@ -10,11 +10,7 @@ defmodule DiffoExample.Access.Shelf do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Extension.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
-  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Access
 
@@ -74,37 +70,21 @@ defmodule DiffoExample.Access.Shelf do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the shelf with cards"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
 
     update :assign_slot do
       description "relates the shelf with an instance by assigning a slot"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :slots),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :slots}
     end
   end
 end

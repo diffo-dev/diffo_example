@@ -14,8 +14,6 @@ defmodule DiffoExample.Nbn.Uni do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Extension.Characteristic
 
   alias DiffoExample.Nbn
 
@@ -96,25 +94,14 @@ defmodule DiffoExample.Nbn.Uni do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Nbn.get_uni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the UNI with other instances (e.g. NTD, NBN Ethernet access)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_uni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 end

@@ -10,11 +10,7 @@ defmodule DiffoExample.Access.Cable do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Extension.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
-  alias Diffo.Provider.Extension.Pool
 
   alias DiffoExample.Access
 
@@ -74,15 +70,7 @@ defmodule DiffoExample.Access.Cable do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <-
-                      Characteristic.update_all(result, changeset, characteristics()),
-                    {:ok, result} <- Pool.update_pools(result, changeset, pools()),
-                    {:ok, result} <- Access.get_cable_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
@@ -100,11 +88,7 @@ defmodule DiffoExample.Access.Cable do
       description "relates the cable with an instance by assigning a pair"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :pairs),
-                    {:ok, result} <- Access.get_cable_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :pairs}
     end
   end
 end

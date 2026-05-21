@@ -5,7 +5,4 @@
 defmodule DiffoExampleTest do
   @moduledoc false
   use ExUnit.Case, async: true
-  doctest DiffoExample.Access.Util
-  # doctest DiffoExample.Nbn.Util
-  # doctest DiffoExample.Nbn.Speeds
 end
