@@ -13,19 +13,6 @@ defmodule DiffoExample.Nbn.NniCharacteristic do
     plural_name :nni_characteristics
   end
 
-  attributes do
-    attribute :port_id, :string, public?: true
-    attribute :capacity, :integer, public?: true
-    attribute :technology, :atom, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :port_id, :capacity, :technology]
@@ -37,6 +24,20 @@ defmodule DiffoExample.Nbn.NniCharacteristic do
 
     update :update do
       accept [:port_id, :capacity, :technology]
+    end
+  end
+
+  attributes do
+    attribute :port_id, :string, public?: true
+    attribute :capacity, :integer, public?: true
+    attribute :technology, :atom, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -54,19 +55,19 @@ defmodule DiffoExample.Nbn.NniCharacteristic.Value do
   @moduledoc false
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
-  typed_struct do
-    field :port_id, :string
-    field :capacity, :integer
-    field :technology, :atom
+  jason do
+    pick [:port_id, :capacity, :technology]
+    compact true
+    rename port_id: "portId"
   end
 
   outstanding do
     expect [:port_id, :capacity]
   end
 
-  jason do
-    pick [:port_id, :capacity, :technology]
-    compact true
-    rename port_id: "portId"
+  typed_struct do
+    field :port_id, :string
+    field :capacity, :integer
+    field :technology, :atom
   end
 end

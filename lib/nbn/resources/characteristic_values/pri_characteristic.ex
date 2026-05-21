@@ -13,6 +13,36 @@ defmodule DiffoExample.Nbn.PriCharacteristic do
     plural_name :pri_characteristics
   end
 
+  actions do
+    create :create do
+      accept [
+        :name,
+        :avcid,
+        :uniid,
+        :technology,
+        :bandwidth_profile,
+        :speeds_downstream,
+        :speeds_upstream
+      ]
+
+      argument :instance_id, :uuid
+      argument :feature_id, :uuid
+      change manage_relationship(:instance_id, :instance, type: :append)
+      change manage_relationship(:feature_id, :feature, type: :append)
+    end
+
+    update :update do
+      accept [
+        :avcid,
+        :uniid,
+        :technology,
+        :bandwidth_profile,
+        :speeds_downstream,
+        :speeds_upstream
+      ]
+    end
+  end
+
   attributes do
     attribute :avcid, :string, public?: true
     attribute :uniid, :string, public?: true
@@ -23,23 +53,10 @@ defmodule DiffoExample.Nbn.PriCharacteristic do
   end
 
   calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
               DiffoExample.Nbn.PriCharacteristic.ValueCalculation do
       public? true
-    end
-  end
-
-  actions do
-    create :create do
-      accept [:name, :avcid, :uniid, :technology, :bandwidth_profile, :speeds_downstream, :speeds_upstream]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:avcid, :uniid, :technology, :bandwidth_profile, :speeds_downstream, :speeds_upstream]
     end
   end
 
@@ -60,22 +77,22 @@ defmodule DiffoExample.Nbn.PriCharacteristic.Value do
   alias DiffoExample.Nbn.Technology
   alias DiffoExample.Nbn.BandwidthProfile
 
-  typed_struct do
-    field :avcid, :string
-    field :uniid, :string
-    field :technology, Technology
-    field :bandwidth_profile, BandwidthProfile
-    field :speeds, :map
+  jason do
+    pick [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
+    compact true
+    rename avcid: "AVCID", uniid: "UNIID", bandwidth_profile: "bandwidthProfile"
   end
 
   outstanding do
     expect [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
   end
 
-  jason do
-    pick [:avcid, :uniid, :technology, :bandwidth_profile, :speeds]
-    compact true
-    rename avcid: "AVCID", uniid: "UNIID", bandwidth_profile: "bandwidthProfile"
+  typed_struct do
+    field :avcid, :string
+    field :uniid, :string
+    field :technology, Technology
+    field :bandwidth_profile, BandwidthProfile
+    field :speeds, :map
   end
 end
 

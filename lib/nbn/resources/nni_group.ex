@@ -2,14 +2,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule DiffoExample.Nbn.Ntd do
+defmodule DiffoExample.Nbn.NniGroup do
   @moduledoc """
   Diffo - TMF Service and Resource Management with a difference
 
-  Ntd - Network Termination Device Resource Instance
+  NniGroup - NNI Group Resource Instance
 
-  An NTD is the device installed at the customer premises that connects
-  the premises to the NBN network. The NTD can assign ports to UNI.
+  An NNI Group is the Point of Interconnect (PoI) grouping where a CVC
+  terminates. It comprises multiple NNI resources.
+  The NNI Group assigns svlan to CVC.
   """
 
   alias Diffo.Provider.BaseInstance
@@ -28,39 +29,34 @@ defmodule DiffoExample.Nbn.Ntd do
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
-    description "An Ash Resource representing a Network Termination Device (NTD)"
-    plural_name :Ntds
+    description "An Ash Resource representing an NNI Group"
+    plural_name :NniGroups
   end
 
-  policies do
-    bypass DiffoExample.Nbn.Checks.NoActor do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:role, :admin) do
-      authorize_if always()
-    end
-
-    policy action_type(:read) do
-      authorize_if always()
-    end
+  json_api do
+    type "nniGroup"
   end
 
   provider do
     specification do
-      id "c3d4e5f6-7a8b-4c9d-ae0f-2a3b4c5d6e7f"
-      name "ntd"
+      id "e5f6a7b8-9c0d-4e1f-8a2b-4c5d6e7f8a9b"
+      name "nniGroup"
       type :resourceSpecification
-      description "An NTD Resource Instance related to a UNI"
+      description "An NNI Group Resource Instance comprising multiple NNI resources"
       category "Network Resource"
     end
 
     characteristics do
-      characteristic :ntd, DiffoExample.Nbn.NtdCharacteristic
+      characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
     end
 
     pools do
-      pool :ports, :port
+      pool :svlans, :svlan
+    end
+
+    relationships do
+      source :all
+      target :all
     end
 
     behaviour do
@@ -70,60 +66,66 @@ defmodule DiffoExample.Nbn.Ntd do
     end
   end
 
-  json_api do
-    type "ntd"
-  end
-
-  def identifier() do
-    DiffoExample.Nbn.Util.identifier("NTD")
-  end
-
   actions do
     create :build do
-      description "creates a new NTD resource instance"
-      accept [:id, :which]
+      description "creates a new NNI Group resource instance"
+      accept [:id, :name, :which]
       argument :relationships, {:array, :struct}
       argument :places, {:array, :struct}
       argument :parties, {:array, :struct}
 
       change set_attribute(:type, :resource)
-      change set_attribute(:name, &DiffoExample.Nbn.Ntd.identifier/0)
+      change DiffoExample.Nbn.Changes.SetRspId
       change load [:href]
       upsert? false
     end
 
     update :define do
-      description "defines the NTD"
+      description "defines the NNI Group"
       argument :characteristic_value_updates, {:array, :term}
 
+      change set_attribute(:resource_state, :operating)
+
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+               with {:ok, result} <- Ash.load(result, [:characteristics]),
+                    {:ok, result} <-
+                      Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Pool.update_pools(result, changeset, pools()),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
+                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)
     end
 
-    update :assign_port do
-      description "assigns a port from the NTD pool to a UNI"
+    update :assign_svlan do
+      description "assigns an S-VLAN ID from the NNI Group pool to a CVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
+               with {:ok, result} <- Assigner.assign(result, changeset, :svlans),
+                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)
     end
 
     update :relate do
-      description "relates the NTD with other instances (e.g. UNI)"
+      description "relates the NNI Group with other instances (e.g. NNI resources it comprises)"
       argument :relationships, {:array, :struct}
 
       change after_action(fn changeset, result, _context ->
                with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
+                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
                     do: {:ok, result}
              end)
     end
   end
+
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
+    end
+  end
+
+  use DiffoExample.Nbn.RspOwnership
 end

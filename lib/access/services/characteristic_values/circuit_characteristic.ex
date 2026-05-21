@@ -15,26 +15,19 @@ defmodule DiffoExample.Access.CircuitCharacteristic do
     plural_name :circuit_characteristics
   end
 
-  attributes do
-    attribute :circuit_id, :string, public?: true
-    attribute :cvlan_id, :integer, public?: true
-    attribute :vci, :integer, public?: true
-    attribute :encapsulation, :atom, public?: true
-    attribute :bp_downstream, :integer, public?: true
-    attribute :bp_upstream, :integer, public?: true
-    attribute :bp_units, :atom, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              DiffoExample.Access.CircuitCharacteristic.ValueCalculation do
-      public? true
-    end
-  end
-
   actions do
     create :create do
-      accept [:name, :circuit_id, :cvlan_id, :vci, :encapsulation, :bp_downstream, :bp_upstream, :bp_units]
+      accept [
+        :name,
+        :circuit_id,
+        :cvlan_id,
+        :vci,
+        :encapsulation,
+        :bp_downstream,
+        :bp_upstream,
+        :bp_units
+      ]
+
       argument :instance_id, :uuid
       argument :feature_id, :uuid
       change manage_relationship(:instance_id, :instance, type: :append)
@@ -57,6 +50,24 @@ defmodule DiffoExample.Access.CircuitCharacteristic do
     end
   end
 
+  attributes do
+    attribute :circuit_id, :string, public?: true
+    attribute :cvlan_id, :integer, public?: true
+    attribute :vci, :integer, public?: true
+    attribute :encapsulation, :atom, public?: true
+    attribute :bp_downstream, :integer, public?: true
+    attribute :bp_upstream, :integer, public?: true
+    attribute :bp_units, :atom, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              DiffoExample.Access.CircuitCharacteristic.ValueCalculation do
+      public? true
+    end
+  end
+
   preparations do
     prepare build(load: [:value])
   end
@@ -73,22 +84,22 @@ defmodule DiffoExample.Access.CircuitCharacteristic.Value do
 
   alias DiffoExample.Access.BandwidthProfile
 
-  typed_struct do
-    field :circuit_id, :string
-    field :cvlan_id, :integer
-    field :vci, :integer
-    field :encapsulation, :atom
-    field :bandwidth_profile, BandwidthProfile
+  jason do
+    pick [:circuit_id, :cvlan_id, :vci, :encapsulation, :bandwidth_profile]
+    compact true
+    rename circuit_id: "circuitId", vci: "VCI", bandwidth_profile: "bandwidthProfile"
   end
 
   outstanding do
     expect [:circuit_id]
   end
 
-  jason do
-    pick [:circuit_id, :cvlan_id, :vci, :encapsulation, :bandwidth_profile]
-    compact true
-    rename circuit_id: "circuitId", vci: "VCI", bandwidth_profile: "bandwidthProfile"
+  typed_struct do
+    field :circuit_id, :string
+    field :cvlan_id, :integer
+    field :vci, :integer
+    field :encapsulation, :atom
+    field :bandwidth_profile, BandwidthProfile
   end
 end
 

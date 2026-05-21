@@ -40,10 +40,14 @@ defmodule DiffoExample.Access.CableTest do
       assert is_list(cable.characteristics)
       assert length(cable.characteristics) == 0
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
+      encoding =
+        Jason.encode!(cable)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"}}) |> Util.summarise_characteristics(cable)
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"}})
+               |> Util.summarise_characteristics(cable)
     end
 
     test "define cable" do
@@ -64,10 +68,14 @@ defmodule DiffoExample.Access.CableTest do
         cable
       )
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
+      encoding =
+        Jason.encode!(cable)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\"}) |> Util.summarise_characteristics(cable)
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\"})
+               |> Util.summarise_characteristics(cable)
     end
 
     test "auto assign pair to service" do
@@ -89,10 +97,14 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 59]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
+      encoding =
+        Jason.encode!(cable)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]}]}) |> Util.summarise_characteristics(cable)
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]}]})
+               |> Util.summarise_characteristics(cable)
     end
 
     test "auto assign two pairs to same service" do
@@ -119,10 +131,14 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 58]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
+      encoding =
+        Jason.encode!(cable)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":2}]}]}) |> Util.summarise_characteristics(cable)
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":2}]}]})
+               |> Util.summarise_characteristics(cable)
     end
 
     test "specific assignment rejects duplicate request" do
@@ -149,10 +165,14 @@ defmodule DiffoExample.Access.CableTest do
 
       Characteristics.check_values([pairs: [free: 59]], cable)
 
-      encoding = Jason.encode!(cable) |> Diffo.Util.summarise_dates() |> Util.summarise_characteristics(cable)
+      encoding =
+        Jason.encode!(cable)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(cable)
 
       assert encoding ==
-               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":5}]}]}) |> Util.summarise_characteristics(cable)
+               ~s({\"id\":\"#{cable.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{cable.id}",\"category\":\"Network Resource\",\"description\":\"A Cable Resource Instance\",\"resourceSpecification\":{\"id\":\"ce0a567a-6abb-4862-9e33-851fd79fa595\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/ce0a567a-6abb-4862-9e33-851fd79fa595\",\"name\":\"cable\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"pair\",\"value\":5}]}]})
+               |> Util.summarise_characteristics(cable)
     end
   end
 end

@@ -13,18 +13,6 @@ defmodule DiffoExample.Nbn.NniGroupCharacteristic do
     plural_name :nni_group_characteristics
   end
 
-  attributes do
-    attribute :group_name, :string, public?: true
-    attribute :location, :string, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :group_name, :location]
@@ -36,6 +24,19 @@ defmodule DiffoExample.Nbn.NniGroupCharacteristic do
 
     update :update do
       accept [:group_name, :location]
+    end
+  end
+
+  attributes do
+    attribute :group_name, :string, public?: true
+    attribute :location, :string, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -53,18 +54,18 @@ defmodule DiffoExample.Nbn.NniGroupCharacteristic.Value do
   @moduledoc false
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
-  typed_struct do
-    field :group_name, :string
-    field :location, :string
+  jason do
+    pick [:group_name, :location]
+    compact true
+    rename group_name: "name"
   end
 
   outstanding do
     expect [:group_name, :location]
   end
 
-  jason do
-    pick [:group_name, :location]
-    compact true
-    rename group_name: "name"
+  typed_struct do
+    field :group_name, :string
+    field :location, :string
   end
 end

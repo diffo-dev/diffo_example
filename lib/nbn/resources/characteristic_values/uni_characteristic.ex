@@ -13,19 +13,6 @@ defmodule DiffoExample.Nbn.UniCharacteristic do
     plural_name :uni_characteristics
   end
 
-  attributes do
-    attribute :port, :integer, public?: true
-    attribute :encapsulation, :string, public?: true
-    attribute :technology, DiffoExample.Nbn.Technology, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :port, :encapsulation, :technology]
@@ -37,6 +24,20 @@ defmodule DiffoExample.Nbn.UniCharacteristic do
 
     update :update do
       accept [:port, :encapsulation, :technology]
+    end
+  end
+
+  attributes do
+    attribute :port, :integer, public?: true
+    attribute :encapsulation, :string, public?: true
+    attribute :technology, DiffoExample.Nbn.Technology, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -56,18 +57,18 @@ defmodule DiffoExample.Nbn.UniCharacteristic.Value do
 
   alias DiffoExample.Nbn.Technology
 
-  typed_struct do
-    field :port, :integer
-    field :encapsulation, :string
-    field :technology, Technology
+  jason do
+    pick [:port, :encapsulation, :technology]
+    compact true
   end
 
   outstanding do
     expect [:port, :encapsulation, :technology]
   end
 
-  jason do
-    pick [:port, :encapsulation, :technology]
-    compact true
+  typed_struct do
+    field :port, :integer
+    field :encapsulation, :string
+    field :technology, Technology
   end
 end

@@ -47,6 +47,11 @@ defmodule DiffoExample.Nbn.Nni do
       characteristic :nni, DiffoExample.Nbn.NniCharacteristic
     end
 
+    relationships do
+      source :all
+      target :all
+    end
+
     behaviour do
       actions do
         create :build
@@ -73,8 +78,12 @@ defmodule DiffoExample.Nbn.Nni do
       description "defines the NNI"
       argument :characteristic_value_updates, {:array, :term}
 
+      change set_attribute(:resource_state, :operating)
+
       change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+               with {:ok, result} <- Ash.load(result, [:characteristics]),
+                    {:ok, result} <-
+                      Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Nbn.get_nni_by_id(result.id),
                     do: {:ok, result}
              end)

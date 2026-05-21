@@ -13,19 +13,6 @@ defmodule DiffoExample.Access.CardCharacteristic do
     plural_name :card_characteristics
   end
 
-  attributes do
-    attribute :family, :atom, public?: true
-    attribute :model, :string, public?: true
-    attribute :technology, :atom, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :family, :model, :technology]
@@ -37,6 +24,20 @@ defmodule DiffoExample.Access.CardCharacteristic do
 
     update :update do
       accept [:family, :model, :technology]
+    end
+  end
+
+  attributes do
+    attribute :family, :atom, public?: true
+    attribute :model, :string, public?: true
+    attribute :technology, :atom, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -54,14 +55,14 @@ defmodule DiffoExample.Access.CardCharacteristic.Value do
   @moduledoc false
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct]
 
+  jason do
+    pick [:family, :model, :technology]
+    compact true
+  end
+
   typed_struct do
     field :family, :atom
     field :model, :string
     field :technology, :atom
-  end
-
-  jason do
-    pick [:family, :model, :technology]
-    compact true
   end
 end

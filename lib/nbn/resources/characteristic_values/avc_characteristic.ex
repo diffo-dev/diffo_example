@@ -13,18 +13,6 @@ defmodule DiffoExample.Nbn.AvcCharacteristic do
     plural_name :avc_characteristics
   end
 
-  attributes do
-    attribute :cvlan, :integer, public?: true
-    attribute :bandwidth_profile, DiffoExample.Nbn.BandwidthProfile, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :cvlan, :bandwidth_profile]
@@ -36,6 +24,19 @@ defmodule DiffoExample.Nbn.AvcCharacteristic do
 
     update :update do
       accept [:cvlan, :bandwidth_profile]
+    end
+  end
+
+  attributes do
+    attribute :cvlan, :integer, public?: true
+    attribute :bandwidth_profile, DiffoExample.Nbn.BandwidthProfile, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -55,17 +56,17 @@ defmodule DiffoExample.Nbn.AvcCharacteristic.Value do
 
   alias DiffoExample.Nbn.BandwidthProfile
 
-  typed_struct do
-    field :cvlan, :integer
-    field :bandwidth_profile, BandwidthProfile
+  jason do
+    pick [:cvlan, :bandwidth_profile]
+    compact true
   end
 
   outstanding do
     expect [:cvlan, :bandwidth_profile]
   end
 
-  jason do
-    pick [:cvlan, :bandwidth_profile]
-    compact true
+  typed_struct do
+    field :cvlan, :integer
+    field :bandwidth_profile, BandwidthProfile
   end
 end

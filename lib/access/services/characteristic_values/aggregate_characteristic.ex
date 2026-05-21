@@ -13,6 +13,29 @@ defmodule DiffoExample.Access.AggregateCharacteristic do
     plural_name :aggregate_characteristics
   end
 
+  actions do
+    create :create do
+      accept [
+        :name,
+        :interface_name,
+        :physical_interface,
+        :physical_layer,
+        :link_layer,
+        :svlan_id,
+        :vpi
+      ]
+
+      argument :instance_id, :uuid
+      argument :feature_id, :uuid
+      change manage_relationship(:instance_id, :instance, type: :append)
+      change manage_relationship(:feature_id, :feature, type: :append)
+    end
+
+    update :update do
+      accept [:interface_name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
+    end
+  end
+
   attributes do
     attribute :interface_name, :string, public?: true
     attribute :physical_interface, :string, public?: true
@@ -23,23 +46,10 @@ defmodule DiffoExample.Access.AggregateCharacteristic do
   end
 
   calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
               Diffo.Provider.Calculations.CharacteristicValue do
       public? true
-    end
-  end
-
-  actions do
-    create :create do
-      accept [:name, :interface_name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:interface_name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
     end
   end
 
@@ -57,19 +67,6 @@ defmodule DiffoExample.Access.AggregateCharacteristic.Value do
   @moduledoc false
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
-  typed_struct do
-    field :interface_name, :string
-    field :physical_interface, :string
-    field :physical_layer, :atom
-    field :link_layer, :atom
-    field :svlan_id, :integer
-    field :vpi, :integer
-  end
-
-  outstanding do
-    expect [:interface_name]
-  end
-
   jason do
     pick [:interface_name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
     compact true
@@ -80,5 +77,18 @@ defmodule DiffoExample.Access.AggregateCharacteristic.Value do
            link_layer: "linkLayer",
            svlan_id: "svlanId",
            vpi: "VPI"
+  end
+
+  outstanding do
+    expect [:interface_name]
+  end
+
+  typed_struct do
+    field :interface_name, :string
+    field :physical_interface, :string
+    field :physical_layer, :atom
+    field :link_layer, :atom
+    field :svlan_id, :integer
+    field :vpi, :integer
   end
 end

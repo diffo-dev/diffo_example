@@ -35,7 +35,8 @@ defmodule DiffoExample.Util do
 
   Modelled after `Diffo.Util.summarise_dates/1`.
   """
-  def summarise_characteristics(payload, instance) when is_binary(payload) and is_struct(instance) do
+  def summarise_characteristics(payload, instance)
+      when is_binary(payload) and is_struct(instance) do
     mod = instance.__struct__
 
     payload

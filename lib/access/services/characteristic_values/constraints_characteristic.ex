@@ -15,20 +15,6 @@ defmodule DiffoExample.Access.ConstraintsCharacteristic do
     plural_name :constraints_characteristics
   end
 
-  attributes do
-    attribute :max_latency, :integer, public?: true
-    attribute :mp_downstream, :integer, public?: true
-    attribute :mp_upstream, :integer, public?: true
-    attribute :mp_units, :atom, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              DiffoExample.Access.ConstraintsCharacteristic.ValueCalculation do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :max_latency, :mp_downstream, :mp_upstream, :mp_units]
@@ -54,6 +40,21 @@ defmodule DiffoExample.Access.ConstraintsCharacteristic do
     end
   end
 
+  attributes do
+    attribute :max_latency, :integer, public?: true
+    attribute :mp_downstream, :integer, public?: true
+    attribute :mp_upstream, :integer, public?: true
+    attribute :mp_units, :atom, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              DiffoExample.Access.ConstraintsCharacteristic.ValueCalculation do
+      public? true
+    end
+  end
+
   preparations do
     prepare build(load: [:value])
   end
@@ -70,19 +71,19 @@ defmodule DiffoExample.Access.ConstraintsCharacteristic.Value do
 
   alias DiffoExample.Access.BandwidthProfile
 
-  typed_struct do
-    field :max_latency, :integer
-    field :min_profile, BandwidthProfile
+  jason do
+    pick [:max_latency, :min_profile]
+    compact true
+    rename max_latency: "maxLatency", min_profile: "minProfile"
   end
 
   outstanding do
     expect [:max_latency, :min_profile]
   end
 
-  jason do
-    pick [:max_latency, :min_profile]
-    compact true
-    rename max_latency: "maxLatency", min_profile: "minProfile"
+  typed_struct do
+    field :max_latency, :integer
+    field :min_profile, BandwidthProfile
   end
 end
 

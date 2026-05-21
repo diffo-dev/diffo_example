@@ -22,7 +22,14 @@ defmodule DiffoExample.Test.Characteristics do
     dslam: DiffoExample.Access.DslamCharacteristic,
     aggregate_interface: DiffoExample.Access.AggregateCharacteristic,
     circuit: DiffoExample.Access.CircuitCharacteristic,
-    constraints: DiffoExample.Access.ConstraintsCharacteristic
+    constraints: DiffoExample.Access.ConstraintsCharacteristic,
+    avc: DiffoExample.Nbn.AvcCharacteristic,
+    cvc: DiffoExample.Nbn.CvcCharacteristic,
+    nni_group: DiffoExample.Nbn.NniGroupCharacteristic,
+    nni: DiffoExample.Nbn.NniCharacteristic,
+    ntd: DiffoExample.Nbn.NtdCharacteristic,
+    uni: DiffoExample.Nbn.UniCharacteristic,
+    pri: DiffoExample.Nbn.PriCharacteristic
   }
 
   @doc """

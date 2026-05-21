@@ -77,7 +77,8 @@ defmodule DiffoExample.Access.Cable do
 
       change after_action(fn changeset, result, _context ->
                with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <-
+                      Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Pool.update_pools(result, changeset, pools()),
                     {:ok, result} <- Access.get_cable_by_id(result.id),
                     do: {:ok, result}

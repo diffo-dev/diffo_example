@@ -13,18 +13,6 @@ defmodule DiffoExample.Nbn.CvcCharacteristic do
     plural_name :cvc_characteristics
   end
 
-  attributes do
-    attribute :svlan, :integer, public?: true
-    attribute :bandwidth, :integer, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              Diffo.Provider.Calculations.CharacteristicValue do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :svlan, :bandwidth]
@@ -36,6 +24,19 @@ defmodule DiffoExample.Nbn.CvcCharacteristic do
 
     update :update do
       accept [:svlan, :bandwidth]
+    end
+  end
+
+  attributes do
+    attribute :svlan, :integer, public?: true
+    attribute :bandwidth, :integer, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              Diffo.Provider.Calculations.CharacteristicValue do
+      public? true
     end
   end
 
@@ -53,17 +54,17 @@ defmodule DiffoExample.Nbn.CvcCharacteristic.Value do
   @moduledoc false
   use Ash.TypedStruct, extensions: [AshJason.TypedStruct, AshOutstanding.TypedStruct]
 
-  typed_struct do
-    field :svlan, :integer
-    field :bandwidth, :integer
+  jason do
+    pick [:svlan, :bandwidth]
+    compact true
   end
 
   outstanding do
     expect [:svlan, :bandwidth]
   end
 
-  jason do
-    pick [:svlan, :bandwidth]
-    compact true
+  typed_struct do
+    field :svlan, :integer
+    field :bandwidth, :integer
   end
 end

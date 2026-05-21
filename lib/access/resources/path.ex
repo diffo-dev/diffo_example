@@ -68,7 +68,8 @@ defmodule DiffoExample.Access.Path do
 
       change after_action(fn changeset, result, _context ->
                with {:ok, result} <- Ash.load(result, [:characteristics]),
-                    {:ok, result} <- Characteristic.update_all(result, changeset, characteristics()),
+                    {:ok, result} <-
+                      Characteristic.update_all(result, changeset, characteristics()),
                     {:ok, result} <- Access.get_path_by_id(result.id),
                     do: {:ok, result}
              end)

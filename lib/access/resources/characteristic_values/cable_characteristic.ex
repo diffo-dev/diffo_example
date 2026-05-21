@@ -15,22 +15,6 @@ defmodule DiffoExample.Access.CableCharacteristic do
     plural_name :cable_characteristics
   end
 
-  attributes do
-    attribute :pairs, :integer, public?: true
-    attribute :length_amount, :integer, public?: true
-    attribute :length_unit, :atom, public?: true
-    attribute :loss_amount, :float, public?: true
-    attribute :loss_unit, :atom, public?: true
-    attribute :technology, :atom, public?: true
-  end
-
-  calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
-              DiffoExample.Access.CableCharacteristic.ValueCalculation do
-      public? true
-    end
-  end
-
   actions do
     create :create do
       accept [:name, :pairs, :length_amount, :length_unit, :loss_amount, :loss_unit, :technology]
@@ -53,6 +37,23 @@ defmodule DiffoExample.Access.CableCharacteristic do
     end
   end
 
+  attributes do
+    attribute :pairs, :integer, public?: true
+    attribute :length_amount, :integer, public?: true
+    attribute :length_unit, :atom, public?: true
+    attribute :loss_amount, :float, public?: true
+    attribute :loss_unit, :atom, public?: true
+    attribute :technology, :atom, public?: true
+  end
+
+  calculations do
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
+              DiffoExample.Access.CableCharacteristic.ValueCalculation do
+      public? true
+    end
+  end
+
   preparations do
     prepare build(load: [:value])
   end
@@ -70,20 +71,20 @@ defmodule DiffoExample.Access.CableCharacteristic.Value do
   alias DiffoExample.Access.IntegerUnit
   alias DiffoExample.Access.FloatUnit
 
-  typed_struct do
-    field :pairs, :integer
-    field :length, IntegerUnit
-    field :loss, FloatUnit
-    field :technology, :atom
+  jason do
+    pick [:pairs, :length, :loss, :technology]
+    compact true
   end
 
   outstanding do
     expect [:pairs, :loss]
   end
 
-  jason do
-    pick [:pairs, :length, :loss, :technology]
-    compact true
+  typed_struct do
+    field :pairs, :integer
+    field :length, IntegerUnit
+    field :loss, FloatUnit
+    field :technology, :atom
   end
 end
 

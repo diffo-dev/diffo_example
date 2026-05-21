@@ -4,7 +4,7 @@
 
 defmodule DiffoExample.Nbn.RspTest do
   @moduledoc false
-  use ExUnit.Case, async: true, async: true
+  use ExUnit.Case, async: true
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Rsp
 

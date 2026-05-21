@@ -15,6 +15,47 @@ defmodule DiffoExample.Access.PathCharacteristic do
     plural_name :path_characteristics
   end
 
+  actions do
+    create :create do
+      accept [
+        :name,
+        :device_name,
+        :sections,
+        :length_amount,
+        :length_unit,
+        :loss_amount,
+        :loss_unit,
+        :technology
+      ]
+
+      argument :instance_id, :uuid
+      argument :feature_id, :uuid
+      change manage_relationship(:instance_id, :instance, type: :append)
+      change manage_relationship(:feature_id, :feature, type: :append)
+    end
+
+    update :update do
+      accept [
+        :device_name,
+        :sections,
+        :technology,
+        :length_amount,
+        :length_unit,
+        :loss_amount,
+        :loss_unit
+      ]
+
+      argument :length, :term, allow_nil?: true
+      argument :loss, :term, allow_nil?: true
+
+      change fn changeset, _ ->
+        changeset
+        |> CharacteristicChanges.set_unit(:length, :length_amount, :length_unit)
+        |> CharacteristicChanges.set_unit(:loss, :loss_amount, :loss_unit)
+      end
+    end
+  end
+
   attributes do
     attribute :device_name, :string, public?: true
     attribute :sections, :integer, public?: true
@@ -26,31 +67,10 @@ defmodule DiffoExample.Access.PathCharacteristic do
   end
 
   calculations do
-    calculate :value, Diffo.Type.CharacteristicValue,
+    calculate :value,
+              Diffo.Type.CharacteristicValue,
               DiffoExample.Access.PathCharacteristic.ValueCalculation do
       public? true
-    end
-  end
-
-  actions do
-    create :create do
-      accept [:name, :device_name, :sections, :length_amount, :length_unit, :loss_amount, :loss_unit, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:device_name, :sections, :technology, :length_amount, :length_unit, :loss_amount, :loss_unit]
-      argument :length, :term, allow_nil?: true
-      argument :loss, :term, allow_nil?: true
-
-      change fn changeset, _ ->
-        changeset
-        |> CharacteristicChanges.set_unit(:length, :length_amount, :length_unit)
-        |> CharacteristicChanges.set_unit(:loss, :loss_amount, :loss_unit)
-      end
     end
   end
 
@@ -71,22 +91,22 @@ defmodule DiffoExample.Access.PathCharacteristic.Value do
   alias DiffoExample.Access.IntegerUnit
   alias DiffoExample.Access.FloatUnit
 
-  typed_struct do
-    field :device_name, :string
-    field :sections, :integer
-    field :length, IntegerUnit
-    field :loss, FloatUnit
-    field :technology, :atom
+  jason do
+    pick [:device_name, :sections, :length, :loss, :technology]
+    compact true
+    rename device_name: "name"
   end
 
   outstanding do
     expect [:loss]
   end
 
-  jason do
-    pick [:device_name, :sections, :length, :loss, :technology]
-    compact true
-    rename device_name: "name"
+  typed_struct do
+    field :device_name, :string
+    field :sections, :integer
+    field :length, IntegerUnit
+    field :loss, FloatUnit
+    field :technology, :atom
   end
 end
 
