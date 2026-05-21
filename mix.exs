@@ -63,6 +63,7 @@ defmodule DiffoExample.MixProject do
         "README.md": [title: "Guide"],
         "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
         "documentation/domains/nbn.md": [title: "The NBN Domain"],
+        "documentation/how_to/setup_mcp.md": [title: "Setup the MCP server"],
         "LICENSES/MIT.md": [title: "License"]
       ],
       groups_for_extras: [
