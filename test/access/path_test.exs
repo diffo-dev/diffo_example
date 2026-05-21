@@ -109,8 +109,11 @@ defmodule DiffoExample.Access.PathTest do
     # now assign a port from a line card
     [_dslam, line_card] = create_dslam_with_line_card("QDONC-0001", tl(places), parties)
 
+    # path-as-assignee names its slot :port when requesting the port-assignment
+    # from the line card. This alias lets the InheritedCharacteristic calc
+    # traverse path → port → card (and transitively card → slot → shelf).
     Access.assign_port!(line_card, %{
-      assignment: %Assignment{assignee_id: path.id, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: path.id, alias: :port, operation: :auto_assign}
     })
 
     # 5 cables each assigned a pair to the path, plus 1 line card assigned a port
@@ -123,6 +126,19 @@ defmodule DiffoExample.Access.PathTest do
     assert length(incoming) == 6
 
     {:ok, path} = Access.get_path_by_id(path.id)
+
+    # the path brings up its card and (transitively) its shelf via the
+    # port-then-slot assignment chain — each instance shows itself, the path
+    # also shows what's brought up from below.
+    {:ok, path_with_brought_up} =
+      Ash.load(path, [:card, :shelf, :port])
+
+    [%{family: :ISAM, model: "EBLT48", technology: :adsl2Plus}] = path_with_brought_up.card
+
+    [%{device_name: "QDONC-0001", family: :ISAM, model: "ISAM7330", technology: :DSLAM}] =
+      path_with_brought_up.shelf
+
+    assert path_with_brought_up.port == [1]
 
     encoding =
       Jason.encode!(path)
@@ -220,18 +236,26 @@ defmodule DiffoExample.Access.PathTest do
 
     shelf =
       Access.define_shelf!(shelf, %{
-        characteristic_value_updates: [slots: [first: 1, last: 10, assignable_type: "LineCard"]]
+        characteristic_value_updates: [
+          shelf: [device_name: name, family: :ISAM, model: "ISAM7330", technology: :DSLAM],
+          slots: [first: 1, last: 10, assignable_type: "LineCard"]
+        ]
       })
 
     card = Access.build_card!(%{name: "dslam line card #{name} 1"})
 
     card =
       Access.define_card!(card, %{
-        characteristic_value_updates: [ports: [first: 1, last: 48, assignable_type: "ADSL2+"]]
+        characteristic_value_updates: [
+          card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
+          ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
+        ]
       })
 
+    # card-as-assignee names its slot :slot when requesting; alias lets
+    # downstream calculations traverse the assignment by name.
     Access.assign_slot!(shelf, %{
-      assignment: %Assignment{assignee_id: card.id, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: card.id, alias: :slot, operation: :auto_assign}
     })
 
     [shelf, card]

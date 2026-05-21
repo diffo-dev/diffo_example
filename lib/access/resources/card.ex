@@ -87,4 +87,23 @@ defmodule DiffoExample.Access.Card do
       change {DiffoExample.Changes.Assign, pool: :ports}
     end
   end
+
+  calculations do
+    # The shelf characteristic value brought up from the shelf this card is
+    # in — derived live via the :slot assignment.
+    calculate :shelf,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [via: [:slot], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
+      public? true
+    end
+
+    # The slot number this card occupies on its shelf — the value of the
+    # shelf's :slots-pool assignment to this card.
+    calculate :slot,
+              {:array, :integer},
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :slot, field: :value]} do
+      public? true
+    end
+  end
 end

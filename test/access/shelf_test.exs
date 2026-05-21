@@ -153,6 +153,64 @@ defmodule DiffoExample.Access.ShelfTest do
     [psu1, psu2, transport1, transport2]
   end
 
+  test "shelf brings up its cards and total_ports" do
+    places = [create_esa_place()]
+    parties = [create_provider_party()]
+
+    {:ok, shelf} = Access.build_shelf(%{name: "QDONC-0001", places: places, parties: parties})
+
+    {:ok, shelf} =
+      Access.define_shelf(shelf, %{
+        characteristic_value_updates: [
+          shelf: [device_name: "QDONC-1001", family: :ISAM, model: "ISAM7330", technology: :DSLAM],
+          slots: [first: 1, last: 10, assignable_type: "LineCard"]
+        ]
+      })
+
+    # Card A — 48 ports
+    {:ok, card_a} = Access.build_card(%{name: "card a"})
+
+    {:ok, card_a} =
+      Access.define_card(card_a, %{
+        characteristic_value_updates: [
+          card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
+          ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
+        ]
+      })
+
+    # Card B — 24 ports
+    {:ok, card_b} = Access.build_card(%{name: "card b"})
+
+    {:ok, card_b} =
+      Access.define_card(card_b, %{
+        characteristic_value_updates: [
+          card: [family: :ISAM, model: "EBLT24", technology: :adsl2Plus],
+          ports: [first: 1, last: 24, assignable_type: "ADSL2+"]
+        ]
+      })
+
+    # Each card-as-assignee names its slot :slot when requesting.
+    {:ok, _shelf} =
+      Access.assign_slot(shelf, %{
+        assignment: %Assignment{assignee_id: card_a.id, alias: :slot, operation: :auto_assign}
+      })
+
+    {:ok, shelf} =
+      Access.assign_slot(shelf, %{
+        assignment: %Assignment{assignee_id: card_b.id, alias: :slot, operation: :auto_assign}
+      })
+
+    # Shelf brings up its cards (in slot order) and aggregates total ports.
+    {:ok, shelf_with_brought_up} = Ash.load(shelf, [:cards, :total_ports])
+
+    assert [
+             %{family: :ISAM, model: "EBLT48", technology: :adsl2Plus},
+             %{family: :ISAM, model: "EBLT24", technology: :adsl2Plus}
+           ] = shelf_with_brought_up.cards
+
+    assert shelf_with_brought_up.total_ports == 72
+  end
+
   defp create_line_card(name) do
     card =
       Access.build_card!(%{name: "#{name}"})

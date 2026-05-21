@@ -87,4 +87,26 @@ defmodule DiffoExample.Access.Shelf do
       change {DiffoExample.Changes.Assign, pool: :slots}
     end
   end
+
+  calculations do
+    # Brings up the card characteristic of every card this shelf has
+    # assigned a slot to, ordered by slot number. Cards-as-assignees name
+    # their slot :slot when requesting; the calc filters outgoing
+    # AssignmentRelationship records by that alias.
+    calculate :cards,
+              {:array, :map},
+              {DiffoExample.Calculations.ReverseInheritedCharacteristic,
+               [alias: :slot, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
+      public? true
+    end
+
+    # Sum of port capacity across every card assigned to this shelf.
+    # Each card's :ports pool size is `(last - first + 1)`. Reaches across
+    # the slot-assignment chain to AssignableCharacteristic on each card.
+    calculate :total_ports,
+              :integer,
+              DiffoExample.Access.Calculations.ShelfTotalPorts do
+      public? true
+    end
+  end
 end
