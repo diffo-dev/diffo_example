@@ -6,7 +6,7 @@ defmodule DiffoExample.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "0.2.1"
+  @version "0.2.2"
   @name "DiffoExample"
   @description "Examples for Diffo TMF Service and Resource Manager"
   @github_url "https://github.com/diffo-dev/diffo-example"
