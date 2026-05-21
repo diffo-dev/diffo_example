@@ -74,4 +74,35 @@ defmodule DiffoExample.Access.Path do
       change DiffoExample.Changes.Relate
     end
   end
+
+  calculations do
+    # The card characteristic value brought up from the card this path is
+    # assigned a port on — via the :port assignment.
+    calculate :card,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [via: [:port], characteristic_module: DiffoExample.Access.CardCharacteristic]} do
+      public? true
+    end
+
+    # The port number this path occupies on its card — the value of the
+    # card's :ports-pool assignment to this path.
+    calculate :port,
+              {:array, :integer},
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :port, field: :value]} do
+      public? true
+    end
+
+    # The shelf characteristic value brought up transitively — port to the
+    # card, then the card's slot to its shelf. Two-hop via [:port, :slot].
+    calculate :shelf,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [
+                 via: [:port, :slot],
+                 characteristic_module: DiffoExample.Access.ShelfCharacteristic
+               ]} do
+      public? true
+    end
+  end
 end
