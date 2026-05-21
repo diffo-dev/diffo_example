@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Agents working in this repo
 
 Notes for AI assistants (Claude Code, Cursor, Continue, etc.) and humans pairing with them.
@@ -47,3 +53,21 @@ grep -c "define :" lib/access/access.ex lib/nbn/nbn.ex
 ```
 
 The two should match (modulo intentional exclusions).
+
+## Before you commit
+
+Two checks before any commit, every commit:
+
+```bash
+mix format           # auto-format every changed file to project style
+reuse lint           # ensure every file has SPDX-FileCopyrightText + SPDX-License-Identifier
+```
+
+New `.ex` / `.exs` files start with a comment header matching the existing
+files (see `lib/diffo_example/util.ex` for the canonical form). New markdown
+files use an HTML-comment variant (see `README.md`). `reuse lint` will tell
+you which files are missing copyright/license info; if you've created a
+new file and haven't added the header, this is the place to catch it.
+
+Forgetting either is the easiest way to introduce CI noise the reviewer
+has to clean up. Save them both the time.

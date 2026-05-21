@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: MIT
 
 # Used by "mix format"
-locals_without_parens = []
+locals_without_parens = [
+  tool: 3,
+  tool: 4
+]
 
 [
   plugins: [Spark.Formatter],
@@ -11,6 +14,7 @@ locals_without_parens = []
   import_deps: [
     :diffo,
     :ash,
+    :ash_ai,
     :ash_state_machine,
     :ash_neo4j,
     :ash_jason,
