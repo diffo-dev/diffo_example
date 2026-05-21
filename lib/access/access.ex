@@ -9,13 +9,23 @@ defmodule DiffoExample.Access do
   Access - example Access domain
   """
   use Ash.Domain,
-    otp_app: :diffo
+    otp_app: :diffo,
+    fragments: [Diffo.Provider.DomainFragment]
 
   alias DiffoExample.Access.DslAccess
   alias DiffoExample.Access.Shelf
   alias DiffoExample.Access.Card
   alias DiffoExample.Access.Cable
   alias DiffoExample.Access.Path
+  alias DiffoExample.Access.CableCharacteristic
+  alias DiffoExample.Access.CardCharacteristic
+  alias DiffoExample.Access.ShelfCharacteristic
+  alias DiffoExample.Access.PathCharacteristic
+  alias DiffoExample.Access.LineCharacteristic
+  alias DiffoExample.Access.DslamCharacteristic
+  alias DiffoExample.Access.AggregateCharacteristic
+  alias DiffoExample.Access.CircuitCharacteristic
+  alias DiffoExample.Access.ConstraintsCharacteristic
 
   domain do
     description "An example showing how TMF Services and Resources for a fictional Access domain can be extended from the Provider domain"
@@ -59,5 +69,15 @@ defmodule DiffoExample.Access do
       define :define_path, action: :define
       define :relate_path, action: :relate
     end
+
+    resource CableCharacteristic
+    resource CardCharacteristic
+    resource ShelfCharacteristic
+    resource PathCharacteristic
+    resource LineCharacteristic
+    resource DslamCharacteristic
+    resource AggregateCharacteristic
+    resource CircuitCharacteristic
+    resource ConstraintsCharacteristic
   end
 end

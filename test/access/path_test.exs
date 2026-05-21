@@ -4,10 +4,10 @@
 
 defmodule DiffoExample.Access.PathTest do
   @moduledoc false
-  use ExUnit.Case, async: true
+  use DiffoExample.DataCase, async: true
+
   alias Diffo.Provider
   alias Diffo.Provider.Specification
-  alias Diffo.Provider.Characteristic
   alias Diffo.Provider.Instance.Place
   alias Diffo.Provider.Instance.Party
   alias Diffo.Provider.Instance.Relationship
@@ -16,11 +16,7 @@ defmodule DiffoExample.Access.PathTest do
   alias DiffoExample.Access.Path
   alias DiffoExample.Test.Parties
   alias DiffoExample.Test.Places
-
-  setup do
-    AshNeo4j.Sandbox.checkout()
-    on_exit(&AshNeo4j.Sandbox.rollback/0)
-  end
+  alias DiffoExample.Util
 
   describe "build path" do
     test "create a path" do
@@ -46,30 +42,21 @@ defmodule DiffoExample.Access.PathTest do
                :outgoing
              )
 
-      # check characteristic resource enrichment and node relationships
+      # typed characteristics are not in instance.characteristics
       assert is_list(path.characteristics)
-      assert length(path.characteristics) == 1
-
-      Enum.each(path.characteristics, fn characteristic ->
-        assert is_struct(characteristic, Characteristic)
-
-        assert AshNeo4j.Neo4jHelper.nodes_relate_how?(
-                 :Instance,
-                 %{uuid: path.id},
-                 :Characteristic,
-                 %{uuid: characteristic.id},
-                 :HAS,
-                 :outgoing
-               )
-      end)
+      assert length(path.characteristics) == 0
 
       Places.check_places(places, path)
       Parties.check_parties(parties, path)
 
-      encoding = Jason.encode!(path) |> Diffo.Util.summarise_dates()
+      encoding =
+        Jason.encode!(path)
+        |> Diffo.Util.summarise_dates()
+        |> Util.summarise_characteristics(path)
 
       assert encoding ==
                ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"sections\":0}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+               |> Util.summarise_characteristics(path)
     end
   end
 
@@ -81,15 +68,19 @@ defmodule DiffoExample.Access.PathTest do
       Access.build_path(%{name: "82 Rathmullen - DONC", places: places, parties: parties})
 
     updates = [
-      path: [name: "82 Rathmullen - DONC", technology: :copper]
+      path: [device_name: "82 Rathmullen - DONC", technology: :copper]
     ]
 
     {:ok, path} = Access.define_path(path, %{characteristic_value_updates: updates})
 
-    encoding = Jason.encode!(path) |> Diffo.Util.summarise_dates()
+    encoding =
+      Jason.encode!(path)
+      |> Diffo.Util.summarise_dates()
+      |> Util.summarise_characteristics(path)
 
     assert encoding ==
              ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"sections\":0,\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+             |> Util.summarise_characteristics(path)
   end
 
   test "relate cables and dslam" do
@@ -100,7 +91,7 @@ defmodule DiffoExample.Access.PathTest do
       Access.build_path(%{name: "82 Rathmullen - DONC", places: places, parties: parties})
 
     updates = [
-      path: [name: "82 Rathmullen - DONC", technology: :copper]
+      path: [device_name: "82 Rathmullen - DONC", technology: :copper]
     ]
 
     {:ok, path} = Access.define_path(path, %{characteristic_value_updates: updates})
@@ -122,18 +113,26 @@ defmodule DiffoExample.Access.PathTest do
       assignment: %Assignment{assignee_id: path.id, operation: :auto_assign}
     })
 
-    # refresh the path loading the reverse relationships explicitly, which should include
-    # relationships with cables assigning pairs
-    # relationship with line card assigning port
+    # 5 cables each assigned a pair to the path, plus 1 line card assigned a port
+    # — six AssignmentRelationship records pointing at the path
+    {:ok, incoming} =
+      Diffo.Provider.AssignmentRelationship
+      |> Ash.Query.filter_input(target_id: path.id)
+      |> Ash.read()
 
-    {:ok, path} = Access.get_path_by_id(path.id, load: [:reverse_relationships])
-    assert length(path.reverse_relationships) == 6
+    assert length(incoming) == 6
 
-    encoding = Jason.encode!(path) |> Diffo.Util.summarise_dates()
+    {:ok, path} = Access.get_path_by_id(path.id)
+
+    encoding =
+      Jason.encode!(path)
+      |> Diffo.Util.summarise_dates()
+      |> Util.summarise_characteristics(path)
 
     # the reverse relationships are not encoded to json
     assert encoding ==
              ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"sections\":0,\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
+             |> Util.summarise_characteristics(path)
   end
 
   defp create_customer_place do
@@ -209,12 +208,27 @@ defmodule DiffoExample.Access.PathTest do
 
   defp create_cable(name, relationships, places)
        when is_bitstring(name) and is_list(relationships) and is_list(places) do
-    Access.build_cable!(%{name: "#{name}", places: places, relationships: relationships})
+    cable = Access.build_cable!(%{name: "#{name}", places: places, relationships: relationships})
+
+    Access.define_cable!(cable, %{
+      characteristic_value_updates: [pairs: [first: 1, last: 60, assignable_type: "copper"]]
+    })
   end
 
   defp create_dslam_with_line_card(name, places, parties) when is_bitstring(name) do
     shelf = Access.build_shelf!(%{name: "dslam shelf #{name}", places: places, parties: parties})
+
+    shelf =
+      Access.define_shelf!(shelf, %{
+        characteristic_value_updates: [slots: [first: 1, last: 10, assignable_type: "LineCard"]]
+      })
+
     card = Access.build_card!(%{name: "dslam line card #{name} 1"})
+
+    card =
+      Access.define_card!(card, %{
+        characteristic_value_updates: [ports: [first: 1, last: 48, assignable_type: "ADSL2+"]]
+      })
 
     Access.assign_slot!(shelf, %{
       assignment: %Assignment{assignee_id: card.id, operation: :auto_assign}

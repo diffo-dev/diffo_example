@@ -13,8 +13,6 @@ defmodule DiffoExample.Nbn.Avc do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
 
   alias DiffoExample.Nbn
 
@@ -33,7 +31,7 @@ defmodule DiffoExample.Nbn.Avc do
     type "avc"
   end
 
-  structure do
+  provider do
     specification do
       id "b2c3d4e5-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
       name "avc"
@@ -43,14 +41,19 @@ defmodule DiffoExample.Nbn.Avc do
     end
 
     characteristics do
-      characteristic :avc, DiffoExample.Nbn.AvcValue
-      characteristic :cvc, DiffoExample.Nbn.CvcValue
+      characteristic :avc, DiffoExample.Nbn.AvcCharacteristic
+      characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -73,37 +76,15 @@ defmodule DiffoExample.Nbn.Avc do
       description "defines the AVC"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_avc_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the AVC with other instances"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_avc_by_id(result.id),
-                    do: {:ok, result}
-             end)
-    end
-
-    update :mine do
-      description "updates the AVC with data mined from related instances"
-      argument :characteristic_value_updates, {:array, :term}
-
-      change before_action(fn changeset, context ->
-               DiffoExample.Nbn.Avc.mine_related(changeset, context)
-             end)
-
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_avc_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 
@@ -117,15 +98,6 @@ defmodule DiffoExample.Nbn.Avc do
 
   def identifier() do
     DiffoExample.Nbn.Util.identifier("AVC")
-  end
-
-  # mines related resource to characteristics
-  def mine_related(changeset, _context) when is_struct(changeset, Ash.Changeset) do
-    avc = Ash.load!(changeset.data, reverse_relationships: [:characteristics])
-
-    cvlan = {:cvlan, Diffo.Unwrap.unwrap(hd(hd(avc.reverse_relationships).characteristics).value)}
-
-    Ash.Changeset.force_set_argument(changeset, :characteristic_value_updates, avc: [cvlan])
   end
 
   use DiffoExample.Nbn.RspOwnership

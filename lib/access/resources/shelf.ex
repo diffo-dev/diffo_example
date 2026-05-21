@@ -10,9 +10,6 @@ defmodule DiffoExample.Access.Shelf do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
@@ -26,7 +23,7 @@ defmodule DiffoExample.Access.Shelf do
     plural_name :Shelves
   end
 
-  structure do
+  provider do
     specification do
       id "ef016d85-9dbd-429c-84da-1df56cc7dda5"
       name "shelf"
@@ -36,14 +33,22 @@ defmodule DiffoExample.Access.Shelf do
     end
 
     characteristics do
-      characteristic :shelf, DiffoExample.Access.ShelfValue
-      characteristic :slots, Diffo.Provider.AssignableValue
+      characteristic :shelf, DiffoExample.Access.ShelfCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :slots, :slot
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -64,33 +69,22 @@ defmodule DiffoExample.Access.Shelf do
       description "defines the shelf"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the shelf with cards"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
 
     update :assign_slot do
       description "relates the shelf with an instance by assigning a slot"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :slots, :slot),
-                    {:ok, result} <- Access.get_shelf_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :slots}
     end
   end
 end

@@ -10,9 +10,6 @@ defmodule DiffoExample.Access.Cable do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
@@ -26,7 +23,7 @@ defmodule DiffoExample.Access.Cable do
     plural_name :Cables
   end
 
-  structure do
+  provider do
     specification do
       id "ce0a567a-6abb-4862-9e33-851fd79fa595"
       name "cable"
@@ -36,14 +33,22 @@ defmodule DiffoExample.Access.Cable do
     end
 
     characteristics do
-      characteristic :cable, DiffoExample.Access.CableValue
-      characteristic :pairs, Diffo.Provider.AssignableValue
+      characteristic :cable, DiffoExample.Access.CableCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :pairs, :pair
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -64,11 +69,8 @@ defmodule DiffoExample.Access.Cable do
       description "defines the cable"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Access.get_cable_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
@@ -86,11 +88,7 @@ defmodule DiffoExample.Access.Cable do
       description "relates the cable with an instance by assigning a pair"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :pairs, :pair),
-                    {:ok, result} <- Access.get_cable_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :pairs}
     end
   end
 end

@@ -4,14 +4,10 @@
 
 defmodule DiffoExample.Nbn.RspTest do
   @moduledoc false
-  use ExUnit.Case, async: true, async: true
+  use DiffoExample.DataCase, async: true
+
   alias DiffoExample.Nbn
   alias DiffoExample.Nbn.Rsp
-
-  setup do
-    AshNeo4j.Sandbox.checkout()
-    on_exit(&AshNeo4j.Sandbox.rollback/0)
-  end
 
   defp create_rsp(attrs) do
     {:ok, rsp} = Nbn.create_rsp(attrs)

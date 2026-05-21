@@ -14,9 +14,6 @@ defmodule DiffoExample.Nbn.NniGroup do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
@@ -36,7 +33,7 @@ defmodule DiffoExample.Nbn.NniGroup do
     type "nniGroup"
   end
 
-  structure do
+  provider do
     specification do
       id "e5f6a7b8-9c0d-4e1f-8a2b-4c5d6e7f8a9b"
       name "nniGroup"
@@ -46,14 +43,22 @@ defmodule DiffoExample.Nbn.NniGroup do
     end
 
     characteristics do
-      characteristic :nni_group, DiffoExample.Nbn.NniGroupValue
-      characteristic :svlans, Diffo.Provider.AssignableValue
+      characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :svlans, :svlan
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -75,33 +80,22 @@ defmodule DiffoExample.Nbn.NniGroup do
       description "defines the NNI Group"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :assign_svlan do
       description "assigns an S-VLAN ID from the NNI Group pool to a CVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :svlans, :svlan),
-                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :svlans}
     end
 
     update :relate do
       description "relates the NNI Group with other instances (e.g. NNI resources it comprises)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_group_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 

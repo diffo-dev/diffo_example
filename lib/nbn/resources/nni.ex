@@ -14,8 +14,6 @@ defmodule DiffoExample.Nbn.Nni do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
 
   alias DiffoExample.Nbn
 
@@ -34,7 +32,7 @@ defmodule DiffoExample.Nbn.Nni do
     type "nni"
   end
 
-  structure do
+  provider do
     specification do
       id "f6a7b8c9-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
       name "nni"
@@ -44,13 +42,18 @@ defmodule DiffoExample.Nbn.Nni do
     end
 
     characteristics do
-      characteristic :nni, DiffoExample.Nbn.NniValue
+      characteristic :nni, DiffoExample.Nbn.NniCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -73,22 +76,15 @@ defmodule DiffoExample.Nbn.Nni do
       description "defines the NNI"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the NNI with other instances (e.g. its parent NNI Group)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
   end
 
