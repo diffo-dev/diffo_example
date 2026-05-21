@@ -9,16 +9,57 @@ defmodule DiffoExample.Access do
   Access - example Access domain
   """
   use Ash.Domain,
-    otp_app: :diffo
+    otp_app: :diffo,
+    fragments: [Diffo.Provider.DomainFragment],
+    extensions: [AshAi]
 
   alias DiffoExample.Access.DslAccess
   alias DiffoExample.Access.Shelf
   alias DiffoExample.Access.Card
   alias DiffoExample.Access.Cable
   alias DiffoExample.Access.Path
+  alias DiffoExample.Access.CableCharacteristic
+  alias DiffoExample.Access.CardCharacteristic
+  alias DiffoExample.Access.ShelfCharacteristic
+  alias DiffoExample.Access.PathCharacteristic
+  alias DiffoExample.Access.LineCharacteristic
+  alias DiffoExample.Access.DslamCharacteristic
+  alias DiffoExample.Access.AggregateCharacteristic
+  alias DiffoExample.Access.CircuitCharacteristic
+  alias DiffoExample.Access.ConstraintsCharacteristic
 
   domain do
     description "An example showing how TMF Services and Resources for a fictional Access domain can be extended from the Provider domain"
+  end
+
+  tools do
+    tool :get_dsl_by_id, DslAccess, :read
+    tool :qualify_dsl, DslAccess, :qualify
+    tool :qualify_dsl_result, DslAccess, :qualify_result
+    tool :design_dsl_result, DslAccess, :design_result
+
+    tool :get_shelf_by_id, Shelf, :read
+    tool :build_shelf, Shelf, :build
+    tool :define_shelf, Shelf, :define
+    tool :relate_shelf, Shelf, :relate
+    tool :assign_slot, Shelf, :assign_slot
+
+    tool :get_card_by_id, Card, :read
+    tool :build_card, Card, :build
+    tool :define_card, Card, :define
+    tool :relate_card, Card, :relate
+    tool :assign_port_on_card, Card, :assign_port
+
+    tool :get_cable_by_id, Cable, :read
+    tool :build_cable, Cable, :build
+    tool :define_cable, Cable, :define
+    tool :relate_cable, Cable, :relate
+    tool :assign_pair, Cable, :assign_pair
+
+    tool :get_path_by_id, Path, :read
+    tool :build_path, Path, :build
+    tool :define_path, Path, :define
+    tool :relate_path, Path, :relate
   end
 
   resources do
@@ -59,5 +100,15 @@ defmodule DiffoExample.Access do
       define :define_path, action: :define
       define :relate_path, action: :relate
     end
+
+    resource CableCharacteristic
+    resource CardCharacteristic
+    resource ShelfCharacteristic
+    resource PathCharacteristic
+    resource LineCharacteristic
+    resource DslamCharacteristic
+    resource AggregateCharacteristic
+    resource CircuitCharacteristic
+    resource ConstraintsCharacteristic
   end
 end

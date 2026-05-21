@@ -10,8 +10,6 @@ defmodule DiffoExample.Access.Path do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
 
   alias DiffoExample.Access
 
@@ -24,7 +22,7 @@ defmodule DiffoExample.Access.Path do
     plural_name :Paths
   end
 
-  structure do
+  provider do
     specification do
       id "1d507914-8f76-48cb-aa0e-3a8f92951ab0"
       name "path"
@@ -34,13 +32,18 @@ defmodule DiffoExample.Access.Path do
     end
 
     characteristics do
-      characteristic :path, DiffoExample.Access.PathValue
+      characteristic :path, DiffoExample.Access.PathCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -61,22 +64,45 @@ defmodule DiffoExample.Access.Path do
       description "defines the path"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Access.get_path_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the path with other instances"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_path_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
+    end
+  end
+
+  calculations do
+    # The card characteristic value brought up from the card this path is
+    # assigned a port on — via the :port assignment.
+    calculate :card,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [via: [:port], characteristic_module: DiffoExample.Access.CardCharacteristic]} do
+      public? true
+    end
+
+    # The port number this path occupies on its card — the value of the
+    # card's :ports-pool assignment to this path.
+    calculate :port,
+              {:array, :integer},
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :port, field: :value]} do
+      public? true
+    end
+
+    # The shelf characteristic value brought up transitively — port to the
+    # card, then the card's slot to its shelf. Two-hop via [:port, :slot].
+    calculate :shelf,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [
+                 via: [:port, :slot],
+                 characteristic_module: DiffoExample.Access.ShelfCharacteristic
+               ]} do
+      public? true
     end
   end
 end

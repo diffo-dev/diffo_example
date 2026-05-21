@@ -14,8 +14,6 @@ defmodule DiffoExample.Nbn.Nni do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
 
   alias DiffoExample.Nbn
 
@@ -25,16 +23,16 @@ defmodule DiffoExample.Nbn.Nni do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "nni"
-  end
-
   resource do
     description "An Ash Resource representing a Network-to-Network Interface (NNI)"
     plural_name :Nnis
   end
 
-  structure do
+  json_api do
+    type "nni"
+  end
+
+  provider do
     specification do
       id "f6a7b8c9-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
       name "nni"
@@ -44,21 +42,18 @@ defmodule DiffoExample.Nbn.Nni do
     end
 
     characteristics do
-      characteristic :nni, DiffoExample.Nbn.NniValue
+      characteristic :nni, DiffoExample.Nbn.NniCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    relationships do
+      source :all
+      target :all
     end
-  end
 
-  attributes do
-    attribute :rsp_id, :string do
-      description "the owning RSP's id — nil for Perentie-managed infrastructure"
-      allow_nil? true
-      public? true
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -81,22 +76,23 @@ defmodule DiffoExample.Nbn.Nni do
       description "defines the NNI"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the NNI with other instances (e.g. its parent NNI Group)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_nni_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
+    end
+  end
+
+  attributes do
+    attribute :rsp_id, :string do
+      description "the owning RSP's id — nil for Perentie-managed infrastructure"
+      allow_nil? true
+      public? true
     end
   end
 

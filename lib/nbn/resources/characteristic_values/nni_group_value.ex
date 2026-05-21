@@ -12,7 +12,7 @@ defmodule DiffoExample.Nbn.NniGroupValue do
 
   jason do
     pick [:name, :location]
-    compact(true)
+    compact true
   end
 
   outstanding do

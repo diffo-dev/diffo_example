@@ -10,9 +10,6 @@ defmodule DiffoExample.Access.Card do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
@@ -26,7 +23,7 @@ defmodule DiffoExample.Access.Card do
     plural_name :Cards
   end
 
-  structure do
+  provider do
     specification do
       id "cd29956f-6c68-44cc-bf54-705eb8d2f754"
       name "card"
@@ -36,14 +33,22 @@ defmodule DiffoExample.Access.Card do
     end
 
     characteristics do
-      characteristic :card, DiffoExample.Access.CardValue
-      characteristic :ports, Diffo.Provider.AssignableValue
+      characteristic :card, DiffoExample.Access.CardCharacteristic
     end
-  end
 
-  behaviour do
-    actions do
-      create :build
+    pools do
+      pool :ports, :port
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
@@ -64,33 +69,41 @@ defmodule DiffoExample.Access.Card do
       description "defines the card"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Access.get_card_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :relate do
       description "relates the card with other instances"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_card_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change DiffoExample.Changes.Relate
     end
 
     update :assign_port do
       description "relates the card with an instance by assigning a port"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports, :port),
-                    {:ok, result} <- Access.get_card_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :ports}
+    end
+  end
+
+  calculations do
+    # The shelf characteristic value brought up from the shelf this card is
+    # in — derived live via the :slot assignment.
+    calculate :shelf,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristic,
+               [via: [:slot], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
+      public? true
+    end
+
+    # The slot number this card occupies on its shelf — the value of the
+    # shelf's :slots-pool assignment to this card.
+    calculate :slot,
+              {:array, :integer},
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :slot, field: :value]} do
+      public? true
     end
   end
 end

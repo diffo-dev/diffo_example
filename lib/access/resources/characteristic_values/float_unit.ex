@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.FloatUnit do
 
   jason do
     pick [:amount, :unit]
-    compact(true)
+    compact true
   end
 
   outstanding do

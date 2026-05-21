@@ -12,7 +12,7 @@ defmodule DiffoExample.Nbn.NniValue do
 
   jason do
     pick [:port_id, :capacity, :technology]
-    compact(true)
+    compact true
     rename port_id: "portId"
   end
 

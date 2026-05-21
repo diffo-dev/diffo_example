@@ -11,6 +11,41 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)
+
+### Maintenance:
+* updated to diffo 0.4.0 (skipping 0.3.0)
+* updated to ash_neo4j 0.6.0
+* added ash_ai 0.6 for MCP and future LLM features
+* AGENTS.md added with discipline reminders (keep `tools do` aligned with code-interface `define`s; run `mix format` and `reuse lint` before every commit)
+* `DiffoExample.DataCase` ExUnit case template — DRYs the AshNeo4j sandbox setup across 7 test files
+* `test/support/characteristics.ex` `@characteristic_modules` derived from configured ash_domains at runtime via `Ash.Domain.Info.resources/1` + `Diffo.Provider.Extension.Info.instance?/1`
+
+### Features:
+* diffo 0.4.0 migration: unified `provider do` DSL, `pools do`, `AssignmentRelationship`, `Assigner.assign/3` with pool lookup, `relationships do` permitted source/target roles, `Pool.update_pools/3` in define actions
+* `DiffoExample.Changes.Define`, `Relate`, `Assign` — three change modules collapsing ~28 hand-written after-action bodies across 11 instance resources into one declarative line per action
+* MCP interface via ash_ai (issue #44) — 60 tools exposed across Access and Nbn domains; `/mcp` forwarded from the existing Plug.Cowboy listener on port 4000; setup how-to at `documentation/how_to/setup_mcp.md`
+* Bring up characteristics across the assignment graph (issues #10 and #32):
+  * `DiffoExample.Calculations.InheritedCharacteristic` — assignee inherits typed characteristic from its assigner via incoming `AssignmentRelationship` traversal (mirrors `Diffo.Provider.Calculations.InheritedPlace`)
+  * `DiffoExample.Calculations.ReverseInheritedCharacteristic` — assigner brings up typed characteristic from its assignees via outgoing traversal ("insanity is hereditary, you get it from your kids")
+  * `DiffoExample.Access.Calculations.ShelfTotalPorts` — multi-hop aggregate-style calc summing port capacity across a shelf's assigned cards
+  * Card surfaces `:shelf`/`:slot`; Path surfaces `:card`/`:port` and (two-hop) `:shelf`; Shelf surfaces `:cards`/`:total_ports`
+* Resource lifecycle: `:build` leaves `resource_state` nil; `:define` transitions to `:operating` — minimum needed for the Assigner gate without modelling intermediate planning states (which are better expressed as Plan entities outside the instance)
+* `Shelf` and `Path` characteristics gained `:device_name` attribute with JSON rename to `"name"` (parallel to the `Dslam` pattern), so the typed characteristic carries the device's own name without colliding with `BaseCharacteristic`'s role-name `:name`
+
+### Workarounds (raised upstream):
+* `DslAccess.qualify_result` transitions to `:inactive` instead of `:feasibilityChecked` — works around the diffo Assigner gating services to `[:active, :inactive]`
+* `DiffoExample.Util.summarise_characteristics/2` test-time projection collapses typed characteristics and pool records to `"absent_diffo_169"` placeholders on both sides of JSON comparisons while [diffo#169](https://github.com/diffo-dev/diffo/issues/169) is open
+* No JSON rendering yet of inherited / reverse-inherited characteristic calc results — waits on [diffo#173](https://github.com/diffo-dev/diffo/issues/173)
+
+### Upstream yarns raised:
+* [diffo#169](https://github.com/diffo-dev/diffo/issues/169) — surface typed characteristics and pools in Instance JSON
+* [diffo#170](https://github.com/diffo-dev/diffo/issues/170) — provide change modules for the Define / Relate / Assign patterns
+* [diffo#171](https://github.com/diffo-dev/diffo/issues/171) — BaseCharacteristic could generate `update :update accept` from public attributes
+* [diffo#172](https://github.com/diffo-dev/diffo/issues/172) — `inherited_characteristic` and `reverse_inherited_characteristic` DSL declarations
+* [diffo#173](https://github.com/diffo-dev/diffo/issues/173) — JSON surfacing of inherited and reverse-inherited concepts
+* [diffo-dev/ash_neo4j#74](https://github.com/diffo-dev/ash_neo4j/issues/74) — vector index support (enriched with consumer context)
+
 ## [v0.2.1](https://github.com/diffo-dev/diffo/compare/v0.2.0..v0.2.1) (2026-05-07)
 
 ### Maintenance:

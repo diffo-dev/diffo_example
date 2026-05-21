@@ -13,9 +13,6 @@ defmodule DiffoExample.Nbn.Ntd do
   """
 
   alias Diffo.Provider.BaseInstance
-  alias Diffo.Provider.Instance.Relationship
-  alias Diffo.Provider.Instance.Characteristic
-  alias Diffo.Provider.Assigner
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
@@ -26,16 +23,26 @@ defmodule DiffoExample.Nbn.Ntd do
     extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
-  json_api do
-    type "ntd"
-  end
-
   resource do
     description "An Ash Resource representing a Network Termination Device (NTD)"
     plural_name :Ntds
   end
 
-  structure do
+  policies do
+    bypass DiffoExample.Nbn.Checks.NoActor do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+  end
+
+  provider do
     specification do
       id "c3d4e5f6-7a8b-4c9d-ae0f-2a3b4c5d6e7f"
       name "ntd"
@@ -45,15 +52,31 @@ defmodule DiffoExample.Nbn.Ntd do
     end
 
     characteristics do
-      characteristic :ntd, DiffoExample.Nbn.NtdValue
-      characteristic :ports, Diffo.Provider.AssignableValue
+      characteristic :ntd, DiffoExample.Nbn.NtdCharacteristic
+    end
+
+    pools do
+      pool :ports, :port
+    end
+
+    relationships do
+      source :all
+      target :all
+    end
+
+    behaviour do
+      actions do
+        create :build
+      end
     end
   end
 
-  behaviour do
-    actions do
-      create :build
-    end
+  json_api do
+    type "ntd"
+  end
+
+  def identifier() do
+    DiffoExample.Nbn.Util.identifier("NTD")
   end
 
   actions do
@@ -74,51 +97,22 @@ defmodule DiffoExample.Nbn.Ntd do
       description "defines the NTD"
       argument :characteristic_value_updates, {:array, :term}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Characteristic.update_values(result, changeset),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change set_attribute(:resource_state, :operating)
+      change DiffoExample.Changes.Define
     end
 
     update :assign_port do
       description "assigns a port from the NTD pool to a UNI"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Assigner.assign(result, changeset, :ports, :port),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change {DiffoExample.Changes.Assign, pool: :ports}
     end
 
     update :relate do
       description "relates the NTD with other instances (e.g. UNI)"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Nbn.get_ntd_by_id(result.id),
-                    do: {:ok, result}
-             end)
-    end
-  end
-
-  def identifier() do
-    DiffoExample.Nbn.Util.identifier("NTD")
-  end
-
-  policies do
-    bypass DiffoExample.Nbn.Checks.NoActor do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:role, :admin) do
-      authorize_if always()
-    end
-
-    policy action_type(:read) do
-      authorize_if always()
+      change DiffoExample.Changes.Relate
     end
   end
 end

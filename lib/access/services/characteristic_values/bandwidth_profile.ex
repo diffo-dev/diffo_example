@@ -12,7 +12,7 @@ defmodule DiffoExample.Access.BandwidthProfile do
 
   jason do
     pick [:downstream, :upstream, :units]
-    compact(true)
+    compact true
   end
 
   outstanding do
