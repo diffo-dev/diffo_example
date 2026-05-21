@@ -31,5 +31,13 @@ defmodule DiffoExample.Nbn.Router do
     |> send_resp(200, result)
   end
 
+  forward "/mcp",
+    to: AshAi.Mcp.Router,
+    init_opts: [
+      tools: true,
+      otp_app: :diffo_example,
+      protocol_version_statement: "2024-11-05"
+    ]
+
   forward "/", to: DiffoExample.Nbn.ApiRouter
 end

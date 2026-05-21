@@ -15,7 +15,7 @@ defmodule DiffoExample.Nbn do
   use Ash.Domain,
     otp_app: :diffo,
     fragments: [Diffo.Provider.DomainFragment],
-    extensions: [AshJsonApi.Domain]
+    extensions: [AshAi, AshJsonApi.Domain]
 
   alias DiffoExample.Nbn.NbnEthernet
   alias DiffoExample.Nbn.Uni
@@ -35,6 +35,53 @@ defmodule DiffoExample.Nbn do
 
   domain do
     description "An example showing how TMF Resources for a fictional NBN domain can be extended from the Provider domain"
+  end
+
+  tools do
+    tool :get_nbn_ethernet_by_id, NbnEthernet, :read
+    tool :build_nbn_ethernet, NbnEthernet, :build
+    tool :define_nbn_ethernet, NbnEthernet, :define
+    tool :relate_nbn_ethernet, NbnEthernet, :relate
+
+    tool :get_uni_by_id, Uni, :read
+    tool :build_uni, Uni, :build
+    tool :define_uni, Uni, :define
+    tool :relate_uni, Uni, :relate
+
+    tool :get_avc_by_id, Avc, :read
+    tool :build_avc, Avc, :build
+    tool :define_avc, Avc, :define
+    tool :relate_avc, Avc, :relate
+
+    tool :get_ntd_by_id, Ntd, :read
+    tool :build_ntd, Ntd, :build
+    tool :define_ntd, Ntd, :define
+    tool :assign_port_on_ntd, Ntd, :assign_port
+    tool :relate_ntd, Ntd, :relate
+
+    tool :get_cvc_by_id, Cvc, :read
+    tool :build_cvc, Cvc, :build
+    tool :define_cvc, Cvc, :define
+    tool :assign_cvlan, Cvc, :assign_cvlan
+    tool :relate_cvc, Cvc, :relate
+
+    tool :get_nni_group_by_id, NniGroup, :read
+    tool :build_nni_group, NniGroup, :build
+    tool :define_nni_group, NniGroup, :define
+    tool :assign_svlan, NniGroup, :assign_svlan
+    tool :relate_nni_group, NniGroup, :relate
+
+    tool :get_nni_by_id, Nni, :read
+    tool :build_nni, Nni, :build
+    tool :define_nni, Nni, :define
+    tool :relate_nni, Nni, :relate
+
+    tool :list_rsps, Rsp, :inventory
+    tool :get_rsp_by_epid, Rsp, :read
+    tool :create_rsp, Rsp, :build
+    tool :activate_rsp, Rsp, :activate
+    tool :suspend_rsp, Rsp, :suspend
+    tool :deactivate_rsp, Rsp, :deactivate
   end
 
   json_api do
