@@ -83,21 +83,21 @@ defmodule DiffoExample.Nbn.Cvc do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_cvlan do
       description "assigns a C-VLAN ID from the CVC pool to an AVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :cvlans}
+      change {Diffo.Provider.Changes.Assign, pool: :cvlans}
     end
 
     update :relate do
       description "relates the CVC with other instances (e.g. AVC aggregation, NNI Group termination)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 

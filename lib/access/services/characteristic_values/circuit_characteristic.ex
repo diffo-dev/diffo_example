@@ -16,24 +16,6 @@ defmodule DiffoExample.Access.CircuitCharacteristic do
   end
 
   actions do
-    create :create do
-      accept [
-        :name,
-        :circuit_id,
-        :cvlan_id,
-        :vci,
-        :encapsulation,
-        :bp_downstream,
-        :bp_upstream,
-        :bp_units
-      ]
-
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
     update :update do
       accept [:circuit_id, :cvlan_id, :vci, :encapsulation]
       argument :bandwidth_profile, :term, allow_nil?: true

@@ -11,6 +11,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.2.3](https://github.com/diffo-dev/diffo/compare/v0.2.2..v0.2.3) (2026-05-22)
+
+### Maintenance:
+* updated to diffo 0.4.1 (issue #48)
+* refreshed agent guidance via `mix usage_rules.sync`
+
+### Refactors:
+* adopted upstream `Diffo.Provider.Changes.{Define,Relate,Assign}` across 11 instance resources; deleted the local `DiffoExample.Changes.*` trio now that the same modules ship in diffo proper ([diffo#170](https://github.com/diffo-dev/diffo/pull/170))
+* slimmed 16 `BaseCharacteristic`-derived resources by relying on the auto-generated `:create`/`:update` actions ([diffo#171](https://github.com/diffo-dev/diffo/pull/171)) — ~360 lines removed; custom `:update` retained on `cable`, `path`, `circuit`, `constraints` where unit/bandwidth-profile composition is needed
+* `Cable.relate` inline `after_action` (which referenced an unaliased `Relationship` module) folded into `change Diffo.Provider.Changes.Relate`
+
+### Resolved workarounds:
+* `DslAccess.qualify_result` now transitions to `:feasibilityChecked` — restores correct TMF form following [diffo#168](https://github.com/diffo-dev/diffo/pull/168) broadening the Assigner lifecycle gate to include `:feasibilityChecked`
+* `Util.summarise_characteristics/2` no longer called from tests — typed characteristic + pool records now surface in TMF JSON by default ([diffo#169](https://github.com/diffo-dev/diffo/pull/169)). The projection function is retained in [lib/diffo_example/util.ex](lib/diffo_example/util.ex) for future projection demonstrations. Expected JSON strings updated across `cable`, `card`, `cable`, `path`, `shelf`, `dsl_access`, `nbn_ethernet` tests to reflect the real typed/pool surfacing
+
 ## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)
 
 ### Maintenance:

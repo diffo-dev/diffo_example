@@ -13,20 +13,6 @@ defmodule DiffoExample.Nbn.NniGroupCharacteristic do
     plural_name :nni_group_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :group_name, :location]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:group_name, :location]
-    end
-  end
-
   attributes do
     attribute :group_name, :string, public?: true
     attribute :location, :string, public?: true

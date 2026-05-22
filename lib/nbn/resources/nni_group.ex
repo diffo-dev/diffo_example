@@ -81,21 +81,21 @@ defmodule DiffoExample.Nbn.NniGroup do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_svlan do
       description "assigns an S-VLAN ID from the NNI Group pool to a CVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :svlans}
+      change {Diffo.Provider.Changes.Assign, pool: :svlans}
     end
 
     update :relate do
       description "relates the NNI Group with other instances (e.g. NNI resources it comprises)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 

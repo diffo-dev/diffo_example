@@ -54,8 +54,8 @@ defmodule DiffoExample.Access.DslAccess do
 
   state_machine do
     transitions do
-      transition action: :qualify_result, from: :initial, to: :inactive
-      transition action: :design_result, from: [:initial, :inactive], to: :reserved
+      transition action: :qualify_result, from: :initial, to: :feasibilityChecked
+      transition action: :design_result, from: [:initial, :feasibilityChecked], to: :reserved
     end
   end
 
@@ -76,7 +76,7 @@ defmodule DiffoExample.Access.DslAccess do
       argument :places, {:array, :struct}
       require_atomic? false
 
-      change transition_state(:inactive)
+      change transition_state(:feasibilityChecked)
 
       validate argument_in(:service_operating_status, [
                  nil,
@@ -99,7 +99,7 @@ defmodule DiffoExample.Access.DslAccess do
       argument :characteristic_value_updates, {:array, :term}
 
       change transition_state(:reserved)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
   end
 end

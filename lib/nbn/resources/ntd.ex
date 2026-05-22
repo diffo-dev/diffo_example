@@ -98,21 +98,21 @@ defmodule DiffoExample.Nbn.Ntd do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_port do
       description "assigns a port from the NTD pool to a UNI"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :ports}
+      change {Diffo.Provider.Changes.Assign, pool: :ports}
     end
 
     update :relate do
       description "relates the NTD with other instances (e.g. UNI)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 end

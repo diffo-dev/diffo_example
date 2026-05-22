@@ -12,26 +12,25 @@ defmodule DiffoExample.Util do
   projection to both sides of a comparison.
   """
 
-  @absent_characteristic "absent_diffo_169"
+  @absent_characteristic "absent_characteristic"
 
   @doc """
   Project the `*Characteristic` arrays in a JSON payload to a coarser
   form derived from `instance`'s declarations.
 
-  While [diffo#169](https://github.com/diffo-dev/diffo/issues/169) is
-  open, typed characteristic records and pool records do not collapse
-  into the TMF `serviceCharacteristic` / `resourceCharacteristic` /
-  `featureCharacteristic` arrays. Without this projection the actual
-  JSON has no entries at all and the expected has rich entries.
+  General-purpose projection helper for comparing TMF payloads at the
+  *names-only* level, ignoring the specific values carried by typed
+  characteristic records and pool records. Reads the declared
+  characteristic, pool and feature characteristic names from the
+  instance's module and replaces each named characteristic array with a
+  sorted list of `%{"name" => name, "value" => "absent_characteristic"}`
+  entries. Applied to both sides of a comparison, names align and rich
+  values collapse to the same placeholder.
 
-  This projection reads the declared characteristic, pool and feature
-  characteristic names from the instance's module and replaces each
-  named characteristic array with a sorted list of
-  `%{"name" => name, "value" => "absent_diffo_169"}` entries. Applied
-  to both sides, names align; the rich value collapses to the same
-  placeholder. When #169 lands and the collapse arrives, remove the
-  `|> summarise_characteristics(instance)` wraps from each call site
-  (or delete this function) — every previously masked test surfaces.
+  Useful for demonstrating projections — coarsening test assertions to
+  the structural shape (which characteristics are declared and surface)
+  without coupling them to the values those characteristics happen to
+  carry on a given run.
 
   Modelled after `Diffo.Util.summarise_dates/1`.
   """
