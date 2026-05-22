@@ -13,36 +13,6 @@ defmodule DiffoExample.Nbn.PriCharacteristic do
     plural_name :pri_characteristics
   end
 
-  actions do
-    create :create do
-      accept [
-        :name,
-        :avcid,
-        :uniid,
-        :technology,
-        :bandwidth_profile,
-        :speeds_downstream,
-        :speeds_upstream
-      ]
-
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [
-        :avcid,
-        :uniid,
-        :technology,
-        :bandwidth_profile,
-        :speeds_downstream,
-        :speeds_upstream
-      ]
-    end
-  end
-
   attributes do
     attribute :avcid, :string, public?: true
     attribute :uniid, :string, public?: true

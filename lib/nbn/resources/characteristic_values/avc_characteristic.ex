@@ -13,20 +13,6 @@ defmodule DiffoExample.Nbn.AvcCharacteristic do
     plural_name :avc_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :cvlan, :bandwidth_profile]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:cvlan, :bandwidth_profile]
-    end
-  end
-
   attributes do
     attribute :cvlan, :integer, public?: true
     attribute :bandwidth_profile, DiffoExample.Nbn.BandwidthProfile, public?: true

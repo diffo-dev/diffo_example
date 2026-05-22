@@ -16,24 +16,6 @@ defmodule DiffoExample.Access.PathCharacteristic do
   end
 
   actions do
-    create :create do
-      accept [
-        :name,
-        :device_name,
-        :sections,
-        :length_amount,
-        :length_unit,
-        :loss_amount,
-        :loss_unit,
-        :technology
-      ]
-
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
     update :update do
       accept [
         :device_name,

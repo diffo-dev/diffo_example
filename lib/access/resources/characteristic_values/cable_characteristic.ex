@@ -16,14 +16,6 @@ defmodule DiffoExample.Access.CableCharacteristic do
   end
 
   actions do
-    create :create do
-      accept [:name, :pairs, :length_amount, :length_unit, :loss_amount, :loss_unit, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
     update :update do
       accept [:pairs, :technology, :length_amount, :length_unit, :loss_amount, :loss_unit]
       argument :length, :term, allow_nil?: true

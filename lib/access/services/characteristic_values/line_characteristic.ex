@@ -13,20 +13,6 @@ defmodule DiffoExample.Access.LineCharacteristic do
     plural_name :line_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :port, :slot, :standard, :profile]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:port, :slot, :standard, :profile]
-    end
-  end
-
   attributes do
     attribute :port, :integer, public?: true
     attribute :slot, :integer, public?: true

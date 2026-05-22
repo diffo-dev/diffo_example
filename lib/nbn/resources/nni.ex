@@ -77,14 +77,14 @@ defmodule DiffoExample.Nbn.Nni do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the NNI with other instances (e.g. its parent NNI Group)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 

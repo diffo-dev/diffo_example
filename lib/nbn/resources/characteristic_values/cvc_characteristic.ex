@@ -13,20 +13,6 @@ defmodule DiffoExample.Nbn.CvcCharacteristic do
     plural_name :cvc_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :svlan, :bandwidth]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:svlan, :bandwidth]
-    end
-  end
-
   attributes do
     attribute :svlan, :integer, public?: true
     attribute :bandwidth, :integer, public?: true

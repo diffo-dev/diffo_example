@@ -70,25 +70,21 @@ defmodule DiffoExample.Access.Cable do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the cable with other instances"
       argument :relationships, {:array, :struct}
 
-      change after_action(fn changeset, result, _context ->
-               with {:ok, result} <- Relationship.relate_instance(result, changeset),
-                    {:ok, result} <- Access.get_cable_by_id(result.id),
-                    do: {:ok, result}
-             end)
+      change Diffo.Provider.Changes.Relate
     end
 
     update :assign_pair do
       description "relates the cable with an instance by assigning a pair"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :pairs}
+      change {Diffo.Provider.Changes.Assign, pool: :pairs}
     end
   end
 end

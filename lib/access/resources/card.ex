@@ -70,21 +70,21 @@ defmodule DiffoExample.Access.Card do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the card with other instances"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
 
     update :assign_port do
       description "relates the card with an instance by assigning a port"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :ports}
+      change {Diffo.Provider.Changes.Assign, pool: :ports}
     end
   end
 

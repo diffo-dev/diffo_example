@@ -11,7 +11,6 @@ defmodule DiffoExample.Access.CardTest do
   alias DiffoExample.Access
   alias DiffoExample.Access.Card
   alias DiffoExample.Test.Characteristics
-  alias DiffoExample.Util
 
   describe "build card" do
     test "create a card" do
@@ -38,11 +37,9 @@ defmodule DiffoExample.Access.CardTest do
       encoding =
         Jason.encode!(card)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"}})
-               |> Util.summarise_characteristics(card)
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":1,\"algorithm\":\"lowest\"}}]})
     end
 
     test "define card" do
@@ -66,11 +63,9 @@ defmodule DiffoExample.Access.CardTest do
       encoding =
         Jason.encode!(card)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\"})
-               |> Util.summarise_characteristics(card)
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
     end
 
     test "auto assign port to service" do
@@ -95,11 +90,9 @@ defmodule DiffoExample.Access.CardTest do
       encoding =
         Jason.encode!(card)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]}]})
-               |> Util.summarise_characteristics(card)
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
     end
 
     test "auto assign two ports to same service" do
@@ -129,11 +122,9 @@ defmodule DiffoExample.Access.CardTest do
       encoding =
         Jason.encode!(card)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":2}]}]})
-               |> Util.summarise_characteristics(card)
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":1}]},{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":2}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
     end
 
     test "specific assignment rejects duplicate request" do
@@ -163,11 +154,9 @@ defmodule DiffoExample.Access.CardTest do
       encoding =
         Jason.encode!(card)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(card)
 
       assert encoding ==
-               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":5}]}]})
-               |> Util.summarise_characteristics(card)
+               ~s({\"id\":\"#{card.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{card.id}",\"category\":\"Network Resource\",\"description\":\"A Card Resource Instance\",\"resourceSpecification\":{\"id\":\"cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/cd29956f-6c68-44cc-bf54-705eb8d2f754\",\"name\":\"card\",\"version\":\"v1.0.0\"},\"lifecycleState\":\"operating\",\"serviceRelationship\":[{\"type\":\"assignedTo\",\"service\":{\"id\":\"#{assignee.id}\",\"href\":\"serviceInventoryManagement/v4/service/#{assignee.id}\"},\"serviceRelationshipCharacteristic\":[{\"name\":\"port\",\"value\":5}]}],\"resourceCharacteristic\":[{\"name\":\"card\",\"value\":{\"family\":\"ISAM\",\"model\":\"EBLT48\",\"technology\":\"adsl2Plus\"}},{\"name\":\"ports\",\"value\":{\"first\":1,\"last\":48,\"type\":\"ADSL2+\",\"algorithm\":\"lowest\"}}]})
     end
   end
 end

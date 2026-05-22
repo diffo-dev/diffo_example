@@ -64,14 +64,14 @@ defmodule DiffoExample.Access.Path do
       description "defines the path"
       argument :characteristic_value_updates, {:array, :term}
 
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the path with other instances"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 
