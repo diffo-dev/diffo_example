@@ -204,9 +204,8 @@ a second `forward "/mcp_admin"` with its own tool list.
 ## Adding new tools
 
 When you add a new action to a resource, add it to the appropriate domain's
-`tools do` block as well. See [AGENTS.md](../../AGENTS.md) for the
-keep-in-alignment convention. The compile won't catch a missing tool entry;
-the action will simply be invisible to MCP clients.
+`tools do` block as well. The compile won't catch a missing tool entry; the
+action will simply be invisible to MCP clients.
 
 ## Authorisation
 
