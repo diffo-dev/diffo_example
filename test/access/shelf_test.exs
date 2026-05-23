@@ -180,15 +180,16 @@ defmodule DiffoExample.Access.ShelfTest do
         ]
       })
 
-    # Each card-as-assignee names its slot :slot when requesting.
+    # Each card-as-assignee names its upstream Shelf relationship :shelf
+    # when requesting.
     {:ok, _shelf} =
       Access.assign_slot(shelf, %{
-        assignment: %Assignment{assignee_id: card_a.id, alias: :slot, operation: :auto_assign}
+        assignment: %Assignment{assignee_id: card_a.id, alias: :shelf, operation: :auto_assign}
       })
 
     {:ok, shelf} =
       Access.assign_slot(shelf, %{
-        assignment: %Assignment{assignee_id: card_b.id, alias: :slot, operation: :auto_assign}
+        assignment: %Assignment{assignee_id: card_b.id, alias: :shelf, operation: :auto_assign}
       })
 
     # Shelf brings up its cards (in slot order) and aggregates total ports.

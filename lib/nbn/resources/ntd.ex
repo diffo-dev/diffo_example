@@ -115,4 +115,18 @@ defmodule DiffoExample.Nbn.Ntd do
       change Diffo.Provider.Changes.Relate
     end
   end
+
+  calculations do
+    # The UNI characteristic value of every UNI this NTD has assigned a
+    # port to — reverse traversal of outgoing :port AssignmentRelationships
+    # sourced from this NTD. Low cardinality (typical NTD has a handful of
+    # ports). Filter by `thing` (the pool's thing name) rather than `alias`
+    # — see assignment-direction-asymmetry memory.
+    calculate :unis,
+              {:array, :map},
+              {DiffoExample.Calculations.ReverseInheritedCharacteristic,
+               [thing: :port, characteristic_module: DiffoExample.Nbn.UniCharacteristic]} do
+      public? true
+    end
+  end
 end

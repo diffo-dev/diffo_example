@@ -45,6 +45,7 @@ defmodule DiffoExample.Nbn.Cvc do
 
     characteristics do
       characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
+      characteristic :metrics, DiffoExample.Nbn.CvcMetrics
     end
 
     pools do
@@ -105,6 +106,22 @@ defmodule DiffoExample.Nbn.Cvc do
     attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
+      public? true
+    end
+  end
+
+  calculations do
+    # The NniGroup characteristic value brought up from the singular
+    # NniGroup this CVC is part of — single-hop via the CVC's :nni_group
+    # consumer-alias on its svlan assignment from the NniGroup.
+    calculate :nni_group,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
+               [
+                 via: [:nni_group],
+                 characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
+                 singular?: true
+               ]} do
       public? true
     end
   end

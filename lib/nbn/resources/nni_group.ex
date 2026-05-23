@@ -44,6 +44,7 @@ defmodule DiffoExample.Nbn.NniGroup do
 
     characteristics do
       characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
+      characteristic :metrics, DiffoExample.Nbn.NniGroupMetrics
     end
 
     pools do
@@ -103,6 +104,17 @@ defmodule DiffoExample.Nbn.NniGroup do
     attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
+      public? true
+    end
+  end
+
+  calculations do
+    # The NNI characteristic value of every NNI this NniGroup comprises —
+    # forward traversal of :contains Relationships (low cardinality).
+    calculate :nnis,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [type: :contains, characteristic_module: DiffoExample.Nbn.NniCharacteristic]} do
       public? true
     end
   end

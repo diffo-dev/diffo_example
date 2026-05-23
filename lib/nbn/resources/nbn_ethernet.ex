@@ -94,6 +94,67 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     end
   end
 
+  calculations do
+    # PRI names its two owns relationships by the domain role each plays —
+    # `:circuit` for the AVC (Access Virtual Circuit) and `:port` for the
+    # UNI (the customer's port). Both are consumer-aliases on PRI's owns
+    # relationships, set at relate time.
+
+    # The singular AVC this access owns — single-hop via the :circuit owns relationship.
+    calculate :avc,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :circuit,
+                 characteristic_module: DiffoExample.Nbn.AvcCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular UNI this access owns — single-hop via the :port owns relationship.
+    calculate :uni,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :port,
+                 characteristic_module: DiffoExample.Nbn.UniCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular CVC backing this access's circuit — two-hop via the
+    # :circuit owns relationship, then back via the AVC's :cvc consumer-alias
+    # assignment to its CVC.
+    calculate :cvc,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :circuit,
+                 then_via: [:cvc],
+                 characteristic_module: DiffoExample.Nbn.CvcCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular NTD this access's port plugs into — two-hop via the
+    # :port owns relationship, then back via the UNI's :ntd consumer-alias
+    # assignment to its NTD.
+    calculate :ntd,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :port,
+                 then_via: [:ntd],
+                 characteristic_module: DiffoExample.Nbn.NtdCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+  end
+
   def identifier() do
     DiffoExample.Nbn.Util.identifier("PRI")
   end
