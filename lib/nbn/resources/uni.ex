@@ -22,11 +22,6 @@ defmodule DiffoExample.Nbn.Uni do
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
-  resource do
-    description "An Ash Resource representing a User Network Interface (UNI)"
-    plural_name :Unis
-  end
-
   policies do
     bypass DiffoExample.Nbn.Checks.NoActor do
       authorize_if always()
@@ -39,6 +34,11 @@ defmodule DiffoExample.Nbn.Uni do
     policy action_type(:read) do
       authorize_if always()
     end
+  end
+
+  resource do
+    description "An Ash Resource representing a User Network Interface (UNI)"
+    plural_name :Unis
   end
 
   provider do
