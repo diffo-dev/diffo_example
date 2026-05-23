@@ -18,16 +18,11 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing an NBN Ethernet access"
     plural_name :NbnEthernets
-  end
-
-  json_api do
-    type "nbnEthernet"
   end
 
   provider do

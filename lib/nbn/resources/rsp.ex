@@ -20,7 +20,7 @@ defmodule DiffoExample.Nbn.Rsp do
   use Ash.Resource,
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshStateMachine, AshJsonApi.Resource],
+    extensions: [AshStateMachine],
     fragments: [Diffo.Provider.BaseParty]
 
   policies do
@@ -57,10 +57,6 @@ defmodule DiffoExample.Nbn.Rsp do
   #   relationships: party_refs
   #   actions: :read (primary), :destroy, :create (accept [:id,:name,:type,:referred_type]),
   #            :update (name), :list (unsorted), :find_by_name
-
-  json_api do
-    type "rsp"
-  end
 
   provider do
     instances do

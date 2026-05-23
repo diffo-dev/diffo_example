@@ -20,7 +20,6 @@ defmodule DiffoExample.Nbn.Ntd do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
@@ -69,10 +68,6 @@ defmodule DiffoExample.Nbn.Ntd do
         create :build
       end
     end
-  end
-
-  json_api do
-    type "ntd"
   end
 
   def identifier() do

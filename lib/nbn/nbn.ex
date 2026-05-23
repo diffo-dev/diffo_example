@@ -15,7 +15,7 @@ defmodule DiffoExample.Nbn do
   use Ash.Domain,
     otp_app: :diffo,
     fragments: [Diffo.Provider.DomainFragment],
-    extensions: [AshAi, AshJsonApi.Domain]
+    extensions: [AshAi]
 
   alias DiffoExample.Nbn.NbnEthernet
   alias DiffoExample.Nbn.Uni
@@ -84,77 +84,6 @@ defmodule DiffoExample.Nbn do
     tool :activate_rsp, Rsp, :activate
     tool :suspend_rsp, Rsp, :suspend
     tool :deactivate_rsp, Rsp, :deactivate
-  end
-
-  json_api do
-    routes do
-      base_route "/nbnEthernet", NbnEthernet do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/uni", Uni do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/avc", Avc do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/ntd", Ntd do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/cvc", Cvc do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/nniGroup", NniGroup do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/nni", Nni do
-        index :read
-        get :read
-        post :build
-        patch :define
-        patch :relate, route: "/:id/relate"
-        delete :destroy
-      end
-
-      base_route "/rsp", Rsp do
-        get :read
-      end
-    end
   end
 
   resources do

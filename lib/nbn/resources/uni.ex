@@ -20,7 +20,6 @@ defmodule DiffoExample.Nbn.Uni do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
@@ -65,10 +64,6 @@ defmodule DiffoExample.Nbn.Uni do
         create :build
       end
     end
-  end
-
-  json_api do
-    type "uni"
   end
 
   def identifier() do
