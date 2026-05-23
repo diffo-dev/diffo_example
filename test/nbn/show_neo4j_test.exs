@@ -55,7 +55,7 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
           Nbn.assign_svlan(nni_group, %{
             assignment: %Assignment{
               assignee_id: cvc.id,
-              alias: :svlan,
+              alias: :nni_group,
               operation: :auto_assign
             }
           })
@@ -102,7 +102,7 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
       Nbn.assign_cvlan(cvc1, %{
         assignment: %Assignment{
           assignee_id: avc.id,
-          alias: :cvlan,
+          alias: :cvc,
           operation: :auto_assign
         }
       })
@@ -214,7 +214,7 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
       Nbn.assign_cvlan(cvc, %{
         assignment: %Assignment{
           assignee_id: avc.id,
-          alias: :cvlan,
+          alias: :cvc,
           operation: :auto_assign
         }
       })
@@ -223,19 +223,19 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
       Nbn.assign_port(ntd, %{
         assignment: %Assignment{
           assignee_id: uni.id,
-          alias: :port,
+          alias: :ntd,
           operation: :auto_assign
         }
       })
 
-    # PRI owns AVC and UNI
+    # PRI owns AVC (named :circuit from PRI's view) and UNI (named :port).
     {:ok, pri} = Nbn.build_nbn_ethernet(%{})
 
     {:ok, _} =
       Nbn.relate_nbn_ethernet(pri, %{
         relationships: [
-          %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :avc},
-          %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :uni}
+          %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :circuit},
+          %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :port}
         ]
       })
 
@@ -290,7 +290,11 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
 
       {:ok, _} =
         Nbn.assign_port(ntd, %{
-          assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
+          assignment: %Assignment{
+            assignee_id: uni.id,
+            alias: :ntd,
+            operation: :auto_assign
+          }
         })
     end
 

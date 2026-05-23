@@ -34,7 +34,8 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
   * New `cvc_metrics` characteristic on CVC carries `avcs_count` and `avcs_total_bandwidth` aggregated live over assigned AVCs.
   * New `nni_group_metrics` characteristic on NniGroup carries `cvcs_count`/`cvcs_total_bandwidth` (demand), `nnis_count`/`nnis_total_bandwidth` (capacity), and `utilization = cvcs_total_bandwidth / nnis_total_bandwidth`.
 * NBN — NTD brings up assigned UNIs as `unis[]` via the `:port` assignment (issue #49 part 2).
-* NBN — NbnEthernet (PRI) brings up four characteristics surfacing the full delivery chain (issue #49 part 3): `avc` single-hop via the `:avc` owns relationship, `uni` single-hop via the `:uni` owns relationship, `cvc` two-hop via `:avc` then `:cvlan`, and `ntd` two-hop via `:uni` then `:port`. All singular.
+* NBN — NbnEthernet (PRI) brings up four characteristics surfacing the full delivery chain (issue #49 part 3): `avc` single-hop via the `:circuit` owns relationship, `uni` single-hop via the `:port` owns relationship, `cvc` two-hop via `:circuit` then `:cvc`, and `ntd` two-hop via `:port` then `:ntd`. All singular.
+* NBN — consumer-side aliases on assignments and relationships now name the **upstream related resource** the consumer is part of (its domain role), not the slot/thing being received: AVC sets `:cvc` on its cvlan assignment, CVC sets `:nni_group` on its svlan assignment, UNI sets `:ntd` on its port assignment; PRI's two `:owns` relationships are aliased `:circuit` (AVC) and `:port` (UNI). Inheritance walks use these consumer-aliases. Pool/metric aggregations are unaffected — they still filter by `thing`.
 * `BandwidthProfile.downstream/1` — atom-to-Mbps mapping used by the metrics aggregation. CVCs are treated as symmetric capacity in this model (satellite asymmetry ignored).
 
 ### Refactors (continued):

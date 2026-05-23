@@ -27,13 +27,14 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
     queries this resource by `instance_id` and returns the `.value`.
   - `type:` *(optional)* — filter relationships by type atom (e.g. `:contains`).
   - `alias:` *(optional)* — filter relationships by alias atom (e.g. `:avc`).
-  - `then_via:` *(optional)* — list of `AssignmentRelationship` aliases to
-    walk **after** the relationship hop. Each step walks back through the
-    target's incoming assignments (`target_id + alias` identity, so each
-    step has cardinality ≤1). Use this for mixed paths — one relationship
-    hop followed by one or more assignment hops — e.g. PRI's `:cvc`
-    bring-up: `:avc` owns relationship, then `:cvlan` assignment back to
-    the CVC.
+  - `then_via:` *(optional)* — list of consumer-alias atoms to walk back
+    via `AssignmentRelationship` **after** the relationship hop. Each step
+    walks back through the target's incoming assignments (`target_id +
+    alias` identity, so each step has cardinality ≤1). Aliases name the
+    upstream related resource each consumer is part of. Use this for mixed
+    paths — one relationship hop followed by one or more assignment hops
+    — e.g. PRI's `:cvc` bring-up: `:circuit` owns relationship, then `:cvc`
+    assignment back to the CVC.
   - `singular?:` *(optional, default `false`)* — unwrap to a single value
     when the consumer expects a 1-cardinality result (e.g. PRI's `:avc` or
     `:uni` aliased owns-relationship). Declare the calc's return type as
@@ -48,16 +49,19 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
                 {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
                  [type: :contains, characteristic_module: NniCharacteristic]}
 
-      # PRI brings up the singular AVC it owns via the :avc alias.
+      # PRI brings up the singular AVC it owns — PRI calls this related
+      # resource :circuit (its domain role), set as the alias on PRI's
+      # owns relationship.
       calculate :avc, :map,
                 {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-                 [alias: :avc, characteristic_module: AvcCharacteristic, singular?: true]}
+                 [alias: :circuit, characteristic_module: AvcCharacteristic, singular?: true]}
 
-      # PRI brings up the singular CVC two-hop — :avc owns relationship,
-      # then back via the AVC's incoming :cvlan assignment to the CVC.
+      # PRI brings up the singular CVC two-hop — :circuit owns relationship
+      # from PRI to AVC, then back via the AVC's :cvc consumer-alias
+      # assignment from CVC.
       calculate :cvc, :map,
                 {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-                 [alias: :avc, then_via: [:cvlan],
+                 [alias: :circuit, then_via: [:cvc],
                   characteristic_module: CvcCharacteristic, singular?: true]}
   """
   use Ash.Resource.Calculation

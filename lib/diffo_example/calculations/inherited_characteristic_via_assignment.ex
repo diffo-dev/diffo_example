@@ -27,7 +27,9 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaAssignment do
     from this instance back to the source whose characteristic we want.
     Each step filters `AssignmentRelationship` by `target_id` and `alias`,
     then follows `source_id` to the next set of instances. The aliases are
-    the assignee's slot names, supplied when the assignment is made.
+    the **consumer's name for the upstream related resource** at each hop
+    (e.g. AVC names its CVC slot `:cvc`, CVC names its NniGroup slot
+    `:nni_group`) — set when the assignment is made.
   - `characteristic_module:` *(required)* — the typed characteristic Ash
     resource on the final source (e.g. `ShelfCharacteristic`). The calc
     queries this resource by `instance_id` and returns the `.value`.
@@ -52,12 +54,12 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaAssignment do
                 {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                  [via: [:port, :slot], characteristic_module: ShelfCharacteristic]}
 
-      # AVC brings up its singular CVC via :cvlan — AssignmentRelationship
-      # identity guarantees ≤1 source, so we declare :map and ask the calc
-      # to unwrap.
+      # AVC brings up its singular CVC via its :cvc consumer-alias on the
+      # cvlan assignment from the CVC. AssignmentRelationship identity
+      # guarantees ≤1 source, so we declare :map and ask the calc to unwrap.
       calculate :cvc, :map,
                 {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-                 [via: [:cvlan], characteristic_module: CvcCharacteristic, singular?: true]}
+                 [via: [:cvc], characteristic_module: CvcCharacteristic, singular?: true]}
   """
   use Ash.Resource.Calculation
 

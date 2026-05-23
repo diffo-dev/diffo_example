@@ -186,14 +186,14 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
           ]
         })
 
-      # AVC takes a cvlan from CVC; UNI takes a port from NTD. Set explicit
-      # aliases so the inheritance walks (target_id + alias identity)
-      # resolve cleanly.
+      # AVC takes a cvlan from CVC; UNI takes a port from NTD. Consumer
+      # aliases name the upstream resource each is part of, so the
+      # inheritance walks (target_id + alias identity) resolve cleanly.
       {:ok, _} =
         Nbn.assign_cvlan(cvc, %{
           assignment: %Assignment{
             assignee_id: avc.id,
-            alias: :cvlan,
+            alias: :cvc,
             operation: :auto_assign
           }
         })
@@ -202,19 +202,21 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         Nbn.assign_port(ntd, %{
           assignment: %Assignment{
             assignee_id: uni.id,
-            alias: :port,
+            alias: :ntd,
             operation: :auto_assign
           }
         })
 
-      # PRI owns the AVC and UNI
+      # PRI owns the AVC and UNI. Aliases name the role each related
+      # resource plays from PRI's perspective — the AVC is the :circuit,
+      # the UNI is the :port.
       {:ok, pri} = Nbn.build_nbn_ethernet(%{})
 
       {:ok, _} =
         Nbn.relate_nbn_ethernet(pri, %{
           relationships: [
-            %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :avc},
-            %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :uni}
+            %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :circuit},
+            %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :port}
           ]
         })
 
@@ -313,7 +315,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         Nbn.assign_svlan(nni_group, %{
           assignment: %Assignment{
             assignee_id: cvc.id,
-            alias: :svlan,
+            alias: :nni_group,
             operation: :auto_assign
           }
         })
@@ -329,7 +331,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         Nbn.assign_cvlan(cvc, %{
           assignment: %Assignment{
             assignee_id: avc.id,
-            alias: :cvlan,
+            alias: :cvc,
             operation: :auto_assign
           }
         })

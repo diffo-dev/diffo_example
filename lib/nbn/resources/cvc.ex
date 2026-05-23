@@ -112,13 +112,13 @@ defmodule DiffoExample.Nbn.Cvc do
 
   calculations do
     # The NniGroup characteristic value brought up from the singular
-    # NniGroup this CVC is assigned an svlan on — single-hop via the
-    # :svlan assignment.
+    # NniGroup this CVC is part of — single-hop via the CVC's :nni_group
+    # consumer-alias on its svlan assignment from the NniGroup.
     calculate :nni_group,
               :map,
               {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                [
-                 via: [:svlan],
+                 via: [:nni_group],
                  characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
                  singular?: true
                ]} do
