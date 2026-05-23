@@ -1,0 +1,345 @@
+<!--
+SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+
+SPDX-License-Identifier: MIT
+-->
+
+# Diffo Example — Access Domain
+
+```elixir
+Mix.install(
+  [
+    {:diffo_example, "~> 0.2.3"},
+    {:diffo, "~> 0.4.1"},
+    {:kino, "~> 0.14"}
+  ],
+  config: [
+    bolty: [
+      {Bolt,
+       [
+         uri: "bolt://localhost:7687",
+         auth: [username: "neo4j", password: "password"],
+         user_agent: "diffoExampleAccessLivebook/1",
+         pool_size: 15,
+         max_overflow: 3,
+         prefix: :default,
+         name: Bolt,
+         log: false,
+         log_hex: false
+       ]}
+    ]
+  ],
+  consolidate_protocols: false
+)
+```
+
+## Overview
+
+Access is a small **DSL service domain** — a single fictional telco delivering broadband over copper to its own customers. It's the warm-up example: small enough to hold in your head, rich enough to show every diffo modelling primitive you'll need.
+
+This notebook walks the standard provisioning flow end-to-end:
+
+1. Set up exchange infrastructure (a shelf with line cards, a customer access path, cables).
+2. Qualify a subscriber for the service.
+3. Design the service against the infrastructure.
+4. Read the inheritance chain that brings upstream context up to every consumer.
+
+See [access.md](access.md) for the narrative version. Once you've done both, [provider.md](provider.md) lifts the lid on the primitives you've been using the whole time.
+
+## Setting up
+
+Connect to Neo4j (running locally on the default port). It is helpful to keep the Neo4j browser open at <http://localhost:7474/browser/> as you go through the cells.
+
+```elixir
+AshNeo4j.BoltyHelper.is_connected()
+```
+
+**Optional** — clear the database so the scenario builds from a clean slate:
+
+```elixir
+AshNeo4j.Neo4jHelper.delete_all()
+```
+
+```elixir
+alias Diffo.Provider
+alias Diffo.Provider.Assignment
+alias Diffo.Provider.Instance.{Place, Party, Relationship}
+alias DiffoExample.Access
+```
+
+## The resources at a glance
+
+| Kind | Resource | Plays the role of |
+| --- | --- | --- |
+| Service | `DslAccess` | the broadband product the telco sells |
+| Resource | `Shelf` | a DSLAM frame at the exchange — slots for line cards |
+| Resource | `Card` | a line card — ports for customer paths |
+| Resource | `Path` | the access path from the exchange to the customer |
+| Resource | `Cable` | a copper cable — pairs assigned to paths |
+
+`Shelf`, `Card`, and `Cable` each declare a **pool** (`:slots`, `:ports`, `:pairs`). Each consumer takes a value from its upstream's pool and names the upstream by the role it plays — `:shelf`, `:card`, `:cable`. That name (the assignment's `alias`) lets the relationship be walked from either side.
+
+## Places and parties
+
+Real services exist somewhere and for someone. Set up the **places** (where) and **parties** (who) the scenario refers to:
+
+```elixir
+customer_site =
+  Provider.create_place!(%{
+    id: "1657363",
+    name: :addressId,
+    href: "place/telco/1657363",
+    referred_type: :GeographicAddress
+  })
+
+exchange =
+  Provider.create_place!(%{
+    id: "DONC",
+    name: :exchangeId,
+    href: "place/telco/DONC",
+    referred_type: :GeographicSite
+  })
+
+esa =
+  Provider.create_place!(%{
+    id: "DONC-0001",
+    name: :esaId,
+    href: "place/telco/DONC-0001",
+    referred_type: :GeographicLocation
+  })
+
+individual =
+  Provider.create_party!(%{
+    id: "IND000000897354",
+    name: :individualId,
+    referred_type: :Individual
+  })
+
+reseller =
+  Provider.create_party!(%{
+    id: "ORG000000123456",
+    name: :organizationId,
+    referred_type: :Organization
+  })
+
+provider =
+  Provider.create_party!(%{
+    id: "Access",
+    name: :organizationId,
+    referred_type: :Organization
+  })
+
+customer_site_ref = %Place{id: customer_site.id, role: :CustomerSite}
+exchange_ref = %Place{id: exchange.id, role: :NetworkSite}
+esa_ref = %Place{id: esa.id, role: :ServingArea}
+
+customer_ref = %Party{id: individual.id, role: :Customer}
+reseller_ref = %Party{id: reseller.id, role: :Reseller}
+provider_ref = %Party{id: provider.id, role: :Provider}
+```
+
+## 1. The exchange has a shelf
+
+`Shelf` declares a `:slots` pool. We build it, then `:define` it with its identity and the bounds of the slots pool.
+
+```elixir
+{:ok, shelf} = Access.build_shelf(%{
+  name: "QDONC-0001",
+  places: [esa_ref],
+  parties: [provider_ref]
+})
+
+{:ok, shelf} =
+  Access.define_shelf(shelf, %{
+    characteristic_value_updates: [
+      shelf: [device_name: "QDONC-0001", family: :ISAM, model: "ISAM7330", technology: :DSLAM],
+      slots: [first: 1, last: 10, assignable_type: "LineCard"]
+    ]
+  })
+```
+
+## 2. A line card consumes a slot
+
+The card has its own identity and a `:ports` pool. When it takes a slot from the shelf, it names its upstream `:shelf` — the alias names the **related resource the card is part of**, not the slot value.
+
+```elixir
+{:ok, card} = Access.build_card(%{name: "line card 1"})
+
+{:ok, card} =
+  Access.define_card(card, %{
+    characteristic_value_updates: [
+      card: [family: :ISAM, model: "EBLT48", technology: :adsl2Plus],
+      ports: [first: 1, last: 48, assignable_type: "ADSL2+"]
+    ]
+  })
+
+{:ok, shelf} =
+  Access.assign_slot(shelf, %{
+    assignment: %Assignment{
+      assignee_id: card.id,
+      alias: :shelf,
+      operation: :auto_assign
+    }
+  })
+```
+
+## 3. A path through copper to the exchange
+
+```elixir
+{:ok, path} =
+  Access.build_path(%{
+    name: "82 Rathmullen - DONC",
+    places: [customer_site_ref, exchange_ref, esa_ref],
+    parties: [provider_ref]
+  })
+
+{:ok, path} =
+  Access.define_path(path, %{
+    characteristic_value_updates: [
+      path: [device_name: "82 Rathmullen - DONC", technology: :copper, sections: 5]
+    ]
+  })
+```
+
+## 4. Cables along the route
+
+One cable for brevity (you can multiply this for a longer cable run). The path takes a pair from each cable and names its upstream `:cable`.
+
+```elixir
+{:ok, cable} =
+  Access.build_cable(%{name: "lead in cable"})
+
+{:ok, cable} =
+  Access.define_cable(cable, %{
+    characteristic_value_updates: [
+      cable: [pairs: 60, technology: :PIUT],
+      pairs: [first: 1, last: 60, assignable_type: "copper"]
+    ]
+  })
+
+{:ok, _cable} =
+  Access.assign_pair(cable, %{
+    assignment: %Assignment{
+      assignee_id: path.id,
+      alias: :cable,
+      operation: :auto_assign
+    }
+  })
+```
+
+## 5. The card assigns a port to the path
+
+```elixir
+{:ok, _card} =
+  Access.assign_port(card, %{
+    assignment: %Assignment{
+      assignee_id: path.id,
+      alias: :card,
+      operation: :auto_assign
+    }
+  })
+```
+
+The infrastructure is now in place. The path has a port on the card, the card has a slot on the shelf, the path has a pair from the cable.
+
+## 6. Qualify the subscriber
+
+Now sell the service. `qualify_dsl` creates a `DslAccess` in `:initial` state — checking we can serve this address at all:
+
+```elixir
+{:ok, dsl} =
+  Access.qualify_dsl(%{
+    parties: [customer_ref, reseller_ref],
+    places: [customer_site_ref]
+  })
+
+dsl.service_state
+```
+
+`qualify_dsl_result` records the outcome — `:feasible` means we have copper in reach. The state moves to `:feasibilityChecked`.
+
+```elixir
+{:ok, dsl} =
+  Access.qualify_dsl_result(dsl, %{
+    service_operating_status: :feasible,
+    places: [esa_ref]
+  })
+
+dsl.service_state
+```
+
+## 7. Design the service
+
+Set the service's typed characteristics — the actual configuration that gets provisioned to the exchange. The state moves to `:reserved`.
+
+```elixir
+{:ok, dsl} =
+  Access.design_dsl_result(dsl, %{
+    characteristic_value_updates: [
+      dslam: [device_name: "QDONC0001", model: "ISAM7330"],
+      aggregate_interface: [interface_name: "eth0", svlan_id: 3108],
+      circuit: [cvlan_id: 82],
+      line: [slot: 10, port: 5]
+    ]
+  })
+
+dsl.service_state
+```
+
+## 8. Inheritance — bringing upstream context up
+
+The path was assigned a port from the card; the card was assigned a slot from the shelf. Without copying anything, the path can read both:
+
+```elixir
+{:ok, path} = Access.get_path_by_id(path.id, load: [:card, :shelf, :port])
+
+%{
+  card: path.card,
+  shelf: path.shelf,
+  port: path.port
+}
+```
+
+`path.card` brings up the `CardCharacteristic` value via the `:card` alias on the port assignment. `path.shelf` brings it up two-hop via `[:card, :shelf]`. `path.port` is the port number itself.
+
+## TMF JSON
+
+The service and resources serialise to TMF-shaped JSON. Encode the path:
+
+```elixir
+path
+|> Jason.encode!()
+|> Jason.decode!()
+|> Jason.encode!(pretty: true)
+|> IO.puts()
+```
+
+And the service:
+
+```elixir
+{:ok, dsl} = Access.get_dsl_by_id(dsl.id)
+
+dsl
+|> Jason.encode!()
+|> Jason.decode!()
+|> Jason.encode!(pretty: true)
+|> IO.puts()
+```
+
+Notice the typed characteristics surfacing inline in `serviceCharacteristic` / `resourceCharacteristic`, the pool records (`slots`, `ports`, `pairs`) with their state, and the `serviceRelationship` / `resourceRelationship` arrays linking the assignment graph together. The whole TMF surface comes from the modelling — no encoder code anywhere in this notebook.
+
+## Exploring the graph
+
+In the Neo4j browser (<http://localhost:7474/browser/>) try:
+
+```cypher
+MATCH (n) RETURN n LIMIT 100;
+```
+
+You'll see Specification nodes, Instance nodes (Shelf, Card, Path, Cable, DslAccess), Characteristic nodes (one per declared typed characteristic), and the assignment and relationship edges between them. This is what the JSON above is materialised from.
+
+## What next?
+
+You've used every diffo modelling primitive — specifications, typed characteristics, pools, assignments, relationships, state machines. None of them are bespoke to Access. They all come from diffo's [Provider](provider.md) domain — open that next to see what's underneath.
+
+When you're ready for a richer example with multi-tenancy and a longer delivery chain, the [NBN domain](nbn.md) revisits the same primitives at scale.

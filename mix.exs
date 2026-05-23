@@ -61,8 +61,10 @@ defmodule DiffoExample.MixProject do
       logo: "logos/diffo.jpg",
       extras: [
         "README.md": [title: "Guide"],
-        "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
+        "documentation/domains/access.md": [title: "The Access Domain"],
+        "documentation/domains/diffo_example_access.livemd": [title: "Access Livebook"],
         "documentation/domains/nbn.md": [title: "The NBN Domain"],
+        "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
         "documentation/how_to/setup_mcp.md": [title: "Setup the MCP server"],
         "LICENSES/MIT.md": [title: "License"]
       ],
