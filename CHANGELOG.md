@@ -28,14 +28,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Features:
 * NBN — AVC, CVC, NniGroup characteristic inheritance and metrics (issue #49):
-  * AVC inherits the upstream CVC's `cvc` characteristic via the `:cvlan` assignment (single-hop), and the NniGroup's `nni_group` characteristic transitively via `[:cvlan, :svlan]` (two-hop).
-  * CVC inherits the upstream NniGroup's `nni_group` characteristic via the `:svlan` assignment.
+  * AVC inherits the upstream CVC's `cvc` characteristic via the `:cvlan` assignment (single-hop), and the NniGroup's `nni_group` characteristic transitively via `[:cvlan, :svlan]` (two-hop). Both singular.
+  * CVC inherits the upstream NniGroup's `nni_group` characteristic via the `:svlan` assignment (singular).
+  * NniGroup brings up the typed value of every comprised NNI as `nnis[]` via the `:contains` relationship.
   * New `cvc_metrics` characteristic on CVC carries `avcs_count` and `avcs_total_bandwidth` aggregated live over assigned AVCs.
   * New `nni_group_metrics` characteristic on NniGroup carries `cvcs_count`/`cvcs_total_bandwidth` (demand), `nnis_count`/`nnis_total_bandwidth` (capacity), and `utilization = cvcs_total_bandwidth / nnis_total_bandwidth`.
+* NBN — NTD brings up assigned UNIs as `unis[]` via the `:port` assignment (issue #49 part 2).
 * `BandwidthProfile.downstream/1` — atom-to-Mbps mapping used by the metrics aggregation. CVCs are treated as symmetric capacity in this model (satellite asymmetry ignored).
 
 ### Refactors (continued):
-* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment` to make room for a future `InheritedCharacteristicViaRelationship` sibling (the latter lands in the PRI bring-up work).
+* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment`; new sibling `InheritedCharacteristicViaRelationship` traverses `Provider.Relationship` edges (forward source → target). Both calcs accept `singular?:` to unwrap to a single value where graph identity guarantees ≤1 result.
+* `ReverseInheritedCharacteristic` extended with a `thing:` filter option, complementing the existing `alias:` filter. Source-side aggregations should prefer `thing:` since it's always set from the pool DSL — see the assignment-direction-asymmetry rationale.
 
 ## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)
 
