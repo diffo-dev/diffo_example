@@ -13,29 +13,6 @@ defmodule DiffoExample.Access.AggregateCharacteristic do
     plural_name :aggregate_characteristics
   end
 
-  actions do
-    create :create do
-      accept [
-        :name,
-        :interface_name,
-        :physical_interface,
-        :physical_layer,
-        :link_layer,
-        :svlan_id,
-        :vpi
-      ]
-
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:interface_name, :physical_interface, :physical_layer, :link_layer, :svlan_id, :vpi]
-    end
-  end
-
   attributes do
     attribute :interface_name, :string, public?: true
     attribute :physical_interface, :string, public?: true

@@ -13,20 +13,6 @@ defmodule DiffoExample.Nbn.NtdCharacteristic do
     plural_name :ntd_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :model, :serial_number, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:model, :serial_number, :technology]
-    end
-  end
-
   attributes do
     attribute :model, :string, public?: true
     attribute :serial_number, :string, public?: true

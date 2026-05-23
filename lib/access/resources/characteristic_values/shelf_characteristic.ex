@@ -13,20 +13,6 @@ defmodule DiffoExample.Access.ShelfCharacteristic do
     plural_name :shelf_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :device_name, :family, :model, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:device_name, :family, :model, :technology]
-    end
-  end
-
   attributes do
     attribute :device_name, :string, public?: true
     attribute :family, :atom, public?: true

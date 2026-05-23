@@ -20,13 +20,7 @@ defmodule DiffoExample.Nbn.Uni do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
-
-  resource do
-    description "An Ash Resource representing a User Network Interface (UNI)"
-    plural_name :Unis
-  end
 
   policies do
     bypass DiffoExample.Nbn.Checks.NoActor do
@@ -40,6 +34,11 @@ defmodule DiffoExample.Nbn.Uni do
     policy action_type(:read) do
       authorize_if always()
     end
+  end
+
+  resource do
+    description "An Ash Resource representing a User Network Interface (UNI)"
+    plural_name :Unis
   end
 
   provider do
@@ -67,10 +66,6 @@ defmodule DiffoExample.Nbn.Uni do
     end
   end
 
-  json_api do
-    type "uni"
-  end
-
   def identifier() do
     DiffoExample.Nbn.Util.identifier("UNI")
   end
@@ -94,14 +89,14 @@ defmodule DiffoExample.Nbn.Uni do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the UNI with other instances (e.g. NTD, NBN Ethernet access)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 end

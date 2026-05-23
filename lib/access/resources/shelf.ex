@@ -70,21 +70,21 @@ defmodule DiffoExample.Access.Shelf do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the shelf with cards"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
 
     update :assign_slot do
       description "relates the shelf with an instance by assigning a slot"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :slots}
+      change {Diffo.Provider.Changes.Assign, pool: :slots}
     end
   end
 
@@ -96,7 +96,7 @@ defmodule DiffoExample.Access.Shelf do
     calculate :cards,
               {:array, :map},
               {DiffoExample.Calculations.ReverseInheritedCharacteristic,
-               [alias: :slot, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
+               [alias: :shelf, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
       public? true
     end
 

@@ -13,20 +13,6 @@ defmodule DiffoExample.Access.CardCharacteristic do
     plural_name :card_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :family, :model, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:family, :model, :technology]
-    end
-  end
-
   attributes do
     attribute :family, :atom, public?: true
     attribute :model, :string, public?: true

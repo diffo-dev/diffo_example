@@ -20,16 +20,11 @@ defmodule DiffoExample.Nbn.Cvc do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing a Connectivity Virtual Circuit (CVC)"
     plural_name :Cvcs
-  end
-
-  json_api do
-    type "cvc"
   end
 
   provider do
@@ -45,6 +40,7 @@ defmodule DiffoExample.Nbn.Cvc do
 
     characteristics do
       characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
+      characteristic :metrics, DiffoExample.Nbn.CvcMetrics
     end
 
     pools do
@@ -83,21 +79,21 @@ defmodule DiffoExample.Nbn.Cvc do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_cvlan do
       description "assigns a C-VLAN ID from the CVC pool to an AVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :cvlans}
+      change {Diffo.Provider.Changes.Assign, pool: :cvlans}
     end
 
     update :relate do
       description "relates the CVC with other instances (e.g. AVC aggregation, NNI Group termination)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 
@@ -105,6 +101,22 @@ defmodule DiffoExample.Nbn.Cvc do
     attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
+      public? true
+    end
+  end
+
+  calculations do
+    # The NniGroup characteristic value brought up from the singular
+    # NniGroup this CVC is part of — single-hop via the CVC's :nni_group
+    # consumer-alias on its svlan assignment from the NniGroup.
+    calculate :nni_group,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
+               [
+                 via: [:nni_group],
+                 characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
+                 singular?: true
+               ]} do
       public? true
     end
   end

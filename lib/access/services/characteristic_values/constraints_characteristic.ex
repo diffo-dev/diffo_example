@@ -16,14 +16,6 @@ defmodule DiffoExample.Access.ConstraintsCharacteristic do
   end
 
   actions do
-    create :create do
-      accept [:name, :max_latency, :mp_downstream, :mp_upstream, :mp_units]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
     update :update do
       accept [:max_latency]
       argument :min_profile, :term, allow_nil?: true

@@ -20,13 +20,7 @@ defmodule DiffoExample.Nbn.Ntd do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
-
-  resource do
-    description "An Ash Resource representing a Network Termination Device (NTD)"
-    plural_name :Ntds
-  end
 
   policies do
     bypass DiffoExample.Nbn.Checks.NoActor do
@@ -40,6 +34,11 @@ defmodule DiffoExample.Nbn.Ntd do
     policy action_type(:read) do
       authorize_if always()
     end
+  end
+
+  resource do
+    description "An Ash Resource representing a Network Termination Device (NTD)"
+    plural_name :Ntds
   end
 
   provider do
@@ -71,10 +70,6 @@ defmodule DiffoExample.Nbn.Ntd do
     end
   end
 
-  json_api do
-    type "ntd"
-  end
-
   def identifier() do
     DiffoExample.Nbn.Util.identifier("NTD")
   end
@@ -98,21 +93,35 @@ defmodule DiffoExample.Nbn.Ntd do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_port do
       description "assigns a port from the NTD pool to a UNI"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :ports}
+      change {Diffo.Provider.Changes.Assign, pool: :ports}
     end
 
     update :relate do
       description "relates the NTD with other instances (e.g. UNI)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
+    end
+  end
+
+  calculations do
+    # The UNI characteristic value of every UNI this NTD has assigned a
+    # port to — reverse traversal of outgoing :port AssignmentRelationships
+    # sourced from this NTD. Low cardinality (typical NTD has a handful of
+    # ports). Filter by `thing` (the pool's thing name) rather than `alias`
+    # — see assignment-direction-asymmetry memory.
+    calculate :unis,
+              {:array, :map},
+              {DiffoExample.Calculations.ReverseInheritedCharacteristic,
+               [thing: :port, characteristic_module: DiffoExample.Nbn.UniCharacteristic]} do
+      public? true
     end
   end
 end

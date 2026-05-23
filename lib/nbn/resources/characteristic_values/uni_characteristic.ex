@@ -13,20 +13,6 @@ defmodule DiffoExample.Nbn.UniCharacteristic do
     plural_name :uni_characteristics
   end
 
-  actions do
-    create :create do
-      accept [:name, :port, :encapsulation, :technology]
-      argument :instance_id, :uuid
-      argument :feature_id, :uuid
-      change manage_relationship(:instance_id, :instance, type: :append)
-      change manage_relationship(:feature_id, :feature, type: :append)
-    end
-
-    update :update do
-      accept [:port, :encapsulation, :technology]
-    end
-  end
-
   attributes do
     attribute :port, :integer, public?: true
     attribute :encapsulation, :string, public?: true

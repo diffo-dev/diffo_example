@@ -70,39 +70,40 @@ defmodule DiffoExample.Access.Card do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the card with other instances"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
 
     update :assign_port do
       description "relates the card with an instance by assigning a port"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :ports}
+      change {Diffo.Provider.Changes.Assign, pool: :ports}
     end
   end
 
   calculations do
-    # The shelf characteristic value brought up from the shelf this card is
-    # in — derived live via the :slot assignment.
+    # The shelf characteristic value brought up from the shelf this card
+    # is part of — Card's :shelf consumer-alias on its slot assignment
+    # from the Shelf.
     calculate :shelf,
               {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristic,
-               [via: [:slot], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
+               [via: [:shelf], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
       public? true
     end
 
-    # The slot number this card occupies on its shelf — the value of the
-    # shelf's :slots-pool assignment to this card.
+    # The slot number this card occupies on its shelf — the :value of
+    # the assignment Card aliases :shelf (its upstream Shelf).
     calculate :slot,
               {:array, :integer},
-              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :slot, field: :value]} do
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :shelf, field: :value]} do
       public? true
     end
   end

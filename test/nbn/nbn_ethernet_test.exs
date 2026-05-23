@@ -16,7 +16,6 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
   alias DiffoExample.Nbn.NniGroup
   alias DiffoExample.Nbn.Nni
   alias DiffoExample.Test.Characteristics
-  alias DiffoExample.Util
   alias Diffo.Provider.Assignment
   alias Diffo.Provider.Instance.Relationship
 
@@ -47,11 +46,9 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding =
         Jason.encode!(access)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(access)
 
       assert encoding ==
                ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","description":"An NBN Ethernet access comprising a dedicated UNI and AVC",\"name\":\"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceCharacteristic":[{"name":"pri","value":{}}]})
-               |> Util.summarise_characteristics(access)
     end
 
     test "define nbn_ethernet access" do
@@ -144,11 +141,94 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
       encoding =
         Jason.encode!(access)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(access)
 
       assert encoding ==
-               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","description":"An NBN Ethernet access comprising a dedicated UNI and AVC","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{"AVCID":"#{avc.name}","UNIID":"#{uni.name}","technology":"FTTP","bandwidthProfile":"home_fast","speeds":[500,50]}}]})
-               |> Util.summarise_characteristics(access)
+               ~s({"id":"#{access.id}","href":"resourceInventoryManagement/v4/resource/#{access.id}","category":"Network Resource","description":"An NBN Ethernet access comprising a dedicated UNI and AVC","name":"#{access.name}","resourceSpecification":{"id":"f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","href":"resourceCatalogManagement/v4/resourceSpecification/f2a4c6e8-1b3d-4f5a-8c7e-9d0b2e4f6a8c","name":"nbnEthernet","version":"v1.0.0"},"resourceRelationship":[{"alias":"avc","type":"owns","resource":{"id":"#{avc.id}","href":"resourceInventoryManagement/v4/resource/#{avc.id}"}},{"alias":"uni","type":"owns","resource":{"id\":"#{uni.id}","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}}],"supportingResource":[{"id":"avc","href":"resourceInventoryManagement/v4/resource/#{avc.id}"},{"id\":"uni","href":"resourceInventoryManagement/v4/resource/#{uni.id}"}],"resourceCharacteristic":[{"name":"pri","value":{}}]})
+    end
+
+    test "pri brings up avc, uni, cvc, ntd via relationship + assignment chains" do
+      # CVC with cvlan pool, assigned to an AVC
+      {:ok, cvc} = Nbn.build_cvc(%{})
+
+      {:ok, cvc} =
+        Nbn.define_cvc(cvc, %{
+          characteristic_value_updates: [
+            cvc: [svlan: 1, bandwidth: 1000],
+            cvlans: [first: 1, last: 100, assignable_type: "cvlan"]
+          ]
+        })
+
+      # NTD with port pool, assigned to a UNI
+      {:ok, ntd} = Nbn.build_ntd(%{})
+
+      {:ok, ntd} =
+        Nbn.define_ntd(ntd, %{
+          characteristic_value_updates: [
+            ntd: [model: "Sercomm CG4000A", technology: :FTTP],
+            ports: [first: 1, last: 4, assignable_type: "port"]
+          ]
+        })
+
+      # AVC + UNI
+      {:ok, avc} = Nbn.build_avc(%{})
+
+      {:ok, _} =
+        Nbn.define_avc(avc, %{
+          characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+        })
+
+      {:ok, uni} = Nbn.build_uni(%{})
+
+      {:ok, _} =
+        Nbn.define_uni(uni, %{
+          characteristic_value_updates: [
+            uni: [port: 1, encapsulation: "DSCP Mapped", technology: :FTTP]
+          ]
+        })
+
+      # AVC takes a cvlan from CVC; UNI takes a port from NTD. Consumer
+      # aliases name the upstream resource each is part of, so the
+      # inheritance walks (target_id + alias identity) resolve cleanly.
+      {:ok, _} =
+        Nbn.assign_cvlan(cvc, %{
+          assignment: %Assignment{
+            assignee_id: avc.id,
+            alias: :cvc,
+            operation: :auto_assign
+          }
+        })
+
+      {:ok, _} =
+        Nbn.assign_port(ntd, %{
+          assignment: %Assignment{
+            assignee_id: uni.id,
+            alias: :ntd,
+            operation: :auto_assign
+          }
+        })
+
+      # PRI owns the AVC and UNI. Aliases name the role each related
+      # resource plays from PRI's perspective — the AVC is the :circuit,
+      # the UNI is the :port.
+      {:ok, pri} = Nbn.build_nbn_ethernet(%{})
+
+      {:ok, _} =
+        Nbn.relate_nbn_ethernet(pri, %{
+          relationships: [
+            %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :circuit},
+            %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :port}
+          ]
+        })
+
+      {:ok, pri} = Nbn.get_nbn_ethernet_by_id(pri.id, load: [:avc, :uni, :cvc, :ntd])
+
+      # Single-hop via :owns relationship
+      assert %{bandwidth_profile: :home_fast} = pri.avc
+      assert %{port: 1, encapsulation: "DSCP Mapped", technology: :FTTP} = pri.uni
+
+      # Two-hop: :owns relationship then :cvlan / :port assignment
+      assert %{svlan: 1, bandwidth: 1000} = pri.cvc
+      assert %{model: "Sercomm CG4000A", technology: :FTTP} = pri.ntd
     end
   end
 
@@ -206,6 +286,61 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         avc
       )
     end
+
+    test "avc inherits cvc (single-hop) and nni_group (two-hop) via assignment chain" do
+      # NniGroup with svlan pool, then a CVC that takes an svlan from it,
+      # then an AVC that takes a cvlan from the CVC. AVC's inherited calcs
+      # should bring up cvc and nni_group characteristics.
+      {:ok, nni_group} = Nbn.build_nni_group(%{})
+
+      {:ok, nni_group} =
+        Nbn.define_nni_group(nni_group, %{
+          characteristic_value_updates: [
+            nni_group: [group_name: "SYD-POI-01", location: "Sydney"],
+            svlans: [first: 1, last: 4000, assignable_type: "svlan"]
+          ]
+        })
+
+      {:ok, cvc} = Nbn.build_cvc(%{})
+
+      {:ok, cvc} =
+        Nbn.define_cvc(cvc, %{
+          characteristic_value_updates: [
+            cvc: [bandwidth: 1000],
+            cvlans: [first: 1, last: 4000, assignable_type: "cvlan"]
+          ]
+        })
+
+      {:ok, _nni_group} =
+        Nbn.assign_svlan(nni_group, %{
+          assignment: %Assignment{
+            assignee_id: cvc.id,
+            alias: :nni_group,
+            operation: :auto_assign
+          }
+        })
+
+      {:ok, avc} = Nbn.build_avc(%{})
+
+      {:ok, _avc} =
+        Nbn.define_avc(avc, %{
+          characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+        })
+
+      {:ok, _cvc} =
+        Nbn.assign_cvlan(cvc, %{
+          assignment: %Assignment{
+            assignee_id: avc.id,
+            alias: :cvc,
+            operation: :auto_assign
+          }
+        })
+
+      {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:cvc, :nni_group])
+
+      assert %{bandwidth: 1000} = avc.cvc
+      assert %{group_name: "SYD-POI-01", location: "Sydney"} = avc.nni_group
+    end
   end
 
   describe "build ntd" do
@@ -258,6 +393,43 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
           uni
         )
       end)
+    end
+
+    test "ntd brings up assigned UNIs as unis[] via :port assignment" do
+      {:ok, ntd} = Nbn.build_ntd(%{})
+
+      {:ok, ntd} =
+        Nbn.define_ntd(ntd, %{
+          characteristic_value_updates: [
+            ntd: [model: "Sercomm CG4000A", technology: :FTTP],
+            ports: [first: 1, last: 4, assignable_type: "port"]
+          ]
+        })
+
+      # Two UNIs defined and assigned ports from the NTD
+      for {port_num, encap} <- [{1, "DSCP Mapped"}, {2, "untagged"}] do
+        {:ok, uni} = Nbn.build_uni(%{})
+
+        {:ok, _} =
+          Nbn.define_uni(uni, %{
+            characteristic_value_updates: [
+              uni: [port: port_num, encapsulation: encap, technology: :FTTP]
+            ]
+          })
+
+        {:ok, _} =
+          Nbn.assign_port(ntd, %{
+            assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
+          })
+      end
+
+      {:ok, ntd} = Nbn.get_ntd_by_id(ntd.id, load: [:unis])
+
+      assert is_list(ntd.unis)
+      assert length(ntd.unis) == 2
+
+      ports = Enum.map(ntd.unis, & &1.port) |> Enum.sort()
+      assert ports == [1, 2]
     end
   end
 
@@ -313,6 +485,43 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         )
       end)
     end
+
+    test "cvc metrics aggregates avcs_count and avcs_total_bandwidth across assigned avcs" do
+      {:ok, cvc} = Nbn.build_cvc(%{})
+
+      {:ok, cvc} =
+        Nbn.define_cvc(cvc, %{
+          characteristic_value_updates: [
+            cvc: [svlan: 1, bandwidth: 10000],
+            cvlans: [first: 1, last: 4000, assignable_type: "cvlan"]
+          ]
+        })
+
+      # Two AVCs with distinct bandwidth_profiles — :home_fast (500 Mbps
+      # downstream) and :D100_U40 (100 Mbps downstream).
+      for profile <- [:home_fast, :D100_U40] do
+        {:ok, avc} = Nbn.build_avc(%{})
+
+        {:ok, _} =
+          Nbn.define_avc(avc, %{
+            characteristic_value_updates: [avc: [bandwidth_profile: profile]]
+          })
+
+        {:ok, _} =
+          Nbn.assign_cvlan(cvc, %{
+            assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}
+          })
+      end
+
+      metrics =
+        DiffoExample.Nbn.CvcMetrics
+        |> Ash.Query.filter_input(instance_id: cvc.id)
+        |> Ash.Query.load(:value)
+        |> Ash.read_one!()
+
+      assert metrics.value.avcs_count == 2
+      assert metrics.value.avcs_total_bandwidth == 600
+    end
   end
 
   describe "build nni_group" do
@@ -365,6 +574,78 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
           cvc
         )
       end)
+    end
+
+    test "nni_group metrics — cvcs and nnis aggregates plus utilization" do
+      {:ok, nni_group} = Nbn.build_nni_group(%{})
+
+      {:ok, nni_group} =
+        Nbn.define_nni_group(nni_group, %{
+          characteristic_value_updates: [
+            nni_group: [group_name: "SYD-POI-01", location: "Sydney"],
+            svlans: [first: 1, last: 4000, assignable_type: "svlan"]
+          ]
+        })
+
+      # Demand side: two CVCs assigned svlans from this NniGroup.
+      for bandwidth <- [400, 600] do
+        {:ok, cvc} = Nbn.build_cvc(%{})
+
+        {:ok, _} =
+          Nbn.define_cvc(cvc, %{
+            characteristic_value_updates: [cvc: [bandwidth: bandwidth]]
+          })
+
+        {:ok, _} =
+          Nbn.assign_svlan(nni_group, %{
+            assignment: %Assignment{assignee_id: cvc.id, operation: :auto_assign}
+          })
+      end
+
+      # Capacity side: two NNIs comprised by this NniGroup, related via
+      # DefinedSimpleRelationship type :contains.
+      nni_ids =
+        for capacity <- [10, 10] do
+          {:ok, nni} = Nbn.build_nni(%{})
+
+          {:ok, _} =
+            Nbn.define_nni(nni, %{
+              characteristic_value_updates: [
+                nni: [port_id: "SYD-01-ETH-#{capacity}", capacity: capacity]
+              ]
+            })
+
+          nni.id
+        end
+
+      {:ok, _nni_group} =
+        Nbn.relate_nni_group(nni_group, %{
+          relationships:
+            Enum.map(nni_ids, fn nni_id ->
+              %Relationship{id: nni_id, direction: :forward, type: :contains}
+            end)
+        })
+
+      metrics =
+        DiffoExample.Nbn.NniGroupMetrics
+        |> Ash.Query.filter_input(instance_id: nni_group.id)
+        |> Ash.Query.load(:value)
+        |> Ash.read_one!()
+
+      assert metrics.value.cvcs_count == 2
+      assert metrics.value.cvcs_total_bandwidth == 1000
+      assert metrics.value.nnis_count == 2
+      assert metrics.value.nnis_total_bandwidth == 20
+      assert_in_delta metrics.value.utilization, 50.0, 0.001
+
+      # nnis[] brings up the NNI characteristic of every comprised NNI via
+      # the same :contains relationships.
+      {:ok, nni_group} = Nbn.get_nni_group_by_id(nni_group.id, load: [:nnis])
+
+      assert is_list(nni_group.nnis)
+      assert length(nni_group.nnis) == 2
+
+      assert Enum.all?(nni_group.nnis, &match?(%{capacity: 10}, &1))
     end
   end
 

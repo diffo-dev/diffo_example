@@ -20,16 +20,11 @@ defmodule DiffoExample.Nbn.Nni do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing a Network-to-Network Interface (NNI)"
     plural_name :Nnis
-  end
-
-  json_api do
-    type "nni"
   end
 
   provider do
@@ -77,14 +72,14 @@ defmodule DiffoExample.Nbn.Nni do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :relate do
       description "relates the NNI with other instances (e.g. its parent NNI Group)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 

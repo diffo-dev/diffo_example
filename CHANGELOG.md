@@ -11,6 +11,37 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.2.3](https://github.com/diffo-dev/diffo/compare/v0.2.2..v0.2.3) (2026-05-22)
+
+### Maintenance:
+* updated to diffo 0.4.1 (issue #48)
+* refreshed agent guidance via `mix usage_rules.sync`
+
+### Refactors:
+* adopted upstream `Diffo.Provider.Changes.{Define,Relate,Assign}` across 11 instance resources; deleted the local `DiffoExample.Changes.*` trio now that the same modules ship in diffo proper ([diffo#170](https://github.com/diffo-dev/diffo/pull/170))
+* slimmed 16 `BaseCharacteristic`-derived resources by relying on the auto-generated `:create`/`:update` actions ([diffo#171](https://github.com/diffo-dev/diffo/pull/171)) — ~360 lines removed; custom `:update` retained on `cable`, `path`, `circuit`, `constraints` where unit/bandwidth-profile composition is needed
+* `Cable.relate` inline `after_action` (which referenced an unaliased `Relationship` module) folded into `change Diffo.Provider.Changes.Relate`
+
+### Resolved workarounds:
+* `DslAccess.qualify_result` now transitions to `:feasibilityChecked` — restores correct TMF form following [diffo#168](https://github.com/diffo-dev/diffo/pull/168) broadening the Assigner lifecycle gate to include `:feasibilityChecked`
+* `Util.summarise_characteristics/2` no longer called from tests — typed characteristic + pool records now surface in TMF JSON by default ([diffo#169](https://github.com/diffo-dev/diffo/pull/169)). The projection function is retained in [lib/diffo_example/util.ex](lib/diffo_example/util.ex) for future projection demonstrations. Expected JSON strings updated across `cable`, `card`, `cable`, `path`, `shelf`, `dsl_access`, `nbn_ethernet` tests to reflect the real typed/pool surfacing
+
+### Features:
+* NBN — AVC, CVC, NniGroup characteristic inheritance and metrics (issue #49):
+  * AVC inherits the upstream CVC's `cvc` characteristic via the `:cvlan` assignment (single-hop), and the NniGroup's `nni_group` characteristic transitively via `[:cvlan, :svlan]` (two-hop). Both singular.
+  * CVC inherits the upstream NniGroup's `nni_group` characteristic via the `:svlan` assignment (singular).
+  * NniGroup brings up the typed value of every comprised NNI as `nnis[]` via the `:contains` relationship.
+  * New `cvc_metrics` characteristic on CVC carries `avcs_count` and `avcs_total_bandwidth` aggregated live over assigned AVCs.
+  * New `nni_group_metrics` characteristic on NniGroup carries `cvcs_count`/`cvcs_total_bandwidth` (demand), `nnis_count`/`nnis_total_bandwidth` (capacity), and `utilization = cvcs_total_bandwidth / nnis_total_bandwidth`.
+* NBN — NTD brings up assigned UNIs as `unis[]` via the `:port` assignment (issue #49 part 2).
+* NBN — NbnEthernet (PRI) brings up four characteristics surfacing the full delivery chain (issue #49 part 3): `avc` single-hop via the `:circuit` owns relationship, `uni` single-hop via the `:port` owns relationship, `cvc` two-hop via `:circuit` then `:cvc`, and `ntd` two-hop via `:port` then `:ntd`. All singular.
+* NBN and Access — consumer-side aliases on assignments and relationships now name the **upstream related resource** the consumer is part of (its domain role), not the slot/thing being received. NBN: AVC sets `:cvc` on its cvlan assignment, CVC sets `:nni_group` on its svlan assignment, UNI sets `:ntd` on its port assignment; PRI's two `:owns` relationships are aliased `:circuit` (AVC) and `:port` (UNI). Access: Card sets `:shelf` on its slot assignment, Path sets `:card` on its port assignment, and `Shelf.cards` filters on `alias: :shelf`. Inheritance walks use these consumer-aliases. Pool/metric aggregations are unaffected — they still filter by `thing`.
+* `BandwidthProfile.downstream/1` — atom-to-Mbps mapping used by the metrics aggregation. CVCs are treated as symmetric capacity in this model (satellite asymmetry ignored).
+
+### Refactors (continued):
+* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment`; new sibling `InheritedCharacteristicViaRelationship` traverses `Provider.Relationship` edges (forward source → target). Both calcs accept `singular?:` to unwrap to a single value where graph identity guarantees ≤1 result. `InheritedCharacteristicViaRelationship` also accepts a `then_via:` list of assignment aliases to continue the walk via `AssignmentRelationship` after the relationship hop — covers mixed paths like PRI's `cvc` (relationship + assignment).
+* `ReverseInheritedCharacteristic` extended with a `thing:` filter option, complementing the existing `alias:` filter. Source-side aggregations should prefer `thing:` since it's always set from the pool DSL — see the assignment-direction-asymmetry rationale.
+
 ## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)
 
 ### Maintenance:

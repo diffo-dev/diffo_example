@@ -21,16 +21,11 @@ defmodule DiffoExample.Nbn.NniGroup do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing an NNI Group"
     plural_name :NniGroups
-  end
-
-  json_api do
-    type "nniGroup"
   end
 
   provider do
@@ -44,6 +39,7 @@ defmodule DiffoExample.Nbn.NniGroup do
 
     characteristics do
       characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
+      characteristic :metrics, DiffoExample.Nbn.NniGroupMetrics
     end
 
     pools do
@@ -81,21 +77,21 @@ defmodule DiffoExample.Nbn.NniGroup do
       argument :characteristic_value_updates, {:array, :term}
 
       change set_attribute(:resource_state, :operating)
-      change DiffoExample.Changes.Define
+      change Diffo.Provider.Changes.Define
     end
 
     update :assign_svlan do
       description "assigns an S-VLAN ID from the NNI Group pool to a CVC"
       argument :assignment, :struct, constraints: [instance_of: Assignment]
 
-      change {DiffoExample.Changes.Assign, pool: :svlans}
+      change {Diffo.Provider.Changes.Assign, pool: :svlans}
     end
 
     update :relate do
       description "relates the NNI Group with other instances (e.g. NNI resources it comprises)"
       argument :relationships, {:array, :struct}
 
-      change DiffoExample.Changes.Relate
+      change Diffo.Provider.Changes.Relate
     end
   end
 
@@ -103,6 +99,17 @@ defmodule DiffoExample.Nbn.NniGroup do
     attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
+      public? true
+    end
+  end
+
+  calculations do
+    # The NNI characteristic value of every NNI this NniGroup comprises —
+    # forward traversal of :contains Relationships (low cardinality).
+    calculate :nnis,
+              {:array, :map},
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [type: :contains, characteristic_module: DiffoExample.Nbn.NniCharacteristic]} do
       public? true
     end
   end

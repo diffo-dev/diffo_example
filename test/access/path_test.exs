@@ -16,7 +16,6 @@ defmodule DiffoExample.Access.PathTest do
   alias DiffoExample.Access.Path
   alias DiffoExample.Test.Parties
   alias DiffoExample.Test.Places
-  alias DiffoExample.Util
 
   describe "build path" do
     test "create a path" do
@@ -52,11 +51,9 @@ defmodule DiffoExample.Access.PathTest do
       encoding =
         Jason.encode!(path)
         |> Diffo.Util.summarise_dates()
-        |> Util.summarise_characteristics(path)
 
       assert encoding ==
-               ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"sections\":0}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
-               |> Util.summarise_characteristics(path)
+               ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
     end
   end
 
@@ -76,11 +73,9 @@ defmodule DiffoExample.Access.PathTest do
     encoding =
       Jason.encode!(path)
       |> Diffo.Util.summarise_dates()
-      |> Util.summarise_characteristics(path)
 
     assert encoding ==
-             ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"sections\":0,\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
-             |> Util.summarise_characteristics(path)
+             ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
   end
 
   test "relate cables and dslam" do
@@ -109,11 +104,12 @@ defmodule DiffoExample.Access.PathTest do
     # now assign a port from a line card
     [_dslam, line_card] = create_dslam_with_line_card("QDONC-0001", tl(places), parties)
 
-    # path-as-assignee names its slot :port when requesting the port-assignment
-    # from the line card. This alias lets the InheritedCharacteristic calc
-    # traverse path → port → card (and transitively card → slot → shelf).
+    # path-as-assignee names its upstream Card relationship :card when
+    # requesting the port-assignment. The consumer-alias names the
+    # related resource, letting the inheritance calc traverse path → :card
+    # → card (and transitively card → :shelf → shelf).
     Access.assign_port!(line_card, %{
-      assignment: %Assignment{assignee_id: path.id, alias: :port, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: path.id, alias: :card, operation: :auto_assign}
     })
 
     # 5 cables each assigned a pair to the path, plus 1 line card assigned a port
@@ -143,12 +139,10 @@ defmodule DiffoExample.Access.PathTest do
     encoding =
       Jason.encode!(path)
       |> Diffo.Util.summarise_dates()
-      |> Util.summarise_characteristics(path)
 
     # the reverse relationships are not encoded to json
     assert encoding ==
-             ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"sections\":0,\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
-             |> Util.summarise_characteristics(path)
+             ~s({\"id\":\"#{path.id}",\"href\":\"resourceInventoryManagement/v4/resource/#{path.id}",\"category\":\"Network Resource\",\"description\":\"A Path Resource Instance\",\"name\":\"82 Rathmullen - DONC\",\"resourceSpecification\":{\"id\":\"1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"href\":\"resourceCatalogManagement/v4/resourceSpecification/1d507914-8f76-48cb-aa0e-3a8f92951ab0\",\"name\":\"path\",\"version\":\"v1.0.0\"},\"resourceCharacteristic\":[{\"name\":\"path\",\"value\":{\"name\":\"82 Rathmullen - DONC\",\"technology\":\"copper\"}}],\"place\":[{\"id\":\"1657363\",\"href\":\"place/telco/1657363\",\"name\":\"addressId\",\"role\":\"CustomerSite\",\"@referredType\":\"GeographicAddress\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC\",\"href\":\"place/telco/DONC\",\"name\":\"exchangeId\",\"role\":\"NetworkSite\",\"@referredType\":\"GeographicSite\",\"@type\":\"PlaceRef\"},{\"id\":\"DONC-0001\",\"href\":\"place/telco/DONC-0001\",\"name\":\"esaId\",\"role\":\"ServingArea\",\"@referredType\":\"GeographicLocation\",\"@type\":\"PlaceRef\"}],\"relatedParty\":[{\"id\":\"Access\",\"name\":\"organizationId\",\"role\":\"Provider\",\"@referredType\":\"Organization\",\"@type\":\"PartyRef\"}]})
   end
 
   defp create_customer_place do
@@ -252,10 +246,11 @@ defmodule DiffoExample.Access.PathTest do
         ]
       })
 
-    # card-as-assignee names its slot :slot when requesting; alias lets
-    # downstream calculations traverse the assignment by name.
+    # card-as-assignee names its upstream Shelf relationship :shelf when
+    # requesting the slot-assignment; consumer-aliases let downstream calcs
+    # traverse by relationship.
     Access.assign_slot!(shelf, %{
-      assignment: %Assignment{assignee_id: card.id, alias: :slot, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: card.id, alias: :shelf, operation: :auto_assign}
     })
 
     [shelf, card]
