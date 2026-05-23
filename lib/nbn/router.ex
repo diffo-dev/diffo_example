@@ -6,8 +6,8 @@ defmodule DiffoExample.Nbn.Router do
   @moduledoc """
   Diffo - TMF Service and Resource Management with a difference
 
-  NBN HTTP router. Handles the catalog endpoint directly and forwards
-  all JSON API traffic to the AshJsonApi router.
+  NBN HTTP router. Serves the catalog endpoint and forwards `/mcp` to the
+  AshAi MCP router (the externally-callable surface for the domain).
 
   Start with:
 
@@ -17,7 +17,7 @@ defmodule DiffoExample.Nbn.Router do
 
   plug Plug.Parsers,
     parsers: [:json],
-    pass: ["application/vnd.api+json", "application/json"],
+    pass: ["application/json"],
     json_decoder: Jason
 
   plug :match
@@ -39,5 +39,7 @@ defmodule DiffoExample.Nbn.Router do
       protocol_version_statement: "2024-11-05"
     ]
 
-  forward "/", to: DiffoExample.Nbn.ApiRouter
+  match _ do
+    send_resp(conn, 404, "not found")
+  end
 end

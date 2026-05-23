@@ -61,8 +61,11 @@ defmodule DiffoExample.MixProject do
       logo: "logos/diffo.jpg",
       extras: [
         "README.md": [title: "Guide"],
-        "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
+        "documentation/domains/access.md": [title: "The Access Domain"],
+        "documentation/domains/diffo_example_access.livemd": [title: "Access Livebook"],
+        "documentation/domains/provider.md": [title: "The Provider Domain"],
         "documentation/domains/nbn.md": [title: "The NBN Domain"],
+        "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
         "documentation/how_to/setup_mcp.md": [title: "Setup the MCP server"],
         "LICENSES/MIT.md": [title: "License"]
       ],
@@ -91,7 +94,6 @@ defmodule DiffoExample.MixProject do
     [
       {:diffo, diffo_version("~> 0.4.1")},
       {:ash_ai, "~> 0.6"},
-      {:ash_json_api, "~> 1.6"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},
       {:simple_sat, ">= 0.0.0"},

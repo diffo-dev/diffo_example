@@ -19,16 +19,11 @@ defmodule DiffoExample.Nbn.Avc do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing an Access Virtual Circuit (AVC)"
     plural_name :Avcs
-  end
-
-  json_api do
-    type "avc"
   end
 
   provider do

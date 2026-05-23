@@ -20,16 +20,11 @@ defmodule DiffoExample.Nbn.Nni do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing a Network-to-Network Interface (NNI)"
     plural_name :Nnis
-  end
-
-  json_api do
-    type "nni"
   end
 
   provider do

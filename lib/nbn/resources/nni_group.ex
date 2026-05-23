@@ -21,16 +21,11 @@ defmodule DiffoExample.Nbn.NniGroup do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing an NNI Group"
     plural_name :NniGroups
-  end
-
-  json_api do
-    type "nniGroup"
   end
 
   provider do

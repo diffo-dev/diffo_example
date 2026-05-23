@@ -20,13 +20,7 @@ defmodule DiffoExample.Nbn.Ntd do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
-
-  resource do
-    description "An Ash Resource representing a Network Termination Device (NTD)"
-    plural_name :Ntds
-  end
 
   policies do
     bypass DiffoExample.Nbn.Checks.NoActor do
@@ -40,6 +34,11 @@ defmodule DiffoExample.Nbn.Ntd do
     policy action_type(:read) do
       authorize_if always()
     end
+  end
+
+  resource do
+    description "An Ash Resource representing a Network Termination Device (NTD)"
+    plural_name :Ntds
   end
 
   provider do
@@ -69,10 +68,6 @@ defmodule DiffoExample.Nbn.Ntd do
         create :build
       end
     end
-  end
-
-  json_api do
-    type "ntd"
   end
 
   def identifier() do

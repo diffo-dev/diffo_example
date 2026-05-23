@@ -20,16 +20,11 @@ defmodule DiffoExample.Nbn.Cvc do
   use Ash.Resource,
     fragments: [BaseInstance],
     domain: Nbn,
-    extensions: [AshJsonApi.Resource],
     authorizers: [Ash.Policy.Authorizer]
 
   resource do
     description "An Ash Resource representing a Connectivity Virtual Circuit (CVC)"
     plural_name :Cvcs
-  end
-
-  json_api do
-    type "cvc"
   end
 
   provider do
