@@ -93,7 +93,7 @@ defmodule DiffoExample.Access.Card do
     # in — derived live via the :slot assignment.
     calculate :shelf,
               {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristic,
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                [via: [:slot], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
       public? true
     end

@@ -27,7 +27,9 @@ defmodule DiffoExample.Nbn do
   alias DiffoExample.Nbn.Rsp
   alias DiffoExample.Nbn.AvcCharacteristic
   alias DiffoExample.Nbn.CvcCharacteristic
+  alias DiffoExample.Nbn.CvcMetrics
   alias DiffoExample.Nbn.NniGroupCharacteristic
+  alias DiffoExample.Nbn.NniGroupMetrics
   alias DiffoExample.Nbn.NniCharacteristic
   alias DiffoExample.Nbn.NtdCharacteristic
   alias DiffoExample.Nbn.UniCharacteristic
@@ -220,7 +222,9 @@ defmodule DiffoExample.Nbn do
 
     resource AvcCharacteristic
     resource CvcCharacteristic
+    resource CvcMetrics
     resource NniGroupCharacteristic
+    resource NniGroupMetrics
     resource NniCharacteristic
     resource NtdCharacteristic
     resource UniCharacteristic

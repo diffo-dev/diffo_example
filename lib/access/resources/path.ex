@@ -80,7 +80,7 @@ defmodule DiffoExample.Access.Path do
     # assigned a port on — via the :port assignment.
     calculate :card,
               {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristic,
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                [via: [:port], characteristic_module: DiffoExample.Access.CardCharacteristic]} do
       public? true
     end
@@ -97,7 +97,7 @@ defmodule DiffoExample.Access.Path do
     # card, then the card's slot to its shelf. Two-hop via [:port, :slot].
     calculate :shelf,
               {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristic,
+              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                [
                  via: [:port, :slot],
                  characteristic_module: DiffoExample.Access.ShelfCharacteristic

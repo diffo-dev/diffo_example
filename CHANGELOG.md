@@ -26,6 +26,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 * `DslAccess.qualify_result` now transitions to `:feasibilityChecked` — restores correct TMF form following [diffo#168](https://github.com/diffo-dev/diffo/pull/168) broadening the Assigner lifecycle gate to include `:feasibilityChecked`
 * `Util.summarise_characteristics/2` no longer called from tests — typed characteristic + pool records now surface in TMF JSON by default ([diffo#169](https://github.com/diffo-dev/diffo/pull/169)). The projection function is retained in [lib/diffo_example/util.ex](lib/diffo_example/util.ex) for future projection demonstrations. Expected JSON strings updated across `cable`, `card`, `cable`, `path`, `shelf`, `dsl_access`, `nbn_ethernet` tests to reflect the real typed/pool surfacing
 
+### Features:
+* NBN — AVC, CVC, NniGroup characteristic inheritance and metrics (issue #49):
+  * AVC inherits the upstream CVC's `cvc` characteristic via the `:cvlan` assignment (single-hop), and the NniGroup's `nni_group` characteristic transitively via `[:cvlan, :svlan]` (two-hop).
+  * CVC inherits the upstream NniGroup's `nni_group` characteristic via the `:svlan` assignment.
+  * New `cvc_metrics` characteristic on CVC carries `avcs_count` and `avcs_total_bandwidth` aggregated live over assigned AVCs.
+  * New `nni_group_metrics` characteristic on NniGroup carries `cvcs_count`/`cvcs_total_bandwidth` (demand), `nnis_count`/`nnis_total_bandwidth` (capacity), and `utilization = cvcs_total_bandwidth / nnis_total_bandwidth`.
+* `BandwidthProfile.downstream/1` — atom-to-Mbps mapping used by the metrics aggregation. CVCs are treated as symmetric capacity in this model (satellite asymmetry ignored).
+
+### Refactors (continued):
+* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment` to make room for a future `InheritedCharacteristicViaRelationship` sibling (the latter lands in the PRI bring-up work).
+
 ## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)
 
 ### Maintenance:

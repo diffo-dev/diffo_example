@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule DiffoExample.Calculations.InheritedCharacteristic do
+defmodule DiffoExample.Calculations.InheritedCharacteristicViaAssignment do
   @moduledoc """
   Brings up a typed characteristic value from an assignment-source instance.
 
@@ -11,10 +11,15 @@ defmodule DiffoExample.Calculations.InheritedCharacteristic do
   `AssignmentRelationship` by alias to reach source instances, then queries
   the typed characteristic resource on each source and returns its `.value`.
 
-  Local-to-this-repo for now. Worth yarning upstream as a diffo-side
-  `inherited_characteristic` DSL declaration backed by a
-  `Diffo.Provider.Calculations.InheritedCharacteristic` calc, sitting
-  alongside the existing inherited-place and inherited-party machinery.
+  Sibling to `InheritedCharacteristicViaRelationship`, which performs the
+  analogous traversal over `DefinedSimpleRelationship` edges (forward,
+  source → target). Pick the right calc by the kind of edge being
+  traversed — assignment vs. relationship.
+
+  Local-to-this-repo for now. Worth yarning upstream as a pair of
+  diffo-side DSL declarations backed by analogous calcs in the provider
+  extension, sitting alongside the existing inherited-place and
+  inherited-party machinery.
 
   ## Options
 
@@ -26,20 +31,33 @@ defmodule DiffoExample.Calculations.InheritedCharacteristic do
   - `characteristic_module:` *(required)* — the typed characteristic Ash
     resource on the final source (e.g. `ShelfCharacteristic`). The calc
     queries this resource by `instance_id` and returns the `.value`.
+  - `singular?:` *(optional, default `false`)* — when `true`, unwraps the
+    result to a single value (or `nil`) rather than a list. Safe whenever
+    every hop in `via:` traverses an `AssignmentRelationship` with identity
+    `[:target_id, :alias]` — that guarantees ≤1 source per step, so the
+    walk yields at most one value. Declare the calc's return type as `:map`
+    (rather than `{:array, :map}`) when using this option.
 
   ## Example
 
       # Card brings up its shelf's typed characteristic via the slot
       # assignment the shelf made to it (alias :slot on the incoming
       # AssignmentRelationship).
-      calculate :shelf, :map,
-                {DiffoExample.Calculations.InheritedCharacteristic,
+      calculate :shelf, {:array, :map},
+                {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                  [via: [:slot], characteristic_module: ShelfCharacteristic]}
 
       # Path brings up the same via a two-hop chain — port-then-slot.
-      calculate :shelf, :map,
-                {DiffoExample.Calculations.InheritedCharacteristic,
+      calculate :shelf, {:array, :map},
+                {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
                  [via: [:port, :slot], characteristic_module: ShelfCharacteristic]}
+
+      # AVC brings up its singular CVC via :cvlan — AssignmentRelationship
+      # identity guarantees ≤1 source, so we declare :map and ask the calc
+      # to unwrap.
+      calculate :cvc, :map,
+                {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
+                 [via: [:cvlan], characteristic_module: CvcCharacteristic, singular?: true]}
   """
   use Ash.Resource.Calculation
 
@@ -50,6 +68,7 @@ defmodule DiffoExample.Calculations.InheritedCharacteristic do
   def calculate(records, opts, _context) do
     via = Keyword.fetch!(opts, :via)
     characteristic_module = Keyword.fetch!(opts, :characteristic_module)
+    singular? = Keyword.get(opts, :singular?, false)
 
     Enum.map(records, fn record ->
       final_ids =
@@ -62,13 +81,16 @@ defmodule DiffoExample.Calculations.InheritedCharacteristic do
           end)
         end)
 
-      Enum.flat_map(final_ids, fn id ->
-        characteristic_module
-        |> Ash.Query.filter_input(instance_id: id)
-        |> Ash.Query.load(:value)
-        |> Ash.read!()
-        |> Enum.map(& &1.value)
-      end)
+      values =
+        Enum.flat_map(final_ids, fn id ->
+          characteristic_module
+          |> Ash.Query.filter_input(instance_id: id)
+          |> Ash.Query.load(:value)
+          |> Ash.read!()
+          |> Enum.map(& &1.value)
+        end)
+
+      if singular?, do: List.first(values), else: values
     end)
   end
 end

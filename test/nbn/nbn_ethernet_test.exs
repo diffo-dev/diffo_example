@@ -19,6 +19,150 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
   alias Diffo.Provider.Assignment
   alias Diffo.Provider.Instance.Relationship
 
+  @tag :show_json
+  test "show AVC, CVC, NniGroup as JSON (run with `mix test --only show_json`)" do
+    {:ok, nni_group} = Nbn.build_nni_group(%{})
+
+    {:ok, nni_group} =
+      Nbn.define_nni_group(nni_group, %{
+        characteristic_value_updates: [
+          nni_group: [group_name: "SYD-POI-01", location: "Sydney Olympic Park"],
+          svlans: [first: 1, last: 4000, assignable_type: "svlan"]
+        ]
+      })
+
+    # Two CVCs assigned svlans from this NniGroup
+    cvc_ids =
+      for bandwidth <- [400, 600] do
+        {:ok, cvc} = Nbn.build_cvc(%{})
+
+        {:ok, _} =
+          Nbn.define_cvc(cvc, %{
+            characteristic_value_updates: [
+              cvc: [bandwidth: bandwidth],
+              cvlans: [first: 1, last: 4000, assignable_type: "cvlan"]
+            ]
+          })
+
+        {:ok, _} =
+          Nbn.assign_svlan(nni_group, %{
+            assignment: %Assignment{
+              assignee_id: cvc.id,
+              alias: :svlan,
+              operation: :auto_assign
+            }
+          })
+
+        cvc.id
+      end
+
+    # Two NNIs comprised by this NniGroup — realistic capacities so
+    # utilization comes out in the 0–1 range we expect operationally.
+    nni_ids =
+      for {port_id, capacity} <- [{"SYD-01-ETH-1", 10000}, {"SYD-01-ETH-2", 10000}] do
+        {:ok, nni} = Nbn.build_nni(%{})
+
+        {:ok, _} =
+          Nbn.define_nni(nni, %{
+            characteristic_value_updates: [
+              nni: [port_id: port_id, capacity: capacity]
+            ]
+          })
+
+        nni.id
+      end
+
+    {:ok, _} =
+      Nbn.relate_nni_group(nni_group, %{
+        relationships:
+          Enum.map(nni_ids, fn id ->
+            %Relationship{id: id, direction: :forward, type: :contains}
+          end)
+      })
+
+    # One AVC assigned a cvlan from the first CVC
+    cvc1_id = hd(cvc_ids)
+    {:ok, cvc1} = Nbn.get_cvc_by_id(cvc1_id)
+
+    {:ok, avc} = Nbn.build_avc(%{})
+
+    {:ok, _} =
+      Nbn.define_avc(avc, %{
+        characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+      })
+
+    {:ok, _} =
+      Nbn.assign_cvlan(cvc1, %{
+        assignment: %Assignment{
+          assignee_id: avc.id,
+          alias: :cvlan,
+          operation: :auto_assign
+        }
+      })
+
+    # Reload all three with their inheritance calcs / metrics loaded
+    {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:cvc, :nni_group])
+    {:ok, cvc} = Nbn.get_cvc_by_id(cvc1_id, load: [:nni_group])
+    {:ok, nni_group} = Nbn.get_nni_group_by_id(nni_group.id, load: [:nnis])
+
+    cvc_metrics =
+      DiffoExample.Nbn.CvcMetrics
+      |> Ash.Query.filter_input(instance_id: cvc.id)
+      |> Ash.Query.load(:value)
+      |> Ash.read_one!()
+
+    nni_group_metrics =
+      DiffoExample.Nbn.NniGroupMetrics
+      |> Ash.Query.filter_input(instance_id: nni_group.id)
+      |> Ash.Query.load(:value)
+      |> Ash.read_one!()
+
+    IO.puts("\n========== AVC.cvc (single-hop :cvlan) ==========")
+    IO.inspect(avc.cvc, label: "avc.cvc")
+
+    IO.puts("\n========== AVC.nni_group (two-hop [:cvlan, :svlan]) ==========")
+    IO.inspect(avc.nni_group, label: "avc.nni_group")
+
+    IO.puts("\n========== CVC.nni_group (single-hop :svlan) ==========")
+    IO.inspect(cvc.nni_group, label: "cvc.nni_group")
+
+    IO.puts("\n========== CvcMetrics record (live aggregate over assigned AVCs) ==========")
+    IO.inspect(cvc_metrics.value, label: "cvc_metrics.value")
+
+    IO.puts("\n========== NniGroupMetrics record (cvcs/nnis aggregates + utilization) ==========")
+    IO.inspect(nni_group_metrics.value, label: "nni_group_metrics.value")
+
+    IO.puts("\n========== NniGroup.nnis (brought-up via :contains Relationship) ==========")
+    IO.inspect(nni_group.nnis, label: "nni_group.nnis")
+
+    IO.puts("\n========== AVC (TMF JSON, current state) ==========")
+
+    avc
+    |> Jason.encode!()
+    |> Diffo.Util.summarise_dates()
+    |> Jason.decode!()
+    |> Jason.encode!(pretty: true)
+    |> IO.puts()
+
+    IO.puts("\n========== CVC (TMF JSON, current state) ==========")
+
+    cvc
+    |> Jason.encode!()
+    |> Diffo.Util.summarise_dates()
+    |> Jason.decode!()
+    |> Jason.encode!(pretty: true)
+    |> IO.puts()
+
+    IO.puts("\n========== NniGroup (TMF JSON, current state) ==========")
+
+    nni_group
+    |> Jason.encode!()
+    |> Diffo.Util.summarise_dates()
+    |> Jason.decode!()
+    |> Jason.encode!(pretty: true)
+    |> IO.puts()
+  end
+
   describe "build nbn_ethernet" do
     test "create an nbn_ethernet access" do
       {:ok, access} = Nbn.build_nbn_ethernet(%{})
@@ -201,6 +345,61 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         avc
       )
     end
+
+    test "avc inherits cvc (single-hop) and nni_group (two-hop) via assignment chain" do
+      # NniGroup with svlan pool, then a CVC that takes an svlan from it,
+      # then an AVC that takes a cvlan from the CVC. AVC's inherited calcs
+      # should bring up cvc and nni_group characteristics.
+      {:ok, nni_group} = Nbn.build_nni_group(%{})
+
+      {:ok, nni_group} =
+        Nbn.define_nni_group(nni_group, %{
+          characteristic_value_updates: [
+            nni_group: [group_name: "SYD-POI-01", location: "Sydney"],
+            svlans: [first: 1, last: 4000, assignable_type: "svlan"]
+          ]
+        })
+
+      {:ok, cvc} = Nbn.build_cvc(%{})
+
+      {:ok, cvc} =
+        Nbn.define_cvc(cvc, %{
+          characteristic_value_updates: [
+            cvc: [bandwidth: 1000],
+            cvlans: [first: 1, last: 4000, assignable_type: "cvlan"]
+          ]
+        })
+
+      {:ok, _nni_group} =
+        Nbn.assign_svlan(nni_group, %{
+          assignment: %Assignment{
+            assignee_id: cvc.id,
+            alias: :svlan,
+            operation: :auto_assign
+          }
+        })
+
+      {:ok, avc} = Nbn.build_avc(%{})
+
+      {:ok, _avc} =
+        Nbn.define_avc(avc, %{
+          characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+        })
+
+      {:ok, _cvc} =
+        Nbn.assign_cvlan(cvc, %{
+          assignment: %Assignment{
+            assignee_id: avc.id,
+            alias: :cvlan,
+            operation: :auto_assign
+          }
+        })
+
+      {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:cvc, :nni_group])
+
+      assert %{bandwidth: 1000} = avc.cvc
+      assert %{group_name: "SYD-POI-01", location: "Sydney"} = avc.nni_group
+    end
   end
 
   describe "build ntd" do
@@ -308,6 +507,43 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
         )
       end)
     end
+
+    test "cvc metrics aggregates avcs_count and avcs_total_bandwidth across assigned avcs" do
+      {:ok, cvc} = Nbn.build_cvc(%{})
+
+      {:ok, cvc} =
+        Nbn.define_cvc(cvc, %{
+          characteristic_value_updates: [
+            cvc: [svlan: 1, bandwidth: 10000],
+            cvlans: [first: 1, last: 4000, assignable_type: "cvlan"]
+          ]
+        })
+
+      # Two AVCs with distinct bandwidth_profiles — :home_fast (500 Mbps
+      # downstream) and :D100_U40 (100 Mbps downstream).
+      for profile <- [:home_fast, :D100_U40] do
+        {:ok, avc} = Nbn.build_avc(%{})
+
+        {:ok, _} =
+          Nbn.define_avc(avc, %{
+            characteristic_value_updates: [avc: [bandwidth_profile: profile]]
+          })
+
+        {:ok, _} =
+          Nbn.assign_cvlan(cvc, %{
+            assignment: %Assignment{assignee_id: avc.id, operation: :auto_assign}
+          })
+      end
+
+      metrics =
+        DiffoExample.Nbn.CvcMetrics
+        |> Ash.Query.filter_input(instance_id: cvc.id)
+        |> Ash.Query.load(:value)
+        |> Ash.read_one!()
+
+      assert metrics.value.avcs_count == 2
+      assert metrics.value.avcs_total_bandwidth == 600
+    end
   end
 
   describe "build nni_group" do
@@ -360,6 +596,78 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
           cvc
         )
       end)
+    end
+
+    test "nni_group metrics — cvcs and nnis aggregates plus utilization" do
+      {:ok, nni_group} = Nbn.build_nni_group(%{})
+
+      {:ok, nni_group} =
+        Nbn.define_nni_group(nni_group, %{
+          characteristic_value_updates: [
+            nni_group: [group_name: "SYD-POI-01", location: "Sydney"],
+            svlans: [first: 1, last: 4000, assignable_type: "svlan"]
+          ]
+        })
+
+      # Demand side: two CVCs assigned svlans from this NniGroup.
+      for bandwidth <- [400, 600] do
+        {:ok, cvc} = Nbn.build_cvc(%{})
+
+        {:ok, _} =
+          Nbn.define_cvc(cvc, %{
+            characteristic_value_updates: [cvc: [bandwidth: bandwidth]]
+          })
+
+        {:ok, _} =
+          Nbn.assign_svlan(nni_group, %{
+            assignment: %Assignment{assignee_id: cvc.id, operation: :auto_assign}
+          })
+      end
+
+      # Capacity side: two NNIs comprised by this NniGroup, related via
+      # DefinedSimpleRelationship type :contains.
+      nni_ids =
+        for capacity <- [10, 10] do
+          {:ok, nni} = Nbn.build_nni(%{})
+
+          {:ok, _} =
+            Nbn.define_nni(nni, %{
+              characteristic_value_updates: [
+                nni: [port_id: "SYD-01-ETH-#{capacity}", capacity: capacity]
+              ]
+            })
+
+          nni.id
+        end
+
+      {:ok, _nni_group} =
+        Nbn.relate_nni_group(nni_group, %{
+          relationships:
+            Enum.map(nni_ids, fn nni_id ->
+              %Relationship{id: nni_id, direction: :forward, type: :contains}
+            end)
+        })
+
+      metrics =
+        DiffoExample.Nbn.NniGroupMetrics
+        |> Ash.Query.filter_input(instance_id: nni_group.id)
+        |> Ash.Query.load(:value)
+        |> Ash.read_one!()
+
+      assert metrics.value.cvcs_count == 2
+      assert metrics.value.cvcs_total_bandwidth == 1000
+      assert metrics.value.nnis_count == 2
+      assert metrics.value.nnis_total_bandwidth == 20
+      assert_in_delta metrics.value.utilization, 50.0, 0.001
+
+      # nnis[] brings up the NNI characteristic of every comprised NNI via
+      # the same :contains relationships.
+      {:ok, nni_group} = Nbn.get_nni_group_by_id(nni_group.id, load: [:nnis])
+
+      assert is_list(nni_group.nnis)
+      assert length(nni_group.nnis) == 2
+
+      assert Enum.all?(nni_group.nnis, &match?(%{capacity: 10}, &1))
     end
   end
 
