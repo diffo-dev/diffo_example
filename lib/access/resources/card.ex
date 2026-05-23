@@ -89,20 +89,21 @@ defmodule DiffoExample.Access.Card do
   end
 
   calculations do
-    # The shelf characteristic value brought up from the shelf this card is
-    # in — derived live via the :slot assignment.
+    # The shelf characteristic value brought up from the shelf this card
+    # is part of — Card's :shelf consumer-alias on its slot assignment
+    # from the Shelf.
     calculate :shelf,
               {:array, :map},
               {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [via: [:slot], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
+               [via: [:shelf], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
       public? true
     end
 
-    # The slot number this card occupies on its shelf — the value of the
-    # shelf's :slots-pool assignment to this card.
+    # The slot number this card occupies on its shelf — the :value of
+    # the assignment Card aliases :shelf (its upstream Shelf).
     calculate :slot,
               {:array, :integer},
-              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :slot, field: :value]} do
+              {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :shelf, field: :value]} do
       public? true
     end
   end

@@ -96,7 +96,7 @@ defmodule DiffoExample.Access.Shelf do
     calculate :cards,
               {:array, :map},
               {DiffoExample.Calculations.ReverseInheritedCharacteristic,
-               [alias: :slot, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
+               [alias: :shelf, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
       public? true
     end
 

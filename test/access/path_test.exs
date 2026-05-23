@@ -104,11 +104,12 @@ defmodule DiffoExample.Access.PathTest do
     # now assign a port from a line card
     [_dslam, line_card] = create_dslam_with_line_card("QDONC-0001", tl(places), parties)
 
-    # path-as-assignee names its slot :port when requesting the port-assignment
-    # from the line card. This alias lets the InheritedCharacteristic calc
-    # traverse path → port → card (and transitively card → slot → shelf).
+    # path-as-assignee names its upstream Card relationship :card when
+    # requesting the port-assignment. The consumer-alias names the
+    # related resource, letting the inheritance calc traverse path → :card
+    # → card (and transitively card → :shelf → shelf).
     Access.assign_port!(line_card, %{
-      assignment: %Assignment{assignee_id: path.id, alias: :port, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: path.id, alias: :card, operation: :auto_assign}
     })
 
     # 5 cables each assigned a pair to the path, plus 1 line card assigned a port
@@ -245,10 +246,11 @@ defmodule DiffoExample.Access.PathTest do
         ]
       })
 
-    # card-as-assignee names its slot :slot when requesting; alias lets
-    # downstream calculations traverse the assignment by name.
+    # card-as-assignee names its upstream Shelf relationship :shelf when
+    # requesting the slot-assignment; consumer-aliases let downstream calcs
+    # traverse by relationship.
     Access.assign_slot!(shelf, %{
-      assignment: %Assignment{assignee_id: card.id, alias: :slot, operation: :auto_assign}
+      assignment: %Assignment{assignee_id: card.id, alias: :shelf, operation: :auto_assign}
     })
 
     [shelf, card]

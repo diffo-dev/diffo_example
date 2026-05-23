@@ -7,9 +7,10 @@ defmodule DiffoExample.Access.Calculations.ShelfTotalPorts do
   Sums the `:ports` pool capacity across every card a shelf has assigned
   a slot to.
 
-  For each outgoing slot-assignment (alias `:slot`, source = shelf), looks
-  up the assigned card's `AssignableCharacteristic` for the `:ports` pool
-  and sums `(last - first + 1)` across all of them.
+  For each outgoing slot-assignment (cards consumer-alias their upstream
+  Shelf relationship as `:shelf`), looks up the assigned card's
+  `AssignableCharacteristic` for the `:ports` pool and sums
+  `(last - first + 1)` across all of them.
 
   Local-to-this-repo for now. Could in time become a more general
   diffo-side primitive (`SumPoolCapacityOfAssignees` or similar) once the
@@ -26,7 +27,7 @@ defmodule DiffoExample.Access.Calculations.ShelfTotalPorts do
     Enum.map(records, fn shelf ->
       assignments =
         Diffo.Provider.AssignmentRelationship
-        |> Ash.Query.filter_input(source_id: shelf.id, alias: :slot)
+        |> Ash.Query.filter_input(source_id: shelf.id, alias: :shelf)
         |> Ash.read!(domain: Diffo.Provider)
 
       Enum.reduce(assignments, 0, fn assignment, acc ->
