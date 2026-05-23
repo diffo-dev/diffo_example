@@ -23,7 +23,6 @@ defmodule DiffoExample.MixProject do
       # ex_doc
       source_url: "https://github.com/diffo-dev/diffo_example/",
       homepage_url: "http://diffo.dev/diffo_example/",
-      docs: [main: "readme", extras: ["README.md"]],
       elixirc_paths: elixirc_paths(Mix.env()),
       # agent stuff
       usage_rules: usage_rules(),
@@ -63,9 +62,11 @@ defmodule DiffoExample.MixProject do
         "README.md": [title: "Guide"],
         "documentation/domains/access.md": [title: "The Access Domain"],
         "documentation/domains/diffo_example_access.livemd": [title: "Access Livebook"],
+        "documentation/domains/_access_api.md": [title: "Access Domain API"],
         "documentation/domains/provider.md": [title: "The Provider Domain"],
         "documentation/domains/nbn.md": [title: "The NBN Domain"],
         "documentation/domains/diffo_example_nbn.livemd": [title: "NBN Livebook"],
+        "documentation/domains/_nbn_api.md": [title: "NBN Domain API"],
         "documentation/how_to/setup_mcp.md": [title: "Setup the MCP server"],
         "LICENSES/MIT.md": [title: "License"]
       ],

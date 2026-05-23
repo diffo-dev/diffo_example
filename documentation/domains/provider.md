@@ -22,7 +22,7 @@ Every `Instance` declares a `Specification` — the *type* of thing it is (`shel
 
 ### Instance
 
-A concrete thing of a specification — a particular `shelf` named "QDONC-0001" with a unique id. You created instances with `:build` actions (e.g. `Access.build_shelf/1`). Each instance is a node in the graph.
+A concrete thing of a specification — a particular `shelf` named "QDONC-0001" with a unique id. You created instances with `:build` actions (e.g. `DiffoExample.Access.build_shelf/1`). Each instance is a node in the graph.
 
 ### Characteristic
 
