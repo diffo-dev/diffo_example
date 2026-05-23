@@ -170,6 +170,99 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
     |> IO.puts()
   end
 
+  test "PRI (NbnEthernet access) with full delivery chain — AVC + UNI + CVC + NTD" do
+    # CVC + cvlan pool
+    {:ok, cvc} = Nbn.build_cvc(%{})
+
+    {:ok, cvc} =
+      Nbn.define_cvc(cvc, %{
+        characteristic_value_updates: [
+          cvc: [svlan: 1, bandwidth: 1000],
+          cvlans: [first: 1, last: 100, assignable_type: "cvlan"]
+        ]
+      })
+
+    # NTD + port pool
+    {:ok, ntd} = Nbn.build_ntd(%{})
+
+    {:ok, ntd} =
+      Nbn.define_ntd(ntd, %{
+        characteristic_value_updates: [
+          ntd: [model: "Sercomm CG4000A", technology: :FTTP],
+          ports: [first: 1, last: 4, assignable_type: "port"]
+        ]
+      })
+
+    # AVC + UNI
+    {:ok, avc} = Nbn.build_avc(%{})
+
+    {:ok, _} =
+      Nbn.define_avc(avc, %{
+        characteristic_value_updates: [avc: [bandwidth_profile: :home_fast]]
+      })
+
+    {:ok, uni} = Nbn.build_uni(%{})
+
+    {:ok, _} =
+      Nbn.define_uni(uni, %{
+        characteristic_value_updates: [
+          uni: [port: 1, encapsulation: "DSCP Mapped", technology: :FTTP]
+        ]
+      })
+
+    {:ok, _} =
+      Nbn.assign_cvlan(cvc, %{
+        assignment: %Assignment{
+          assignee_id: avc.id,
+          alias: :cvlan,
+          operation: :auto_assign
+        }
+      })
+
+    {:ok, _} =
+      Nbn.assign_port(ntd, %{
+        assignment: %Assignment{
+          assignee_id: uni.id,
+          alias: :port,
+          operation: :auto_assign
+        }
+      })
+
+    # PRI owns AVC and UNI
+    {:ok, pri} = Nbn.build_nbn_ethernet(%{})
+
+    {:ok, _} =
+      Nbn.relate_nbn_ethernet(pri, %{
+        relationships: [
+          %Relationship{id: avc.id, direction: :forward, type: :owns, alias: :avc},
+          %Relationship{id: uni.id, direction: :forward, type: :owns, alias: :uni}
+        ]
+      })
+
+    {:ok, pri} = Nbn.get_nbn_ethernet_by_id(pri.id, load: [:avc, :uni, :cvc, :ntd])
+
+    IO.puts("\n========== PRI.avc (single-hop via :avc owns) ==========")
+    IO.inspect(pri.avc, label: "pri.avc")
+
+    IO.puts("\n========== PRI.uni (single-hop via :uni owns) ==========")
+    IO.inspect(pri.uni, label: "pri.uni")
+
+    IO.puts("\n========== PRI.cvc (two-hop via :avc owns + :cvlan assignment) ==========")
+    IO.inspect(pri.cvc, label: "pri.cvc")
+
+    IO.puts("\n========== PRI.ntd (two-hop via :uni owns + :port assignment) ==========")
+    IO.inspect(pri.ntd, label: "pri.ntd")
+
+    IO.puts("\n========== PRI (TMF JSON) ==========")
+
+    pri
+    |> Jason.encode!()
+    |> Diffo.Util.summarise_dates()
+    |> Jason.decode!()
+    |> Jason.encode!(pretty: true)
+    |> IO.puts()
+  end
+
   test "NTD with assigned UNIs" do
     {:ok, ntd} = Nbn.build_ntd(%{})
 

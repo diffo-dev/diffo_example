@@ -23,10 +23,17 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
   ## Options
 
   - `characteristic_module:` *(required)* — the typed characteristic Ash
-    resource on each target (e.g. `NniCharacteristic`). The calc queries
-    this resource by `instance_id` and returns the `.value`.
+    resource on the final source (e.g. `NniCharacteristic`). The calc
+    queries this resource by `instance_id` and returns the `.value`.
   - `type:` *(optional)* — filter relationships by type atom (e.g. `:contains`).
   - `alias:` *(optional)* — filter relationships by alias atom (e.g. `:avc`).
+  - `then_via:` *(optional)* — list of `AssignmentRelationship` aliases to
+    walk **after** the relationship hop. Each step walks back through the
+    target's incoming assignments (`target_id + alias` identity, so each
+    step has cardinality ≤1). Use this for mixed paths — one relationship
+    hop followed by one or more assignment hops — e.g. PRI's `:cvc`
+    bring-up: `:avc` owns relationship, then `:cvlan` assignment back to
+    the CVC.
   - `singular?:` *(optional, default `false`)* — unwrap to a single value
     when the consumer expects a 1-cardinality result (e.g. PRI's `:avc` or
     `:uni` aliased owns-relationship). Declare the calc's return type as
@@ -45,6 +52,13 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
       calculate :avc, :map,
                 {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
                  [alias: :avc, characteristic_module: AvcCharacteristic, singular?: true]}
+
+      # PRI brings up the singular CVC two-hop — :avc owns relationship,
+      # then back via the AVC's incoming :cvlan assignment to the CVC.
+      calculate :cvc, :map,
+                {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+                 [alias: :avc, then_via: [:cvlan],
+                  characteristic_module: CvcCharacteristic, singular?: true]}
   """
   use Ash.Resource.Calculation
   require Ash.Query
@@ -57,6 +71,7 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
     characteristic_module = Keyword.fetch!(opts, :characteristic_module)
     type_filter = Keyword.get(opts, :type)
     alias_filter = Keyword.get(opts, :alias)
+    then_via = Keyword.get(opts, :then_via, [])
     singular? = Keyword.get(opts, :singular?, false)
 
     Enum.map(records, fn record ->
@@ -66,8 +81,10 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
         |> Ash.read!(domain: Diffo.Provider)
         |> Enum.map(& &1.target_id)
 
+      final_ids = walk_assignments(target_ids, then_via)
+
       values =
-        Enum.flat_map(target_ids, fn id ->
+        Enum.flat_map(final_ids, fn id ->
           characteristic_module
           |> Ash.Query.filter_input(instance_id: id)
           |> Ash.Query.load(:value)
@@ -77,6 +94,22 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
 
       if singular?, do: List.first(values), else: values
     end)
+  end
+
+  # Walks back through incoming `AssignmentRelationship` records for each
+  # id, following `target_id + alias` (identity, ≤1 source per step).
+  defp walk_assignments(ids, []), do: ids
+
+  defp walk_assignments(ids, [alias_step | rest]) do
+    next_ids =
+      Enum.flat_map(ids, fn id ->
+        Diffo.Provider.AssignmentRelationship
+        |> Ash.Query.filter_input(target_id: id, alias: alias_step)
+        |> Ash.read!(domain: Diffo.Provider)
+        |> Enum.map(& &1.source_id)
+      end)
+
+    walk_assignments(next_ids, rest)
   end
 
   defp filter_relationships(query, source_id, nil, nil),

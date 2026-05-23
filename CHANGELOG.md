@@ -34,10 +34,11 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
   * New `cvc_metrics` characteristic on CVC carries `avcs_count` and `avcs_total_bandwidth` aggregated live over assigned AVCs.
   * New `nni_group_metrics` characteristic on NniGroup carries `cvcs_count`/`cvcs_total_bandwidth` (demand), `nnis_count`/`nnis_total_bandwidth` (capacity), and `utilization = cvcs_total_bandwidth / nnis_total_bandwidth`.
 * NBN — NTD brings up assigned UNIs as `unis[]` via the `:port` assignment (issue #49 part 2).
+* NBN — NbnEthernet (PRI) brings up four characteristics surfacing the full delivery chain (issue #49 part 3): `avc` single-hop via the `:avc` owns relationship, `uni` single-hop via the `:uni` owns relationship, `cvc` two-hop via `:avc` then `:cvlan`, and `ntd` two-hop via `:uni` then `:port`. All singular.
 * `BandwidthProfile.downstream/1` — atom-to-Mbps mapping used by the metrics aggregation. CVCs are treated as symmetric capacity in this model (satellite asymmetry ignored).
 
 ### Refactors (continued):
-* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment`; new sibling `InheritedCharacteristicViaRelationship` traverses `Provider.Relationship` edges (forward source → target). Both calcs accept `singular?:` to unwrap to a single value where graph identity guarantees ≤1 result.
+* `DiffoExample.Calculations.InheritedCharacteristic` renamed to `InheritedCharacteristicViaAssignment`; new sibling `InheritedCharacteristicViaRelationship` traverses `Provider.Relationship` edges (forward source → target). Both calcs accept `singular?:` to unwrap to a single value where graph identity guarantees ≤1 result. `InheritedCharacteristicViaRelationship` also accepts a `then_via:` list of assignment aliases to continue the walk via `AssignmentRelationship` after the relationship hop — covers mixed paths like PRI's `cvc` (relationship + assignment).
 * `ReverseInheritedCharacteristic` extended with a `thing:` filter option, complementing the existing `alias:` filter. Source-side aggregations should prefer `thing:` since it's always set from the pool DSL — see the assignment-direction-asymmetry rationale.
 
 ## [v0.2.2](https://github.com/diffo-dev/diffo/compare/v0.2.1..v0.2.2) (2026-05-21)

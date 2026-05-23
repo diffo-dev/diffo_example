@@ -94,6 +94,60 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     end
   end
 
+  calculations do
+    # The singular AVC this access owns — single-hop via :avc owns relationship.
+    calculate :avc,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :avc,
+                 characteristic_module: DiffoExample.Nbn.AvcCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular UNI this access owns — single-hop via :uni owns relationship.
+    calculate :uni,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :uni,
+                 characteristic_module: DiffoExample.Nbn.UniCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular CVC backing this access's AVC — two-hop via :avc owns
+    # relationship, then back via the AVC's incoming :cvlan assignment.
+    calculate :cvc,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :avc,
+                 then_via: [:cvlan],
+                 characteristic_module: DiffoExample.Nbn.CvcCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+
+    # The singular NTD this access's UNI plugs into — two-hop via :uni
+    # owns relationship, then back via the UNI's incoming :port assignment.
+    calculate :ntd,
+              :map,
+              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
+               [
+                 alias: :uni,
+                 then_via: [:port],
+                 characteristic_module: DiffoExample.Nbn.NtdCharacteristic,
+                 singular?: true
+               ]} do
+      public? true
+    end
+  end
+
   def identifier() do
     DiffoExample.Nbn.Util.identifier("PRI")
   end
