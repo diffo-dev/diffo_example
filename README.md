@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT
 
 # Diffo Example
 
-[![Module Version](https://img.shields.io/hexpm/v/diffo)](https://hex.pm/packages/diffo_example)
+[![Module Version](https://img.shields.io/hexpm/v/diffo_example)](https://hex.pm/packages/diffo_example)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen)](https://hexdocs.pm/diffo_example/)
 [![License](https://img.shields.io/hexpm/l/diffo)](https://github.com/diffo-dev/diffo_example/blob/master/LICENSES/MIT.md)
 [![REUSE status](https://api.reuse.software/badge/github.com/diffo-dev/diffo_example)](https://api.reuse.software/info/github.com/diffo-dev/diffo_example)
