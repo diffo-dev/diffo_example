@@ -104,7 +104,7 @@ Access.assign_port!(card, %{
 # 6. Now sell the service. Qualify first (do we have feasibility at this address?)
 {:ok, dsl} = Access.qualify_dsl(%{parties: [customer, reseller], places: [customer_site]})
 {:ok, dsl} = Access.qualify_dsl_result(dsl, %{
-  service_operating_status: :feasible,
+  operating_status: :feasible,
   places: [esa]
 })
 

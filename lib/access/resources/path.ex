@@ -10,11 +10,12 @@ defmodule DiffoExample.Access.Path do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
 
   alias DiffoExample.Access
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Access
 
   resource do

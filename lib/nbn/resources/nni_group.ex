@@ -14,12 +14,13 @@ defmodule DiffoExample.Nbn.NniGroup do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -76,7 +77,7 @@ defmodule DiffoExample.Nbn.NniGroup do
       description "defines the NNI Group"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 

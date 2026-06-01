@@ -38,7 +38,7 @@ The Elixir function-call surface for each resource in the `DiffoExample.Access` 
 | `design_dsl_result` | `:design_result` | `characteristic_value_updates` (list of term) | updates the DSL Access service with the design |
 | `get_dsl_by_id` | `:read` | `id` | read a service or resource instance |
 | `qualify_dsl` | `:qualify` | `id`, `name`, `type`, `which`, `places` (list of struct), `parties` (list of struct) | creates a new DSL Access service instance for qualification |
-| `qualify_dsl_result` | `:qualify_result` | `service_operating_status`, `places` (list of struct) | updates the DSL Access service with qualification result |
+| `qualify_dsl_result` | `:qualify_result` | `operating_status`, `places` (list of struct) | updates the DSL Access service with qualification result |
 
 ## Path
 

@@ -14,11 +14,12 @@ defmodule DiffoExample.Nbn.Uni do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -88,7 +89,7 @@ defmodule DiffoExample.Nbn.Uni do
       description "defines the UNI"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 

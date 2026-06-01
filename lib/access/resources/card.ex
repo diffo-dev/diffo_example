@@ -10,12 +10,13 @@ defmodule DiffoExample.Access.Card do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Access
 
   resource do
@@ -69,7 +70,7 @@ defmodule DiffoExample.Access.Card do
       description "defines the card"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 
