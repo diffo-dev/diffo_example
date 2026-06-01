@@ -35,6 +35,11 @@ defmodule DiffoExample.Access.Card do
 
     characteristics do
       characteristic :card, DiffoExample.Access.CardCharacteristic
+
+      # The shelf characteristic, inherited one hop from the shelf this card
+      # is assigned a slot on (the card names that slot-assignment :shelf).
+      # Surfaces automatically into resourceCharacteristic when loaded.
+      inherited_characteristic :shelf
     end
 
     pools do
@@ -93,13 +98,6 @@ defmodule DiffoExample.Access.Card do
     # The shelf characteristic value brought up from the shelf this card
     # is part of — Card's :shelf consumer-alias on its slot assignment
     # from the Shelf.
-    calculate :shelf,
-              {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [via: [:shelf], characteristic_module: DiffoExample.Access.ShelfCharacteristic]} do
-      public? true
-    end
-
     # The slot number this card occupies on its shelf — the :value of
     # the assignment Card aliases :shelf (its upstream Shelf).
     calculate :slot,

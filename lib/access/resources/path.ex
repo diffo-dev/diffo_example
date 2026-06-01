@@ -34,6 +34,14 @@ defmodule DiffoExample.Access.Path do
 
     characteristics do
       characteristic :path, DiffoExample.Access.PathCharacteristic
+
+      # The card characteristic, inherited one hop from the card this path is
+      # assigned a port on (the path names that port-assignment :card).
+      inherited_characteristic :card
+
+      # The shelf characteristic, inherited transitively — Path's :card alias
+      # to the Card, then the Card's :shelf alias to its Shelf. Two-hop via.
+      inherited_characteristic :shelf, via: [:card, :shelf]
     end
 
     relationships do
@@ -77,34 +85,11 @@ defmodule DiffoExample.Access.Path do
   end
 
   calculations do
-    # The card characteristic value brought up from the card this path is
-    # part of — Path's :card consumer-alias on its port assignment from
-    # the Card.
-    calculate :card,
-              {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [via: [:card], characteristic_module: DiffoExample.Access.CardCharacteristic]} do
-      public? true
-    end
-
     # The port number this path occupies on its card — the :value of the
     # assignment Path aliases :card (its upstream Card).
     calculate :port,
               {:array, :integer},
               {Diffo.Provider.Calculations.FieldFromAssignment, [alias: :card, field: :value]} do
-      public? true
-    end
-
-    # The shelf characteristic value brought up transitively — Path's
-    # :card alias to the Card, then the Card's :shelf alias to its Shelf.
-    # Two-hop via [:card, :shelf].
-    calculate :shelf,
-              {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [
-                 via: [:card, :shelf],
-                 characteristic_module: DiffoExample.Access.ShelfCharacteristic
-               ]} do
       public? true
     end
   end

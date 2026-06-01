@@ -8,17 +8,15 @@ defmodule DiffoExample.Calculations.InheritedCharacteristicViaRelationship do
   forward `Diffo.Provider.Relationship` edges (source → target), optionally
   filtered by `type:` and/or `alias:`.
 
-  Sibling to `InheritedCharacteristicViaAssignment`, which performs the
-  analogous traversal over `AssignmentRelationship` edges. Pick the right
-  calc by the kind of edge being traversed — relationship vs. assignment.
-
   Use this when the edge between the consuming instance and the target was
-  created by a `:relate` action (a `Provider.Relationship` record). Use
-  `InheritedCharacteristicViaAssignment` when the edge was created by the
-  Assigner (an `AssignmentRelationship` record).
+  created by a `:relate` action (a `Provider.Relationship` record) — i.e. a
+  forward `:contains` / `:owns` relationship, optionally with a `then_via:`
+  hop that continues along assignment aliases.
 
-  Local-to-this-repo for now. Worth yarning upstream alongside the
-  assignment variant as a pair of provider-side calcs.
+  The assignment-based variants are now native diffo DSL
+  (`inherited_characteristic` / `reverse_inherited_characteristic`); this
+  relationship-edge calc remains local pending diffo#212 (native forward-
+  relationship traversal).
 
   ## Options
 

@@ -53,6 +53,11 @@ defmodule DiffoExample.Nbn.Ntd do
 
     characteristics do
       characteristic :ntd, DiffoExample.Nbn.NtdCharacteristic
+
+      # The UNI characteristic of every UNI this NTD has assigned a port to —
+      # each UNI names its NTD-port assignment :ntd, so reverse-traverse that
+      # alias. Surfaces into resourceCharacteristic.
+      reverse_inherited_characteristic :unis, assignment_alias: :ntd, characteristic: :uni
     end
 
     pools do
@@ -112,17 +117,4 @@ defmodule DiffoExample.Nbn.Ntd do
     end
   end
 
-  calculations do
-    # The UNI characteristic value of every UNI this NTD has assigned a
-    # port to — reverse traversal of outgoing :port AssignmentRelationships
-    # sourced from this NTD. Low cardinality (typical NTD has a handful of
-    # ports). Filter by `thing` (the pool's thing name) rather than `alias`
-    # — see assignment-direction-asymmetry memory.
-    calculate :unis,
-              {:array, :map},
-              {DiffoExample.Calculations.ReverseInheritedCharacteristic,
-               [thing: :port, characteristic_module: DiffoExample.Nbn.UniCharacteristic]} do
-      public? true
-    end
-  end
 end

@@ -42,6 +42,10 @@ defmodule DiffoExample.Nbn.Cvc do
     characteristics do
       characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
       characteristic :metrics, DiffoExample.Nbn.CvcMetrics
+
+      # The NNI Group this CVC is assigned an svlan from — single-hop via the
+      # CVC's :nni_group consumer-alias. Returns a list (#211: structurally ≤1).
+      inherited_characteristic :nni_group
     end
 
     pools do
@@ -107,19 +111,6 @@ defmodule DiffoExample.Nbn.Cvc do
   end
 
   calculations do
-    # The NniGroup characteristic value brought up from the singular
-    # NniGroup this CVC is part of — single-hop via the CVC's :nni_group
-    # consumer-alias on its svlan assignment from the NniGroup.
-    calculate :nni_group,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [
-                 via: [:nni_group],
-                 characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
   end
 
   def identifier() do
