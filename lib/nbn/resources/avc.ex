@@ -40,13 +40,12 @@ defmodule DiffoExample.Nbn.Avc do
       characteristic :avc, DiffoExample.Nbn.AvcCharacteristic
 
       # The CVC this AVC is assigned a cvlan from — single-hop via the AVC's
-      # :cvc consumer-alias. Returns a list (#211: structurally ≤1, will be
-      # declarable singular once cardinality lands).
-      inherited_characteristic :cvc
+      # :cvc consumer-alias. Structurally one, so collapse to a single record.
+      inherited_characteristic :cvc, collapse: :first
 
       # The NNI Group backing this AVC's CVC — two-hop: AVC's :cvc alias to
       # the CVC, then the CVC's :nni_group alias to its NNI Group.
-      inherited_characteristic :nni_group, via: [:cvc, :nni_group]
+      inherited_characteristic :nni_group, via: [:cvc, :nni_group], collapse: :first
     end
 
     relationships do

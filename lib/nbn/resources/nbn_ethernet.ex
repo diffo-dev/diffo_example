@@ -95,6 +95,13 @@ defmodule DiffoExample.Nbn.NbnEthernet do
     # `:circuit` for the AVC (Access Virtual Circuit) and `:port` for the
     # UNI (the customer's port). Both are consumer-aliases on PRI's owns
     # relationships, set at relate time.
+    #
+    # diffo#222: these :owns-relationship traversals (and the mixed
+    # relationship→assignment chains below) stay on the custom calc until
+    # native traversal can walk the general Relationship. The 0.6.0
+    # relationship: hop only walks DefinedSimpleRelationship; our :owns edges
+    # are general Relationships via relationships do / Changes.Relate. Migrate
+    # to native when #222 lands (0.6.1).
 
     # The singular AVC this access owns — single-hop via the :circuit owns relationship.
     calculate :avc,

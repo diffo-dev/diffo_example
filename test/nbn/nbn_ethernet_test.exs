@@ -338,11 +338,10 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
       {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:cvc, :nni_group])
 
-      # #211: native inherited_characteristic returns a list; these are
-      # structurally singular and will collapse to a raw map once cardinality
-      # is declarable. Until then, assert the one-element list.
-      assert [%{bandwidth: 1000}] = avc.cvc
-      assert [%{group_name: "SYD-POI-01", location: "Sydney"}] = avc.nni_group
+      # collapse: :first → these structurally-single inheritances return a
+      # single record, not a one-element list.
+      assert %{bandwidth: 1000} = avc.cvc
+      assert %{group_name: "SYD-POI-01", location: "Sydney"} = avc.nni_group
     end
   end
 

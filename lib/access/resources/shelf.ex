@@ -38,7 +38,7 @@ defmodule DiffoExample.Access.Shelf do
 
       # The card characteristic of every card assigned a slot on this shelf —
       # cards name their slot-assignment :shelf, so reverse-traverse that alias.
-      reverse_inherited_characteristic :cards, assignment_alias: :shelf, characteristic: :card
+      inherited_characteristic :cards, via: [{:forward, assignment: :shelf}], read: :card
     end
 
     pools do

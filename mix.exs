@@ -93,7 +93,7 @@ defmodule DiffoExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:diffo, diffo_version("~> 0.5.0")},
+      {:diffo, diffo_version("~> 0.6.0")},
       {:ash_ai, "~> 0.6"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},

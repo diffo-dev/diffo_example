@@ -57,7 +57,7 @@ defmodule DiffoExample.Nbn.Ntd do
       # The UNI characteristic of every UNI this NTD has assigned a port to —
       # each UNI names its NTD-port assignment :ntd, so reverse-traverse that
       # alias. Surfaces into resourceCharacteristic.
-      reverse_inherited_characteristic :unis, assignment_alias: :ntd, characteristic: :uni
+      inherited_characteristic :unis, via: [{:forward, assignment: :ntd}], read: :uni
     end
 
     pools do

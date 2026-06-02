@@ -107,6 +107,12 @@ defmodule DiffoExample.Nbn.NniGroup do
   calculations do
     # The NNI characteristic value of every NNI this NniGroup comprises —
     # forward traversal of :contains Relationships (low cardinality).
+    #
+    # diffo#222: stays on the custom calc until native traversal can walk the
+    # general Relationship. The 0.6.0 `inherited_characteristic` relationship:
+    # hop only walks DefinedSimpleRelationship; our :contains edges (created by
+    # the low-code relationships do / Changes.Relate path) are general
+    # Relationships. Migrate to native when #222 lands (0.6.1).
     calculate :nnis,
               {:array, :map},
               {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
