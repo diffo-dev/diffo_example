@@ -40,39 +40,51 @@ defmodule DiffoExample.Nbn do
   end
 
   tools do
+    # Read tools expose `id` (and the other public attributes) as filter fields,
+    # so get_*_by_id is reachable via `filter` with the default parameters — no
+    # `action_parameters` needed. (`action_parameters` *restricts* the default
+    # [:filter, :sort, :offset, :limit, :result_type]; it does not add fields.)
+    # The list_* tools surface each instance's :list action for inventory (#58).
+    tool :list_nbn_ethernets, NbnEthernet, :list
     tool :get_nbn_ethernet_by_id, NbnEthernet, :read
     tool :build_nbn_ethernet, NbnEthernet, :build
     tool :define_nbn_ethernet, NbnEthernet, :define
     tool :relate_nbn_ethernet, NbnEthernet, :relate
 
+    tool :list_unis, Uni, :list
     tool :get_uni_by_id, Uni, :read
     tool :build_uni, Uni, :build
     tool :define_uni, Uni, :define
     tool :relate_uni, Uni, :relate
 
+    tool :list_avcs, Avc, :list
     tool :get_avc_by_id, Avc, :read
     tool :build_avc, Avc, :build
     tool :define_avc, Avc, :define
     tool :relate_avc, Avc, :relate
 
+    tool :list_ntds, Ntd, :list
     tool :get_ntd_by_id, Ntd, :read
     tool :build_ntd, Ntd, :build
     tool :define_ntd, Ntd, :define
     tool :assign_port_on_ntd, Ntd, :assign_port
     tool :relate_ntd, Ntd, :relate
 
+    tool :list_cvcs, Cvc, :list
     tool :get_cvc_by_id, Cvc, :read
     tool :build_cvc, Cvc, :build
     tool :define_cvc, Cvc, :define
     tool :assign_cvlan, Cvc, :assign_cvlan
     tool :relate_cvc, Cvc, :relate
 
+    tool :list_nni_groups, NniGroup, :list
     tool :get_nni_group_by_id, NniGroup, :read
     tool :build_nni_group, NniGroup, :build
     tool :define_nni_group, NniGroup, :define
     tool :assign_svlan, NniGroup, :assign_svlan
     tool :relate_nni_group, NniGroup, :relate
 
+    tool :list_nnis, Nni, :list
     tool :get_nni_by_id, Nni, :read
     tool :build_nni, Nni, :build
     tool :define_nni, Nni, :define
@@ -80,6 +92,7 @@ defmodule DiffoExample.Nbn do
 
     tool :list_rsps, Rsp, :inventory
     tool :get_rsp_by_epid, Rsp, :read
+    tool :get_rsp_by_short_name, Rsp, :read
     tool :create_rsp, Rsp, :build
     tool :activate_rsp, Rsp, :activate
     tool :suspend_rsp, Rsp, :suspend
