@@ -10,12 +10,13 @@ defmodule DiffoExample.Access.DslAccess do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Service
   alias Diffo.Provider.Instance.Place
 
   alias DiffoExample.Access
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Service],
     domain: Access
 
   resource do
@@ -72,13 +73,13 @@ defmodule DiffoExample.Access.DslAccess do
 
     update :qualify_result do
       description "updates the DSL Access service with qualification result"
-      accept [:service_operating_status]
+      accept [:operating_status]
       argument :places, {:array, :struct}
       require_atomic? false
 
       change transition_state(:feasibilityChecked)
 
-      validate argument_in(:service_operating_status, [
+      validate argument_in(:operating_status, [
                  nil,
                  :initial,
                  :pending,

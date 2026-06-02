@@ -52,7 +52,7 @@ Where and who. Declared with `places do … end` and `parties do … end` blocks
 
 ### State machine
 
-Services and resources both carry lifecycle state. You declared transitions with `state_machine do transitions do … end end`; each action that should transition uses `change transition_state(:new_state)` or `change set_attribute(:resource_state, …)`. The current state surfaces in JSON as `state` (service) or `lifecycleState` (resource).
+A service carries a lifecycle state machine; a resource carries an independent `lifecycle_state`. A service declares transitions with `state_machine do transitions do … end end` and each transitioning action uses `change transition_state(:new_state)`; a resource sets its TMF639 lifecycle directly, e.g. `change set_attribute(:lifecycle_state, :installed)`. The current state surfaces in JSON as `state` (service) or `lifecycleState` (resource).
 
 ## What the encoder does
 

@@ -85,15 +85,15 @@ defmodule DiffoExample.Access.DslAccessTest do
 
       {:ok, dsl_access} =
         Access.qualify_dsl_result(dsl_access, %{
-          service_operating_status: :feasible,
+          operating_status: :feasible,
           places: [esa_place]
         })
 
       # check the instance is a DslAccess
       assert is_struct(dsl_access, DslAccess)
 
-      assert dsl_access.service_state == :feasibilityChecked
-      assert dsl_access.service_operating_status == :feasible
+      assert dsl_access.state == :feasibilityChecked
+      assert dsl_access.operating_status == :feasible
 
       Places.check_places([initial_place | [esa_place]], dsl_access)
 
@@ -115,7 +115,7 @@ defmodule DiffoExample.Access.DslAccessTest do
 
       {:ok, dsl_access} =
         Access.qualify_dsl_result(dsl_access, %{
-          service_operating_status: :feasible,
+          operating_status: :feasible,
           places: [esa_place]
         })
 
@@ -135,8 +135,8 @@ defmodule DiffoExample.Access.DslAccessTest do
       # check the instance is a DslAccess
       assert is_struct(dsl_access, DslAccess)
 
-      assert dsl_access.service_state == :reserved
-      assert dsl_access.service_operating_status == :feasible
+      assert dsl_access.state == :reserved
+      assert dsl_access.operating_status == :feasible
 
       Places.check_places([initial_place | [esa_place]], dsl_access)
 
@@ -151,7 +151,7 @@ defmodule DiffoExample.Access.DslAccessTest do
 
   defp create_initial_place do
     z_end =
-      Provider.create_place!(%{
+      Provider.create_place!(:PlaceRef, %{
         id: "1657363",
         name: :addressId,
         href: "place/telco/1657363",
@@ -163,7 +163,7 @@ defmodule DiffoExample.Access.DslAccessTest do
 
   defp create_esa_place do
     esa =
-      Provider.create_place!(%{
+      Provider.create_place!(:PlaceRef, %{
         id: "DONC-0001",
         name: :esaId,
         href: "place/telco/DONC-0001",
@@ -175,14 +175,14 @@ defmodule DiffoExample.Access.DslAccessTest do
 
   defp create_initial_parties do
     individual =
-      Provider.create_party!(%{
+      Provider.create_party!(:PartyRef, %{
         id: "IND000000897354",
         name: :individualId,
         referred_type: :Individual
       })
 
     org =
-      Provider.create_party!(%{
+      Provider.create_party!(:PartyRef, %{
         id: "ORG000000123456",
         name: :organizationId,
         referred_type: :Organization

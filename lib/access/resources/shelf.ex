@@ -10,12 +10,13 @@ defmodule DiffoExample.Access.Shelf do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Access
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Access
 
   resource do
@@ -34,6 +35,10 @@ defmodule DiffoExample.Access.Shelf do
 
     characteristics do
       characteristic :shelf, DiffoExample.Access.ShelfCharacteristic
+
+      # The card characteristic of every card assigned a slot on this shelf —
+      # cards name their slot-assignment :shelf, so reverse-traverse that alias.
+      inherited_characteristic :cards, via: [{:forward, assignment: :shelf}], read: :card
     end
 
     pools do
@@ -69,7 +74,7 @@ defmodule DiffoExample.Access.Shelf do
       description "defines the shelf"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 
@@ -89,17 +94,6 @@ defmodule DiffoExample.Access.Shelf do
   end
 
   calculations do
-    # Brings up the card characteristic of every card this shelf has
-    # assigned a slot to, ordered by slot number. Cards-as-assignees name
-    # their slot :slot when requesting; the calc filters outgoing
-    # AssignmentRelationship records by that alias.
-    calculate :cards,
-              {:array, :map},
-              {DiffoExample.Calculations.ReverseInheritedCharacteristic,
-               [alias: :shelf, characteristic_module: DiffoExample.Access.CardCharacteristic]} do
-      public? true
-    end
-
     # Sum of port capacity across every card assigned to this shelf.
     # Each card's :ports pool size is `(last - first + 1)`. Reaches across
     # the slot-assignment chain to AssignableCharacteristic on each card.

@@ -13,12 +13,13 @@ defmodule DiffoExample.Nbn.Cvc do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -41,6 +42,10 @@ defmodule DiffoExample.Nbn.Cvc do
     characteristics do
       characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
       characteristic :metrics, DiffoExample.Nbn.CvcMetrics
+
+      # The NNI Group this CVC is assigned an svlan from — single-hop via the
+      # CVC's :nni_group consumer-alias. Structurally one, so collapse.
+      inherited_characteristic :nni_group, collapse: :first
     end
 
     pools do
@@ -78,7 +83,7 @@ defmodule DiffoExample.Nbn.Cvc do
       description "defines the CVC"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 
@@ -106,19 +111,6 @@ defmodule DiffoExample.Nbn.Cvc do
   end
 
   calculations do
-    # The NniGroup characteristic value brought up from the singular
-    # NniGroup this CVC is part of — single-hop via the CVC's :nni_group
-    # consumer-alias on its svlan assignment from the NniGroup.
-    calculate :nni_group,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [
-                 via: [:nni_group],
-                 characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
   end
 
   def identifier() do

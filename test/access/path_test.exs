@@ -147,7 +147,7 @@ defmodule DiffoExample.Access.PathTest do
 
   defp create_customer_place do
     z_end =
-      Provider.create_place!(%{
+      Provider.create_place!(:PlaceRef, %{
         id: "1657363",
         name: :addressId,
         href: "place/telco/1657363",
@@ -159,7 +159,7 @@ defmodule DiffoExample.Access.PathTest do
 
   defp create_esa_place do
     esa =
-      Provider.create_place!(%{
+      Provider.create_place!(:PlaceRef, %{
         id: "DONC-0001",
         name: :esaId,
         href: "place/telco/DONC-0001",
@@ -171,7 +171,7 @@ defmodule DiffoExample.Access.PathTest do
 
   defp create_exchange_place do
     exchange =
-      Provider.create_place!(%{
+      Provider.create_place!(:PlaceRef, %{
         id: "DONC",
         name: :exchangeId,
         href: "place/telco/DONC",
@@ -258,7 +258,7 @@ defmodule DiffoExample.Access.PathTest do
 
   defp create_provider_party do
     provider =
-      Provider.create_party!(%{
+      Provider.create_party!(:PartyRef, %{
         id: "Access",
         name: :organizationId,
         referred_type: :Organization

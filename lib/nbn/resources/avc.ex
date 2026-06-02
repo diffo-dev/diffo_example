@@ -13,11 +13,12 @@ defmodule DiffoExample.Nbn.Avc do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -37,7 +38,14 @@ defmodule DiffoExample.Nbn.Avc do
 
     characteristics do
       characteristic :avc, DiffoExample.Nbn.AvcCharacteristic
-      characteristic :cvc, DiffoExample.Nbn.CvcCharacteristic
+
+      # The CVC this AVC is assigned a cvlan from — single-hop via the AVC's
+      # :cvc consumer-alias. Structurally one, so collapse to a single record.
+      inherited_characteristic :cvc, collapse: :first
+
+      # The NNI Group backing this AVC's CVC — two-hop: AVC's :cvc alias to
+      # the CVC, then the CVC's :nni_group alias to its NNI Group.
+      inherited_characteristic :nni_group, via: [:cvc, :nni_group], collapse: :first
     end
 
     relationships do
@@ -71,7 +79,7 @@ defmodule DiffoExample.Nbn.Avc do
       description "defines the AVC"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 
@@ -87,36 +95,6 @@ defmodule DiffoExample.Nbn.Avc do
     attribute :rsp_id, :string do
       description "the owning RSP's id — nil for Perentie-managed infrastructure"
       allow_nil? true
-      public? true
-    end
-  end
-
-  calculations do
-    # The CVC characteristic value brought up from the singular CVC this
-    # AVC is part of — single-hop via the AVC's :cvc consumer-alias on its
-    # cvlan assignment from the CVC.
-    calculate :cvc,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [
-                 via: [:cvc],
-                 characteristic_module: DiffoExample.Nbn.CvcCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
-
-    # The singular NniGroup characteristic value brought up transitively —
-    # AVC's :cvc alias to the CVC, then the CVC's :nni_group alias to its
-    # NniGroup. Two-hop via [:cvc, :nni_group].
-    calculate :nni_group,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaAssignment,
-               [
-                 via: [:cvc, :nni_group],
-                 characteristic_module: DiffoExample.Nbn.NniGroupCharacteristic,
-                 singular?: true
-               ]} do
       public? true
     end
   end
