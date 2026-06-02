@@ -94,7 +94,7 @@ defmodule DiffoExample.MixProject do
   defp deps do
     [
       {:diffo, diffo_version("~> 0.7.0")},
-      {:ash_ai, "~> 0.6"},
+      {:ash_ai, "~> 0.7"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},
       {:simple_sat, ">= 0.0.0"},
