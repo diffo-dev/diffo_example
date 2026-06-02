@@ -37,6 +37,31 @@ defmodule DiffoExample.Nbn.NbnEthernet do
 
     characteristics do
       characteristic :pri, DiffoExample.Nbn.PriCharacteristic
+
+      # PRI owns its AVC (:circuit) and UNI (:port) via forward :owns
+      # relationships (PRI is the edge source → forward_relationships), each
+      # singular. The CVC and NTD are two-hop mixed chains: forward :owns to
+      # the AVC/UNI, then reverse the assignment that resource holds (:cvc /
+      # :ntd) back to its assigner.
+      inherited_characteristic :avc,
+        via: [{:forward, relationship: [alias: :circuit]}],
+        read: :avc,
+        collapse: :first
+
+      inherited_characteristic :uni,
+        via: [{:forward, relationship: [alias: :port]}],
+        read: :uni,
+        collapse: :first
+
+      inherited_characteristic :cvc,
+        via: [{:forward, relationship: [alias: :circuit]}, {:reverse, assignment: :cvc}],
+        read: :cvc,
+        collapse: :first
+
+      inherited_characteristic :ntd,
+        via: [{:forward, relationship: [alias: :port]}, {:reverse, assignment: :ntd}],
+        read: :ntd,
+        collapse: :first
     end
 
     relationships do
@@ -91,71 +116,6 @@ defmodule DiffoExample.Nbn.NbnEthernet do
   end
 
   calculations do
-    # PRI names its two owns relationships by the domain role each plays —
-    # `:circuit` for the AVC (Access Virtual Circuit) and `:port` for the
-    # UNI (the customer's port). Both are consumer-aliases on PRI's owns
-    # relationships, set at relate time.
-    #
-    # diffo#222: these :owns-relationship traversals (and the mixed
-    # relationship→assignment chains below) stay on the custom calc until
-    # native traversal can walk the general Relationship. The 0.6.0
-    # relationship: hop only walks DefinedSimpleRelationship; our :owns edges
-    # are general Relationships via relationships do / Changes.Relate. Migrate
-    # to native when #222 lands (0.6.1).
-
-    # The singular AVC this access owns — single-hop via the :circuit owns relationship.
-    calculate :avc,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [
-                 alias: :circuit,
-                 characteristic_module: DiffoExample.Nbn.AvcCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
-
-    # The singular UNI this access owns — single-hop via the :port owns relationship.
-    calculate :uni,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [
-                 alias: :port,
-                 characteristic_module: DiffoExample.Nbn.UniCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
-
-    # The singular CVC backing this access's circuit — two-hop via the
-    # :circuit owns relationship, then back via the AVC's :cvc consumer-alias
-    # assignment to its CVC.
-    calculate :cvc,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [
-                 alias: :circuit,
-                 then_via: [:cvc],
-                 characteristic_module: DiffoExample.Nbn.CvcCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
-
-    # The singular NTD this access's port plugs into — two-hop via the
-    # :port owns relationship, then back via the UNI's :ntd consumer-alias
-    # assignment to its NTD.
-    calculate :ntd,
-              :map,
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [
-                 alias: :port,
-                 then_via: [:ntd],
-                 characteristic_module: DiffoExample.Nbn.NtdCharacteristic,
-                 singular?: true
-               ]} do
-      public? true
-    end
   end
 
   def identifier() do

@@ -41,6 +41,10 @@ defmodule DiffoExample.Nbn.NniGroup do
     characteristics do
       characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
       characteristic :metrics, DiffoExample.Nbn.NniGroupMetrics
+
+      # Every NNI this group comprises — forward :contains relationship (the
+      # group is the source of the edge → forward_relationships).
+      inherited_characteristic :nnis, via: [{:forward, relationship: :contains}], read: :nni
     end
 
     pools do
@@ -105,20 +109,6 @@ defmodule DiffoExample.Nbn.NniGroup do
   end
 
   calculations do
-    # The NNI characteristic value of every NNI this NniGroup comprises —
-    # forward traversal of :contains Relationships (low cardinality).
-    #
-    # diffo#222: stays on the custom calc until native traversal can walk the
-    # general Relationship. The 0.6.0 `inherited_characteristic` relationship:
-    # hop only walks DefinedSimpleRelationship; our :contains edges (created by
-    # the low-code relationships do / Changes.Relate path) are general
-    # Relationships. Migrate to native when #222 lands (0.6.1).
-    calculate :nnis,
-              {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [type: :contains, characteristic_module: DiffoExample.Nbn.NniCharacteristic]} do
-      public? true
-    end
   end
 
   use DiffoExample.Nbn.RspOwnership
