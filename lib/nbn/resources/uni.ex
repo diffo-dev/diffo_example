@@ -53,6 +53,24 @@ defmodule DiffoExample.Nbn.Uni do
 
     characteristics do
       characteristic :uni, DiffoExample.Nbn.UniCharacteristic
+
+      # Lawful-intercept traversal (#60): from this UNI, trace the bearer chain
+      # out to the network-edge NNIs it could traverse. A single declaration
+      # expressing a 5-hop, mixed-mechanism, direction-changing walk:
+      #   UNI  --reverse :owns(:port)--------> its PRI
+      #   PRI  --forward :owns(:circuit)-----> the owned AVC
+      #   AVC  --reverse assignment(:cvc)----> its CVC
+      #   CVC  --reverse assignment(:nni_group)-> its NNI Group
+      #   NNIGroup --forward :contains-------> the NNIs
+      inherited_characteristic :intercept_nnis,
+        via: [
+          {:reverse, relationship: [alias: :port]},
+          {:forward, relationship: [alias: :circuit]},
+          {:reverse, assignment: :cvc},
+          {:reverse, assignment: :nni_group},
+          {:forward, relationship: :contains}
+        ],
+        read: :nni
     end
 
     relationships do

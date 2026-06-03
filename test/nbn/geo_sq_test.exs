@@ -38,9 +38,9 @@ defmodule DiffoExample.Nbn.GeoSqTest do
     end
 
     test "customer premises and points are seeded and geo-located" do
-      assert length(Nbn.list_locations!()) == 5
-      # 5 premises points + 2 standalone non-premise points
-      assert length(Nbn.list_location_points!()) == 7
+      assert length(Nbn.list_locations!()) == 6
+      # 6 premises points + 2 standalone non-premise points
+      assert length(Nbn.list_location_points!()) == 8
 
       # a premises Location is geo_located by its LocationPoint
       {:ok, loc} =
