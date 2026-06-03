@@ -88,6 +88,45 @@ actor = Enum.find(rsps, fn rsp -> Atom.to_string(rsp.short_name) == Kino.Input.r
 actor
 ```
 
+## The interconnect geography — POIs and CSAs
+
+Before any service exists, NBN's fixed-line footprint is a set of **Points of Interconnect (POI)** — the handover sites where an RSP's traffic meets the network — each paired 1:1 with the **Connectivity Serving Area (CSA)** it interconnects. `Initializer.init()` above already seeded them.
+
+```elixir
+pois = Nbn.list_pois!()
+Kino.DataTable.new(pois, keys: [:id, :name, :type])
+```
+
+A POI carries a `location` (a point); its CSA carries `bounds` (a polygon). Take Stirling (`5STI`) and the area it serves:
+
+```elixir
+poi = Nbn.get_poi_by_id!("5STI")
+csa = Nbn.get_csa_by_id!("CSA-5STI")
+{poi.name, poi.location.coordinates, length(hd(csa.bounds.coordinates))}
+```
+
+The POI → CSA pairing is a `PlaceRef` (role `:interconnects`), reachable from the POI side:
+
+```elixir
+Diffo.Provider.list_place_refs_from({:place, "5STI"})
+```
+
+To *see* the geography — labels, points and polygons — drop to Neo4j Browser (observation only; note the Ash `id` persists as the node `key` property):
+
+```cypher
+MATCH (poi:`Poi` {key: '5STI'})-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+RETURN poi, csa;
+```
+
+Or every pair at once:
+
+```cypher
+MATCH (poi:`Poi`)-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+RETURN DISTINCT poi, csa LIMIT 150;
+```
+
+> Geographic data derived from NBN Co's fixed-line coverage dataset ([data.gov.au](https://data.gov.au/data/dataset/national-broadband-network), © NBN Co, CC BY 4.0), simplified to coarse convex hulls — see `DiffoExample.Nbn.Geo`. Fixed-wireless and satellite coverage are excluded.
+
 ## 1. Shareable infrastructure — NNI Group + NNIs
 
 An RSP builds (or has built for it) shareable infrastructure at each Point of Interconnect: an `NniGroup` containing `Nni`s, and a `Cvc` that terminates at the NNI Group. This gets done once per POI per RSP and serves many customers.

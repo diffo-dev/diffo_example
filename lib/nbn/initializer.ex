@@ -8,9 +8,11 @@ defmodule DiffoExample.Nbn.Initializer do
 
   Initializes the NBN domain on application startup:
   - seeds RSP records in historical EPID sequence
+  - seeds POI and CSA places, paired POI -> CSA
   """
 
   alias DiffoExample.Nbn
+  alias DiffoExample.Nbn.Geo
 
   @rsps [
     %{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "0001"},
@@ -24,6 +26,7 @@ defmodule DiffoExample.Nbn.Initializer do
 
   def init do
     seed_rsps()
+    Geo.seed()
   end
 
   defp seed_rsps do
