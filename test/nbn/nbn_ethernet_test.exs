@@ -338,6 +338,8 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
       {:ok, avc} = Nbn.get_avc_by_id(avc.id, load: [:cvc, :nni_group])
 
+      # collapse: :first → these structurally-single inheritances return a
+      # single record, not a one-element list.
       assert %{bandwidth: 1000} = avc.cvc
       assert %{group_name: "SYD-POI-01", location: "Sydney"} = avc.nni_group
     end
@@ -419,7 +421,7 @@ defmodule DiffoExample.Nbn.NbnEthernetTest do
 
         {:ok, _} =
           Nbn.assign_port(ntd, %{
-            assignment: %Assignment{assignee_id: uni.id, operation: :auto_assign}
+            assignment: %Assignment{assignee_id: uni.id, alias: :ntd, operation: :auto_assign}
           })
       end
 

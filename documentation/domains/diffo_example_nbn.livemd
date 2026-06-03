@@ -9,8 +9,8 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.3"},
-    {:diffo, "~> 0.4.1"},
+    {:diffo_example, "~> 0.3.0"},
+    {:diffo, "~> 0.7.0"},
     {:kino, "~> 0.14"}
   ],
   config: [
@@ -86,6 +86,142 @@ rsp_input =
 ```elixir
 actor = Enum.find(rsps, fn rsp -> Atom.to_string(rsp.short_name) == Kino.Input.read(rsp_input) end)
 actor
+```
+
+## The interconnect geography — POIs and CSAs
+
+Before any service exists, NBN's fixed-line footprint is a set of **Points of Interconnect (POI)** — the handover sites where an RSP's traffic meets the network — each paired 1:1 with the **Connectivity Serving Area (CSA)** it interconnects. `Initializer.init()` above already seeded them.
+
+```elixir
+pois = Nbn.list_pois!()
+Kino.DataTable.new(pois, keys: [:id, :name, :type])
+```
+
+A POI carries a `location` (a point); its CSA carries `bounds` (a polygon). Take Stirling (`5STI`) and the area it serves:
+
+```elixir
+poi = Nbn.get_poi_by_id!("5STI")
+csa = Nbn.get_csa_by_id!("CSA-5STI")
+{poi.name, poi.location.coordinates, length(hd(csa.bounds.coordinates))}
+```
+
+The POI → CSA pairing is a `PlaceRef` (role `:interconnects`), reachable from the POI side:
+
+```elixir
+Diffo.Provider.list_place_refs_from({:place, "5STI"})
+```
+
+To *see* the geography — labels, points and polygons — drop to Neo4j Browser (observation only; note the Ash `id` persists as the node `key` property):
+
+```cypher
+MATCH (poi:`Poi` {key: '5STI'})-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+RETURN poi, csa;
+```
+
+Or every pair at once:
+
+```cypher
+MATCH (poi:`Poi`)-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+RETURN DISTINCT poi, csa LIMIT 150;
+```
+
+> Geographic data derived from NBN Co's fixed-line coverage dataset ([data.gov.au](https://data.gov.au/data/dataset/national-broadband-network), © NBN Co, CC BY 4.0), simplified to coarse convex hulls — see `DiffoExample.Nbn.Geo`. Fixed-wireless and satellite coverage are excluded.
+
+## Customer locations
+
+A customer is somewhere. `Initializer.init()` seeded a handful of real Adelaide-Hills venues — each a `Location` (street address) geo-located by a `LocationPoint` (lat/long). The point is what service qualification runs against; the address is for humans.
+
+```elixir
+import Ash.Expr
+require Ash.Query
+
+Nbn.list_locations!()
+|> Enum.map(fn loc -> %{name: loc.name, street: "#{loc.street_nr} #{loc.street_name}, #{loc.locality} #{loc.postcode}"} end)
+|> Kino.DataTable.new()
+```
+
+Some `LocationPoint`s stand alone — a lat/long needing comms with no postal address (NBN's non-premise model). Here, temporary connectivity for the Tour Down Under: cabinets at the Stirling Oval and Mylor Oval carparks.
+
+```elixir
+Nbn.list_location_points!()
+|> Enum.map(fn p -> %{id: p.id, name: p.name, coords: inspect(p.location.coordinates)} end)
+|> Kino.DataTable.new()
+```
+
+## Service qualification — which CSA, and how far to the POI
+
+Pick a customer location. Service qualification is a spatial question answered as an **Ash expression**: which CSA's `bounds` polygon contains the point? `st_contains` pushes the bounding-box stage down to Neo4j, then checks exact containment.
+
+```elixir
+# the Stirling Hotel's point (try Crafers Hotel / Stanley Bridge Tavern too — all qualify)
+point = Nbn.get_location_point_by_id!("LOP000998597184")
+
+csa =
+  Nbn.Csa
+  |> Ash.Query.filter(st_contains(bounds, ^point.location))
+  |> Ash.read!()
+  |> List.first()
+
+csa && csa.name
+```
+
+A qualifying location is served by the CSA's POI — traverse the `PlaceRef` (CSA is the target, the POI the source):
+
+```elixir
+poi =
+  if csa do
+    {:ok, csa} = Ash.load(csa, place_refs: [:source_place])
+    ref = Enum.find(csa.place_refs, &(&1.role == :interconnects))
+    ref && ref.source_place
+  end
+
+poi && %{poi_id: poi.id, poi_name: poi.name}
+```
+
+How far is the customer from that interconnect? A geodesic distance, again a pushed-down Ash expression (`st_distance_in_meters`, point to point):
+
+```elixir
+if poi do
+  [%{m: m}] =
+    Nbn.LocationPoint
+    |> Ash.Query.filter(id == ^point.id)
+    |> Ash.Query.calculate(:m, :float, expr(st_distance_in_meters(location, ^poi.location)))
+    |> Ash.read!()
+
+  "#{point.name} is #{round(m)} m from POI #{poi.id}"
+end
+```
+
+### When SQ misses — how far outside coverage?
+
+A location with no containing CSA isn't served by fixed line. Rather than a bare "no", we can say *by how much* it missed — `st_distance_in_meters` works point-to-polygon, giving the distance to a CSA's edge. Narrow to the few nearest POIs, then measure to their CSAs.
+
+```elixir
+# German Arms, Hahndorf — real FTTP, but an island outside our coarse Stirling hull
+miss = %Geo.Point{coordinates: {138.8103, -35.0283}, srid: 4326}
+
+hit? = Nbn.Csa |> Ash.Query.filter(st_contains(bounds, ^miss)) |> Ash.read!() |> Enum.any?()
+
+if hit? do
+  "covered"
+else
+  # nearest POIs by point distance, then distance to each one's CSA edge
+  nearest_pois =
+    Nbn.Poi
+    |> Ash.Query.calculate(:m, :float, expr(st_distance_in_meters(location, ^miss)))
+    |> Ash.read!()
+    |> Enum.sort_by(& &1.m)
+    |> Enum.take(6)
+    |> Enum.map(& &1.id)
+
+  Nbn.Csa
+  |> Ash.Query.filter(id in ^Enum.map(nearest_pois, &("CSA-" <> &1)))
+  |> Ash.Query.calculate(:edge_m, :float, expr(st_distance_in_meters(bounds, ^miss)))
+  |> Ash.read!()
+  |> Enum.sort_by(& &1.edge_m)
+  |> List.first()
+  |> then(fn csa -> "missed #{csa.name} CSA by #{round(csa.edge_m)} m" end)
+end
 ```
 
 ## 1. Shareable infrastructure — NNI Group + NNIs
@@ -346,6 +482,87 @@ nni_group
 |> Jason.encode!(pretty: true)
 |> IO.puts()
 ```
+
+## 9. Lawful intercept — trace a UNI to the network edge
+
+> *Given a customer's UNI (the interface at the premises), which network-edge NNIs could its traffic traverse?*
+
+One `inherited_characteristic` on `Uni` answers it by walking the whole bearer chain in reverse — **UNI → PRI → AVC → CVC → NNI Group → NNIs** — a single declaration mixing relationship and assignment hops and changing direction mid-walk:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+inherited_characteristic :intercept_nnis,
+  via: [
+    {:reverse, relationship: [alias: :port]},      # UNI ← its PRI (owns :port)
+    {:forward, relationship: [alias: :circuit]},   # PRI → the owned AVC (:circuit)
+    {:reverse, assignment: :cvc},                  # AVC ← its CVC (cvlan)
+    {:reverse, assignment: :nni_group},            # CVC ← its NNI Group (svlan)
+    {:forward, relationship: :contains}            # NNI Group → the NNIs
+  ],
+  read: :nni
+```
+
+`DiffoExample.Nbn.ServiceInitializer` has already seeded (via `Initializer.init()` above) **quokka's** standing edge at the Stirling (5STI) POI — two NNI Groups carrying four CVCs — and **NBN's** on-site NTD at the library with four idle UNIs. Here's the edge:
+
+```elixir
+alias DiffoExample.Nbn.ServiceInitializer, as: SI
+{:ok, quokka} = Nbn.get_rsp_by_short_name(:quokka)
+
+for {label, id} <- [{"A — 10G", SI.group_ids().group_a}, {"B — 100G", SI.group_ids().group_b}] do
+  {:ok, group} = Nbn.get_nni_group_by_id(id, load: [:nnis], actor: quokka)
+  %{nni_group: label, nnis: group.nnis |> Enum.map(& &1.port_id) |> Enum.join(", ")}
+end
+|> Kino.DataTable.new()
+```
+
+Now provision a service. **You are quokka** — pick an idle UNI and the CVC to land it on. The CVC choice is the load-balancing decision, and it decides which NNI Group (and so which NNIs) the service rides:
+
+```elixir
+intercept_cvc_input =
+  Kino.Input.select(
+    "CVC — the RSP's load-balancing choice",
+    [
+      {"NNI Group A (10G) · CVC 1", Enum.at(SI.cvc_ids().group_a, 0)},
+      {"NNI Group A (10G) · CVC 2", Enum.at(SI.cvc_ids().group_a, 1)},
+      {"NNI Group B (100G) · CVC 1", Enum.at(SI.cvc_ids().group_b, 0)},
+      {"NNI Group B (100G) · CVC 2", Enum.at(SI.cvc_ids().group_b, 1)}
+    ]
+  )
+```
+
+```elixir
+intercept_uni_input =
+  Kino.Input.select(
+    "Idle UNI to light up",
+    SI.uni_ids()
+    |> Enum.with_index(1)
+    |> Enum.map(fn {id, port} -> {"UNI on NTD port #{port}", id} end)
+  )
+```
+
+```elixir
+intercept_cvc_id = Kino.Input.read(intercept_cvc_input)
+intercept_uni_id = Kino.Input.read(intercept_uni_input)
+
+{:ok, chosen_uni} = Nbn.get_uni_by_id(intercept_uni_id)
+{:ok, chosen_cvc} = Nbn.get_cvc_by_id(intercept_cvc_id, actor: quokka)
+
+# The order: land this UNI on that CVC — builds an AVC (cvlan from the CVC) and a
+# PRI owning the AVC (:circuit) and the UNI (:port).
+_pri = SI.provision_service(chosen_uni, chosen_cvc, quokka)
+
+# Now ask the UNI: which NNIs could my traffic traverse?
+{:ok, chosen_uni} = Nbn.get_uni_by_id(intercept_uni_id, load: [:intercept_nnis])
+
+chosen_uni.intercept_nnis
+|> Enum.map(fn nni -> %{nni: nni.port_id, capacity_mbps: nni.capacity} end)
+|> Kino.DataTable.new()
+```
+
+Pick a CVC on **Group A** and the answer is the two **10G** NNIs; pick one on **Group B** and it's the two **100G** NNIs — same NTD, same kind of UNI, but the intercept follows the path you actually provisioned. Nothing stored that answer: `intercept_nnis` re-walks the graph on every read, so re-wiring moves it. That liveness is the whole point of the unified `via:` grammar.
+
+> Each run lights a *fresh* idle UNI (one per NTD port) — choose a different port to compare a second path side by side.
 
 ## Exploring the graph
 

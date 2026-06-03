@@ -14,12 +14,13 @@ defmodule DiffoExample.Nbn.NniGroup do
   """
 
   alias Diffo.Provider.BaseInstance
+  alias Diffo.Provider.Resource
   alias Diffo.Provider.Assignment
 
   alias DiffoExample.Nbn
 
   use Ash.Resource,
-    fragments: [BaseInstance],
+    fragments: [BaseInstance, Resource],
     domain: Nbn,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -40,6 +41,10 @@ defmodule DiffoExample.Nbn.NniGroup do
     characteristics do
       characteristic :nni_group, DiffoExample.Nbn.NniGroupCharacteristic
       characteristic :metrics, DiffoExample.Nbn.NniGroupMetrics
+
+      # Every NNI this group comprises — forward :contains relationship (the
+      # group is the source of the edge → forward_relationships).
+      inherited_characteristic :nnis, via: [{:forward, relationship: :contains}], read: :nni
     end
 
     pools do
@@ -76,7 +81,7 @@ defmodule DiffoExample.Nbn.NniGroup do
       description "defines the NNI Group"
       argument :characteristic_value_updates, {:array, :term}
 
-      change set_attribute(:resource_state, :operating)
+      change set_attribute(:lifecycle_state, :installed)
       change Diffo.Provider.Changes.Define
     end
 
@@ -104,14 +109,6 @@ defmodule DiffoExample.Nbn.NniGroup do
   end
 
   calculations do
-    # The NNI characteristic value of every NNI this NniGroup comprises —
-    # forward traversal of :contains Relationships (low cardinality).
-    calculate :nnis,
-              {:array, :map},
-              {DiffoExample.Calculations.InheritedCharacteristicViaRelationship,
-               [type: :contains, characteristic_module: DiffoExample.Nbn.NniCharacteristic]} do
-      public? true
-    end
   end
 
   use DiffoExample.Nbn.RspOwnership

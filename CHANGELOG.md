@@ -11,6 +11,16 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.3.0](https://github.com/diffo-dev/diffo_example/compare/v0.2.3..v0.3.0) (2026-06-04)
+
+### Features:
+* spatial service qualification — NBN CSA and POI places for South Australia, a LocationPoint (the SQ anchor) and Location premises, with `st_contains` point-in-CSA qualification and CSA→POI traversal; SQ livebook section + tests (#26)
+* lawful-intercept traversal showcase — `Uni.intercept_nnis`, one 5-hop `via:` declaration (UNI→PRI→AVC→CVC→NNI Group→NNIs) demonstrating the unified traversal grammar; a standing 5STI service seed (quokka-owned NNI Groups/CVCs, NBN-owned NTD + four idle UNIs) with `:locates` place refs and a `provision_service` helper; livebook section + path-selective tests (#60)
+
+### Maintenance:
+* migrated to diffo 0.7.0 — adopted the unified `inherited_characteristic` traversal grammar and the Service/Resource cascade, Phases 1–3 (#59)
+* reconciled the NBN MCP tool surface with the domain code interface (#58)
+
 ## [v0.2.3](https://github.com/diffo-dev/diffo/compare/v0.2.2..v0.2.3) (2026-05-22)
 
 ### Maintenance:

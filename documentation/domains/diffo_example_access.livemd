@@ -9,8 +9,8 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.2.3"},
-    {:diffo, "~> 0.4.1"},
+    {:diffo_example, "~> 0.3.0"},
+    {:diffo, "~> 0.7.0"},
     {:kino, "~> 0.14"}
   ],
   config: [
@@ -85,7 +85,7 @@ Real services exist somewhere and for someone. Set up the **places** (where) and
 
 ```elixir
 customer_site =
-  Provider.create_place!(%{
+  Provider.create_place!(:PlaceRef, %{
     id: "1657363",
     name: :addressId,
     href: "place/telco/1657363",
@@ -93,7 +93,7 @@ customer_site =
   })
 
 exchange =
-  Provider.create_place!(%{
+  Provider.create_place!(:PlaceRef, %{
     id: "DONC",
     name: :exchangeId,
     href: "place/telco/DONC",
@@ -101,7 +101,7 @@ exchange =
   })
 
 esa =
-  Provider.create_place!(%{
+  Provider.create_place!(:PlaceRef, %{
     id: "DONC-0001",
     name: :esaId,
     href: "place/telco/DONC-0001",
@@ -109,21 +109,21 @@ esa =
   })
 
 individual =
-  Provider.create_party!(%{
+  Provider.create_party!(:PartyRef, %{
     id: "IND000000897354",
     name: :individualId,
     referred_type: :Individual
   })
 
 reseller =
-  Provider.create_party!(%{
+  Provider.create_party!(:PartyRef, %{
     id: "ORG000000123456",
     name: :organizationId,
     referred_type: :Organization
   })
 
 provider =
-  Provider.create_party!(%{
+  Provider.create_party!(:PartyRef, %{
     id: "Access",
     name: :organizationId,
     referred_type: :Organization
@@ -253,7 +253,7 @@ Now sell the service. `qualify_dsl` creates a `DslAccess` in `:initial` state �
     places: [customer_site_ref]
   })
 
-dsl.service_state
+dsl.state
 ```
 
 `qualify_dsl_result` records the outcome — `:feasible` means we have copper in reach. The state moves to `:feasibilityChecked`.
@@ -261,11 +261,11 @@ dsl.service_state
 ```elixir
 {:ok, dsl} =
   Access.qualify_dsl_result(dsl, %{
-    service_operating_status: :feasible,
+    operating_status: :feasible,
     places: [esa_ref]
   })
 
-dsl.service_state
+dsl.state
 ```
 
 ## 7. Design the service
@@ -283,7 +283,7 @@ Set the service's typed characteristics — the actual configuration that gets p
     ]
   })
 
-dsl.service_state
+dsl.state
 ```
 
 ## 8. Inheritance — bringing upstream context up
