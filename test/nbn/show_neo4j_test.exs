@@ -312,4 +312,86 @@ defmodule DiffoExample.Nbn.ShowNeo4jTest do
     |> Jason.encode!(pretty: true)
     |> IO.puts()
   end
+
+  test "lawful intercept (#60) — 5STI edge, two provisioned services, divergent NNI paths" do
+    alias DiffoExample.Nbn.ServiceInitializer, as: SI
+
+    # Inspection tool: reset the real DB so the browser shows only the #60 graph.
+    Bolty.query!(Bolt, "MATCH (n) DETACH DELETE n")
+
+    # quokka (get-or-create — this hits the real DB, no rollback) and the two
+    # places the seed relates to, then the standing 5STI infrastructure.
+    quokka =
+      case Nbn.get_rsp_by_short_name(:quokka) do
+        {:ok, %{} = q} ->
+          q
+
+        _ ->
+          {:ok, q} = Nbn.create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "0002"})
+          {:ok, q} = Nbn.activate_rsp(q)
+          q
+      end
+
+    {:ok, _poi} =
+      Nbn.build_poi(%{
+        id: SI.poi_id(),
+        name: "Stirling",
+        location: %Geo.Point{coordinates: {138.71665, -35.00656}, srid: 4326}
+      })
+
+    {:ok, _lop} =
+      Nbn.build_location_point(%{
+        id: SI.library_lop_id(),
+        name: "Stirling Library",
+        location: %Geo.Point{coordinates: {138.7186, -35.0030}, srid: 4326}
+      })
+
+    :ok = SI.seed()
+
+    # Provision two services — a UNI on the 10G group and another on the 100G
+    # group. The RSP's CVC choice decides which NNIs each UNI can traverse.
+    [u1, u2 | _] = SI.uni_ids()
+    {:ok, uni1} = Nbn.get_uni_by_id(u1)
+    {:ok, uni2} = Nbn.get_uni_by_id(u2)
+    {:ok, cvc_a} = Nbn.get_cvc_by_id(hd(SI.cvc_ids().group_a), actor: quokka)
+    {:ok, cvc_b} = Nbn.get_cvc_by_id(hd(SI.cvc_ids().group_b), actor: quokka)
+    SI.provision_service(uni1, cvc_a, quokka)
+    SI.provision_service(uni2, cvc_b, quokka)
+
+    {:ok, uni1} = Nbn.get_uni_by_id(u1, load: [:intercept_nnis])
+    {:ok, uni2} = Nbn.get_uni_by_id(u2, load: [:intercept_nnis])
+
+    IO.puts("\n========== UNI on 10G group — intercept_nnis (the bearer chain's NNIs) ==========")
+    IO.inspect(Enum.map(uni1.intercept_nnis, & &1.port_id), label: "uni1 -> NNIs")
+
+    IO.puts("\n========== UNI on 100G group — intercept_nnis ==========")
+    IO.inspect(Enum.map(uni2.intercept_nnis, & &1.port_id), label: "uni2 -> NNIs")
+
+    IO.puts("\n========== Places — NTD :locates LocationPoint, NNI Groups :locate POI ==========")
+    {:ok, ntd} = Nbn.get_ntd_by_id(SI.ntd_id(), load: [places: [:place]])
+    IO.inspect(Enum.map(ntd.places, &{&1.role, &1.place.id}), label: "NTD places")
+
+    for gid <- Map.values(SI.group_ids()) do
+      {:ok, g} = Nbn.get_nni_group_by_id(gid, load: [places: [:place]], actor: quokka)
+      IO.inspect(Enum.map(g.places, &{&1.role, &1.place.id}), label: "NNI Group places")
+    end
+
+    # The pick is consequential and the traversal is live: each UNI reaches only
+    # its own group's two NNIs.
+    assert length(uni1.intercept_nnis) == 2
+    assert length(uni2.intercept_nnis) == 2
+    refute MapSet.equal?(
+             MapSet.new(uni1.intercept_nnis, & &1.port_id),
+             MapSet.new(uni2.intercept_nnis, & &1.port_id)
+           )
+
+    IO.puts("\n========== UNI (TMF JSON) ==========")
+
+    uni1
+    |> Jason.encode!()
+    |> Diffo.Util.summarise_dates()
+    |> Jason.decode!()
+    |> Jason.encode!(pretty: true)
+    |> IO.puts()
+  end
 end
