@@ -33,6 +33,39 @@ defmodule DiffoExample.Nbn.Geo do
   # makes it compile-known so reads revive it.
   @interconnects :interconnects
 
+  # The PlaceRef role from a LocationPoint to the Location it geo-locates.
+  # Module attribute for the same compile-time interning reason as above.
+  @geo_locates :geo_locates
+
+  # Real Adelaide-Hills venues that service-qualify to the Stirling CSA (5STI).
+  # Each is a Location (premises address) geo-located by a LocationPoint
+  # (lat/long, what SQ runs against). NBN-style LOC<12-digit> ids, minted once
+  # via Nbn.Util.identifier and locked here so they're stable across seeds.
+  # {loc_id, point_id, name, {street_nr, street_name, locality, postcode}, {lon, lat}}
+  @locations [
+    {"LOC000114541080", "LOP000998597184", "Stirling Hotel",
+     {"52", "Mount Barker Road", "Stirling", "5152"}, {138.7206, -35.0036}},
+    {"LOC000399047043", "LOP000718290091", "Crafers Hotel",
+     {"8", "Main Street", "Crafers", "5152"}, {138.7000, -34.9930}},
+    {"LOC000709306545", "LOP000560061946", "Stanley Bridge Tavern",
+     {"1", "Onkaparinga Valley Road", "Verdun", "5245"}, {138.7460, -35.0180}},
+    {"LOC000835998318", "LOP000241706513", "Aldgate Pump Hotel",
+     {"1", "Strathalbyn Road", "Aldgate", "5154"}, {138.7350, -35.0150}},
+    {"LOC000244331923", "LOP000205961414", "Bridgewater Mill",
+     {"386", "Mount Barker Road", "Bridgewater", "5155"}, {138.7560, -35.0110}}
+  ]
+
+  # Non-premise LocationPoints: a lat/long that needs comms but has no postal
+  # address — so a standalone point with NO Location. Legitimately how NBN
+  # models non-premise locations. Here, temporary connectivity for the Tour
+  # Down Under (which often runs a Stirling stage), so they still
+  # service-qualify to 5STI.
+  # {point_id, name, {lon, lat}}
+  @standalone_points [
+    {"LOP000037364340", "TDU outside broadcast cabinet - Stirling Oval carpark", {138.7165, -35.0008}},
+    {"LOP000453129508", "TDU event village cabinet - Mylor Oval carpark", {138.7595, -35.0455}}
+  ]
+
   @pois [
     {"2ALB", "Albury", %Geo.Point{coordinates: {146.91488, -36.08194}, srid: 4326}},
     {"2BLK", "Blacktown", %Geo.Point{coordinates: {150.90826, -33.77027}, srid: 4326}},
@@ -305,6 +338,77 @@ defmodule DiffoExample.Nbn.Geo do
       end
     end)
 
+    seed_locations()
+
+    :ok
+  end
+
+  @doc """
+  Seeds the demo customer premises: each a Location (street address) plus a
+  LocationPoint (lat/long) that `:geo_locates` it. These Adelaide-Hills venues
+  service-qualify to the Stirling CSA (5STI). Idempotent like `seed/0`.
+  """
+  def seed_locations do
+    require Logger
+
+    Enum.each(@locations, fn {loc_id, _point_id, name, {nr, street, locality, postcode}, _coords} ->
+      try do
+        Nbn.build_location!(%{
+          id: loc_id,
+          name: name,
+          street_nr: nr,
+          street_name: street,
+          locality: locality,
+          state_or_province: "SA",
+          country: "Australia",
+          postcode: postcode
+        })
+      rescue
+        e -> Logger.error("Exception seeding Location #{loc_id} (#{name}): #{inspect(e)}")
+      end
+    end)
+
+    Enum.each(@locations, fn {_loc_id, point_id, name, _street, {lon, lat}} ->
+      try do
+        Nbn.build_location_point!(%{
+          id: point_id,
+          name: name,
+          location: %Geo.Point{coordinates: {lon, lat}, srid: 4326}
+        })
+      rescue
+        e -> Logger.error("Exception seeding LocationPoint #{point_id} (#{name}): #{inspect(e)}")
+      end
+    end)
+
+    Enum.each(@locations, fn {loc_id, point_id, _name, _street, _coords} ->
+      try do
+        # LocationPoint :geo_locates Location (point -> address). Guard the
+        # non-upserting create_place_ref! by reading the ref off the Location.
+        unless geo_located?(loc_id, point_id) do
+          Provider.create_place_ref!(%{
+            role: @geo_locates,
+            source: {:place, point_id},
+            target: loc_id
+          })
+        end
+      rescue
+        e -> Logger.error("Exception geo-locating Location #{loc_id}: #{inspect(e)}")
+      end
+    end)
+
+    # Standalone non-premise points — a LocationPoint with no Location.
+    Enum.each(@standalone_points, fn {point_id, name, {lon, lat}} ->
+      try do
+        Nbn.build_location_point!(%{
+          id: point_id,
+          name: name,
+          location: %Geo.Point{coordinates: {lon, lat}, srid: 4326}
+        })
+      rescue
+        e -> Logger.error("Exception seeding standalone point #{point_id} (#{name}): #{inspect(e)}")
+      end
+    end)
+
     :ok
   end
 
@@ -322,6 +426,22 @@ defmodule DiffoExample.Nbn.Geo do
       Enum.any?(refs, fn pr ->
         pr.role == @interconnects and pr.source_place != nil and
           pr.source_place.id == poi_ref
+      end)
+    else
+      _ -> false
+    end
+  end
+
+  # True if the Location already has a :geo_locates PlaceRef from the given
+  # LocationPoint. Same load-off-the-target pattern as paired?/2.
+  defp geo_located?(loc_id, point_id) do
+    with {:ok, loc} <- Nbn.get_location_by_id(loc_id),
+         false <- is_nil(loc),
+         {:ok, loc} <- Ash.load(loc, place_refs: [:source_place]),
+         refs when is_list(refs) <- loc.place_refs do
+      Enum.any?(refs, fn pr ->
+        pr.role == @geo_locates and pr.source_place != nil and
+          pr.source_place.id == point_id
       end)
     else
       _ -> false

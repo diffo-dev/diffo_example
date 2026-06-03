@@ -28,6 +28,7 @@ defmodule DiffoExample.Nbn do
   alias DiffoExample.Nbn.Poi
   alias DiffoExample.Nbn.Csa
   alias DiffoExample.Nbn.LocationPoint
+  alias DiffoExample.Nbn.Location
   alias DiffoExample.Nbn.AvcCharacteristic
   alias DiffoExample.Nbn.CvcCharacteristic
   alias DiffoExample.Nbn.CvcMetrics
@@ -184,6 +185,13 @@ defmodule DiffoExample.Nbn do
       define :get_location_point_by_id, action: :read, get_by: :id
       define :build_location_point, action: :build
       define :define_location_point, action: :define
+    end
+
+    resource Location do
+      define :list_locations, action: :read
+      define :get_location_by_id, action: :read, get_by: :id
+      define :build_location, action: :build
+      define :define_location, action: :define
     end
 
     resource AvcCharacteristic
