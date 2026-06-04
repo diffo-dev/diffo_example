@@ -11,6 +11,14 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.4.0](https://github.com/diffo-dev/diffo_example/compare/v0.3.0..v0.4.0) (2026-06-04)
+
+### Features:
+* the PRI surfaces its full geography via `inherited_place` — the POI and its CSA (from the NNI Group) and the customer's LocationPoint and Location (from the NTD) — using diffo 0.8.0's unified `via:` traversal grammar, now extended to places ([diffo#226](https://github.com/diffo-dev/diffo/issues/226)). The NNI Group and NTD carry both places directly, pending place→place traversal ([diffo#227](https://github.com/diffo-dev/diffo/issues/227)) (#65)
+
+### Maintenance:
+* bumped to diffo 0.8.0 (#65)
+
 ## [v0.3.0](https://github.com/diffo-dev/diffo_example/compare/v0.2.3..v0.3.0) (2026-06-04)
 
 ### Features:
