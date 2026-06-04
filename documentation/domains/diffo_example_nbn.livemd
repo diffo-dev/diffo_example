@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 Mix.install(
   [
     {:diffo_example, "~> 0.3.0"},
-    {:diffo, "~> 0.7.0"},
+    {:diffo, "~> 0.8.0"},
     {:kino, "~> 0.14"}
   ],
   config: [
@@ -550,7 +550,7 @@ intercept_uni_id = Kino.Input.read(intercept_uni_input)
 
 # The order: land this UNI on that CVC — builds an AVC (cvlan from the CVC) and a
 # PRI owning the AVC (:circuit) and the UNI (:port).
-_pri = SI.provision_service(chosen_uni, chosen_cvc, quokka)
+pri = SI.provision_service(chosen_uni, chosen_cvc, quokka)
 
 # Now ask the UNI: which NNIs could my traffic traverse?
 {:ok, chosen_uni} = Nbn.get_uni_by_id(intercept_uni_id, load: [:intercept_nnis])
@@ -563,6 +563,26 @@ chosen_uni.intercept_nnis
 Pick a CVC on **Group A** and the answer is the two **10G** NNIs; pick one on **Group B** and it's the two **100G** NNIs — same NTD, same kind of UNI, but the intercept follows the path you actually provisioned. Nothing stored that answer: `intercept_nnis` re-walks the graph on every read, so re-wiring moves it. That liveness is the whole point of the unified `via:` grammar.
 
 > Each run lights a *fresh* idle UNI (one per NTD port) — choose a different port to compare a second path side by side.
+
+### …and the service knows its own geography
+
+The same PRI also surfaces *where it lives*, via `inherited_place` (#65) — the unified `via:` grammar now reaches places too. It walks the bearer to the NNI Group (for the **POI** and its **CSA**) and to the NTD (for the customer's **LocationPoint** and **Location**), reading one place ref on each reached instance. (Place→place hops — POI→CSA, LOP→LOC — aren't expressible yet, so the NNI Group and NTD each carry both places directly; see diffo #227.)
+
+```elixir
+{:ok, pri} =
+  Nbn.get_nbn_ethernet_by_id(pri.id,
+    load: [:poi, :csa, :location_point, :location],
+    actor: quokka
+  )
+
+[
+  %{place: "POI — interconnect", id: pri.poi.id, name: pri.poi.name},
+  %{place: "CSA — serving area", id: pri.csa.id, name: pri.csa.name},
+  %{place: "LocationPoint — premises point", id: pri.location_point.id, name: pri.location_point.name},
+  %{place: "Location — premises address", id: pri.location.id, name: pri.location.name}
+]
+|> Kino.DataTable.new()
+```
 
 ## Exploring the graph
 

@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 Mix.install(
   [
     {:diffo_example, "~> 0.3.0"},
-    {:diffo, "~> 0.7.0"},
+    {:diffo, "~> 0.8.0"},
     {:kino, "~> 0.14"}
   ],
   config: [

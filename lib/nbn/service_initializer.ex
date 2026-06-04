@@ -31,15 +31,23 @@ defmodule DiffoExample.Nbn.ServiceInitializer do
 
   require Logger
 
-  # PlaceRef role: "this place locates this resource". A module attribute interns
-  # the atom at compile time so it round-trips on a cold read (Ash.Type.Atom reads
-  # via to_existing_atom) — same footgun the geo seed guards against.
+  # PlaceRef roles, interned as module attributes so they round-trip on a cold read
+  # (Ash.Type.Atom reads via to_existing_atom — diffo has no atom-footgun mitigation
+  # yet, diffo #228/#232). `:locates` = this place locates the resource; `:serves` =
+  # the area an NNI Group serves; `:addressed_at` = the premises an NTD is addressed
+  # at. The PRI reads these back via inherited_place (#65).
   @locates :locates
+  @serves :serves
+  @addressed_at :addressed_at
 
-  # Stirling Library LocationPoint (seeded in DiffoExample.Nbn.Geo's @locations)
-  # that the on-site NTD `:locates`, and the 5STI POI the NNI Groups `:locate` to.
+  # Geo places (seeded by DiffoExample.Nbn.Geo) the standing instances carry directly
+  # — inherited_place can't hop place→place (diffo #227), so each NNI Group carries
+  # both the 5STI POI (`:locates`) and its CSA (`:serves`), and the NTD carries both
+  # the Stirling Library LocationPoint (`:locates`) and Location (`:addressed_at`).
   @library_lop "LOP000620145388"
+  @library_loc "LOC000620145388"
   @poi "5STI"
+  @csa "CSA-5STI"
 
   # Fixed UUIDs for every seeded instance — idempotent get-by-id, and stable
   # handles for the test/livebook (exposed via the accessors below).
@@ -172,7 +180,10 @@ defmodule DiffoExample.Nbn.ServiceInitializer do
 
   defp build_group!(id, group_name, quokka) do
     {:ok, group} =
-      Nbn.build_nni_group(%{id: id, places: [%Place{id: @poi, role: @locates}]}, actor: quokka)
+      Nbn.build_nni_group(
+        %{id: id, places: [%Place{id: @poi, role: @locates}, %Place{id: @csa, role: @serves}]},
+        actor: quokka
+      )
 
     {:ok, group} =
       Nbn.define_nni_group(
@@ -244,7 +255,14 @@ defmodule DiffoExample.Nbn.ServiceInitializer do
   end
 
   defp build_ntd! do
-    {:ok, ntd} = Nbn.build_ntd(%{id: @ntd, places: [%Place{id: @library_lop, role: @locates}]})
+    {:ok, ntd} =
+      Nbn.build_ntd(%{
+        id: @ntd,
+        places: [
+          %Place{id: @library_lop, role: @locates},
+          %Place{id: @library_loc, role: @addressed_at}
+        ]
+      })
 
     {:ok, ntd} =
       Nbn.define_ntd(ntd, %{
@@ -281,10 +299,12 @@ defmodule DiffoExample.Nbn.ServiceInitializer do
 
   # ── accessors (stable handles for the test + livebook) ────────────────────────
 
-  @doc "The on-site NTD's id, and the library LocationPoint it `:locates`."
+  @doc "The on-site NTD, the library places it carries, and the POI/CSA at 5STI."
   def ntd_id, do: @ntd
   def library_lop_id, do: @library_lop
+  def library_loc_id, do: @library_loc
   def poi_id, do: @poi
+  def csa_id, do: @csa
 
   @doc "The four idle UNI ids (the NTD's four ports)."
   def uni_ids, do: [@uni_1, @uni_2, @uni_3, @uni_4]

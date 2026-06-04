@@ -64,6 +64,43 @@ defmodule DiffoExample.Nbn.NbnEthernet do
         collapse: :first
     end
 
+    places do
+      # The PRI surfaces the geography of the service it realises (#65). inherited_place
+      # reaches an instance via the bearer chain, then reads one of its place refs
+      # (source_role); it can't hop place→place (diffo #227), so the NNI Group carries
+      # both POI and CSA, and the NTD both LocationPoint and Location — read here.
+      #
+      # Network edge — reach the NNI Group (PRI → AVC → CVC → NNI Group):
+      inherited_place :poi,
+        via: [
+          {:forward, relationship: [alias: :circuit]},
+          {:reverse, assignment: :cvc},
+          {:reverse, assignment: :nni_group}
+        ],
+        source_role: :locates,
+        collapse: :first
+
+      inherited_place :csa,
+        via: [
+          {:forward, relationship: [alias: :circuit]},
+          {:reverse, assignment: :cvc},
+          {:reverse, assignment: :nni_group}
+        ],
+        source_role: :serves,
+        collapse: :first
+
+      # Customer premises — reach the NTD (PRI → UNI → NTD):
+      inherited_place :location_point,
+        via: [{:forward, relationship: [alias: :port]}, {:reverse, assignment: :ntd}],
+        source_role: :locates,
+        collapse: :first
+
+      inherited_place :location,
+        via: [{:forward, relationship: [alias: :port]}, {:reverse, assignment: :ntd}],
+        source_role: :addressed_at,
+        collapse: :first
+    end
+
     relationships do
       source :all
       target :all
