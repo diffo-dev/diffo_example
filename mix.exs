@@ -6,7 +6,7 @@ defmodule DiffoExample.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
   @name "DiffoExample"
   @description "Examples for Diffo TMF Service and Resource Manager"
   @github_url "https://github.com/diffo-dev/diffo_example"
@@ -93,7 +93,7 @@ defmodule DiffoExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:diffo, diffo_version("~> 0.7.0")},
+      {:diffo, diffo_version("~> 0.8.0")},
       {:ash_ai, "~> 0.7"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},

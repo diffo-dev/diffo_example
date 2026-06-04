@@ -22,46 +22,32 @@ defmodule DiffoExample.Nbn.InterceptTest do
   alias DiffoExample.Nbn.ServiceInitializer, as: SI
 
   setup do
-    {:ok, quokka} = Nbn.create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "0002"})
-    {:ok, quokka} = Nbn.activate_rsp(quokka)
-
-    # The two places the seed relates to (subset of Geo's seed — this test is
-    # about the service edge, not the geo SQ, which geo_sq_test covers).
-    {:ok, _poi} =
-      Nbn.build_poi(%{
-        id: SI.poi_id(),
-        name: "Stirling",
-        location: %Geo.Point{coordinates: {138.71665, -35.00656}, srid: 4326}
-      })
-
-    {:ok, _lop} =
-      Nbn.build_location_point(%{
-        id: SI.library_lop_id(),
-        name: "Stirling Library",
-        location: %Geo.Point{coordinates: {138.7186, -35.0030}, srid: 4326}
-      })
-
-    :ok = SI.seed()
+    # Boot the NBN domain exactly as the app does — RSPs, the geo places, and the
+    # standing 5STI service infrastructure (DiffoExample.Nbn.ServiceInitializer).
+    DiffoExample.Nbn.Initializer.init()
+    {:ok, quokka} = Nbn.get_rsp_by_short_name(:quokka)
     %{quokka: quokka}
   end
 
   describe "standing infrastructure" do
-    test "the on-site NTD :locates the library LocationPoint" do
+    test "the on-site NTD carries its LocationPoint (:locates) and Location (:addressed_at)" do
       {:ok, ntd} = Nbn.get_ntd_by_id(SI.ntd_id(), load: [places: [:place]])
 
-      ref = Enum.find(ntd.places, &(&1.role == :locates))
-      assert ref
-      assert ref.place.id == SI.library_lop_id()
+      locates = Enum.find(ntd.places, &(&1.role == :locates))
+      addressed = Enum.find(ntd.places, &(&1.role == :addressed_at))
+      assert locates.place.id == SI.library_lop_id()
+      assert addressed.place.id == SI.library_loc_id()
     end
 
-    test "each NNI Group :locates the 5STI POI", %{quokka: quokka} do
+    test "each NNI Group carries the 5STI POI (:locates) and its CSA (:serves)", %{quokka: quokka} do
       for group_id <- Map.values(SI.group_ids()) do
         {:ok, group} =
           Nbn.get_nni_group_by_id(group_id, load: [places: [:place]], actor: quokka)
 
-        ref = Enum.find(group.places, &(&1.role == :locates))
-        assert ref
-        assert ref.place.id == SI.poi_id()
+        locates = Enum.find(group.places, &(&1.role == :locates))
+        serves = Enum.find(group.places, &(&1.role == :serves))
+        assert locates.place.id == SI.poi_id()
+        assert serves.place.id == SI.csa_id()
       end
     end
 
@@ -108,6 +94,27 @@ defmodule DiffoExample.Nbn.InterceptTest do
 
     test "an idle UNI with no service traces to nothing" do
       assert intercept(idle_uni().id) == []
+    end
+  end
+
+  describe "the PRI surfaces the service's geography (#65)" do
+    test "a provisioned PRI inherits POI, CSA, LocationPoint and Location", %{quokka: quokka} do
+      uni = idle_uni()
+      cvc = cvc_on(:group_a, quokka)
+      pri = SI.provision_service(uni, cvc, quokka)
+
+      {:ok, pri} =
+        Nbn.get_nbn_ethernet_by_id(pri.id,
+          load: [:poi, :csa, :location_point, :location],
+          actor: quokka
+        )
+
+      # Network edge — surfaced from the NNI Group (PRI → AVC → CVC → NNI Group).
+      assert pri.poi.id == SI.poi_id()
+      assert pri.csa.id == SI.csa_id()
+      # Customer premises — surfaced from the NTD (PRI → UNI → NTD).
+      assert pri.location_point.id == SI.library_lop_id()
+      assert pri.location.id == SI.library_loc_id()
     end
   end
 
