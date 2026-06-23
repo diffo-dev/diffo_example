@@ -71,3 +71,17 @@ new file and haven't added the header, this is the place to catch it.
 
 Forgetting either is the easiest way to introduce CI noise the reviewer
 has to clean up. Save them both the time.
+
+## Commit messages
+
+This repo follows [Conventional Commits](https://conventionalcommits.org), the
+same as upstream diffo (its CHANGELOG is generated from them). Format the
+subject as `type(scope): description`:
+
+- `feat:` / `fix:` — new behaviour or bug fixes in a domain.
+- `chore(deps):` — dependency bumps (e.g. `chore(deps): bump diffo to 0.9.0`),
+  matching the `chore` issue label and diffo's "Dependencies" changelog section.
+- `docs:` documentation-only, `refactor:` non-behavioural restructuring.
+
+Put issue closers in the body/footer (`Closes #NN`). PR titles follow the same
+convention.

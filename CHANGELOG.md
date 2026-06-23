@@ -11,6 +11,12 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.5.0](https://github.com/diffo-dev/diffo_example/compare/v0.4.0..v0.5.0) (2026-06-24)
+
+### Maintenance:
+* bumped to diffo 0.9.0 — target Neo4j is now **2026.05** (Cypher 25 / BOLT 6.0); adds the mandatory `config :ash, :require_atomic_by_default?, false` (the 0.8.x→0.9.0 step), updates both livebooks, and adds a `docker-compose.yml` for a local Neo4j 2026.05. All tests pass with no Access/NBN domain logic changes (#69)
+* dropped two unused `require Ash.Query` and applied pending `mix format` normalizations
+
 ## [v0.4.0](https://github.com/diffo-dev/diffo_example/compare/v0.3.0..v0.4.0) (2026-06-04)
 
 ### Features:
