@@ -85,3 +85,11 @@ subject as `type(scope): description`:
 
 Put issue closers in the body/footer (`Closes #NN`). PR titles follow the same
 convention.
+
+## Toolchain
+
+When bumping diffo (or any major dependency), always advance the Erlang and
+Elixir toolchains in `.tool-versions` to match upstream diffo's `.tool-versions`
+(and ash_neo4j's) — keep them in lockstep so this repo builds and tests on the
+same runtime the dependency is developed against. We use [mise](https://mise.jdx.dev),
+which reads `.tool-versions` natively; there is no separate `mise.toml`.
