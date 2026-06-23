@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+#
+# SPDX-License-Identifier: MIT
+
+# Local Neo4j for diffo_example.
+#
+#   neo4j → bolt://localhost:7687  (Bolt 6.0 / Cypher 25)
+#
+# As of diffo 0.9.0 the target is Neo4j 2026.05 (Cypher 25 / BOLT 6.0). The
+# port and credentials match the Bolt block in config/{dev,test,runtime}.exs
+# (neo4j / password). Community edition is deliberate — it's the floor of the
+# user base and runs everything the suite needs. No volumes: the test suite is
+# ephemeral by design, so the data does not need to survive a restart.
+#
+#   docker compose up -d        # start
+#   mix test                    # run the suite against it
+#   docker compose down         # stop
+#
+# The compose project is named `diffo_example` so this stack stays separate from
+# any ash_neo4j / bolty Neo4j stacks you may have running.
+name: diffo_example
+
+services:
+  neo4j:
+    # Pin to the UBI build: the floating neo4j:2026.05 tag drifted to a
+    # Temurin-based build that exits 3 on boot (Apple Silicon); the
+    # *.0-community-ubi10 build boots cleanly. Pinning also keeps the suite
+    # reproducible.
+    image: neo4j:2026.05.0-community-ubi10
+    container_name: neo4j-diffo-example
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    environment:
+      NEO4J_AUTH: neo4j/password
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p password 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30

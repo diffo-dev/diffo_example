@@ -52,7 +52,7 @@ def deps do
 end
 ```
 
-You need [Neo4j](https://github.com/neo4j/neo4j) available. We recommend the Neo4j Community 5 latest, available at the [Neo4j Deployment Centre](https://neo4j.com/deployment-center/) which can be installed locally. You can also configure connection to a cloud-based database service such as [Neo4j AuraDB](https://neo4j.com/product/auradb/).
+You need [Neo4j](https://github.com/neo4j/neo4j) available. As of diffo 0.9.0 the target is **Neo4j 2026.05** (Cypher 25 / BOLT 6.0); we recommend the latest Neo4j Community on the date-versioned line, available at the [Neo4j Deployment Centre](https://neo4j.com/deployment-center/) which can be installed locally. You can also configure connection to a cloud-based database service such as [Neo4j AuraDB](https://neo4j.com/product/auradb/).
 
 ## Contributions
 

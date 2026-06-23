@@ -116,5 +116,4 @@ defmodule DiffoExample.Nbn.Ntd do
       change Diffo.Provider.Changes.Relate
     end
   end
-
 end
