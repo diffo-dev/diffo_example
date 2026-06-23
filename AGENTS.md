@@ -93,3 +93,19 @@ Elixir toolchains in `.tool-versions` to match upstream diffo's `.tool-versions`
 (and ash_neo4j's) — keep them in lockstep so this repo builds and tests on the
 same runtime the dependency is developed against. We use [mise](https://mise.jdx.dev),
 which reads `.tool-versions` natively; there is no separate `mise.toml`.
+
+## Releasing / version bumps
+
+A version bump touches more than `mix.exs` — keep the advertised versions in
+sync everywhere they appear:
+
+- `mix.exs` — `@version` and the `:diffo` pin; regenerate `mix.lock`.
+- `README.md` — the install snippet floor (`{:diffo_example, "~> X.Y"}`).
+- `documentation/domains/*.livemd` — the `Mix.install` pins (`:diffo_example`,
+  `:diffo`) and bump other livebook deps (e.g. `:kino`) to current while you're
+  there.
+- `CHANGELOG.md` — add the new version entry.
+- `.tool-versions` — advance the toolchain (see above).
+
+After the version is published, those `~>` pins resolve against hex; until then
+they describe the release this PR produces.

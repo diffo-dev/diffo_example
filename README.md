@@ -47,7 +47,7 @@ The package can be installed by adding `diffo_example` to your list of dependenc
 ```elixir
 def deps do
   [
-    {:diffo_example, "~> 0.2"}
+    {:diffo_example, "~> 0.5"}
   ]
 end
 ```
