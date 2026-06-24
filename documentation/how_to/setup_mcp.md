@@ -20,6 +20,9 @@ for the framing.
 
 - Elixir / Erlang installed (per `mix.exs` — currently `~> 1.18`).
 - Neo4j running locally with the credentials configured in `config/dev.exs`.
+  As of diffo 0.9.0 this must be **Neo4j 2026.05** (Cypher 25 / BOLT 6.0); the
+  repo's `docker-compose.yml` brings one up on the configured port
+  (`docker compose up -d`).
 - Dependencies fetched: `mix deps.get`.
 - Initial RSP data seeded on first start (handled automatically by
   `DiffoExample.Nbn.Initializer` when the app starts in dev).

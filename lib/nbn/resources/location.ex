@@ -33,14 +33,36 @@ defmodule DiffoExample.Nbn.Location do
   actions do
     create :build do
       description "creates a location (premises address)"
-      accept [:id, :href, :name, :street_nr, :street_name, :locality, :state_or_province, :country, :postcode]
+
+      accept [
+        :id,
+        :href,
+        :name,
+        :street_nr,
+        :street_name,
+        :locality,
+        :state_or_province,
+        :country,
+        :postcode
+      ]
+
       change set_attribute(:type, :GeographicAddress)
       upsert? true
     end
 
     update :define do
       description "defines fields on a location"
-      accept [:name, :href, :street_nr, :street_name, :locality, :state_or_province, :country, :postcode]
+
+      accept [
+        :name,
+        :href,
+        :street_nr,
+        :street_name,
+        :locality,
+        :state_or_province,
+        :country,
+        :postcode
+      ]
     end
   end
 end

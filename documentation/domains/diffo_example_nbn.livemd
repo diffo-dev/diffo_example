@@ -9,11 +9,14 @@ SPDX-License-Identifier: MIT
 ```elixir
 Mix.install(
   [
-    {:diffo_example, "~> 0.4.0"},
-    {:diffo, "~> 0.8.0"},
-    {:kino, "~> 0.14"}
+    {:diffo_example, "~> 0.5.0"},
+    {:diffo, "~> 0.9.0"},
+    {:kino, "~> 0.19"}
   ],
   config: [
+    diffo: [ash_domains: [Diffo.Provider]],
+    diffo_example: [ash_domains: [DiffoExample.Access, DiffoExample.Nbn]],
+    ash: [require_atomic_by_default?: false],
     bolty: [
       {Bolt,
        [
@@ -39,8 +42,8 @@ NBN is a fictional, simplified take on Australia's wholesale broadband network. 
 
 This notebook walks the provisioning flow when an RSP sells an NBN Ethernet access to a subscriber. Two things make NBN richer than Access:
 
-- **Multi-tenancy** — every resource is owned by an RSP and policy-scoped to its owner.
-- **Longer delivery chain** — `NbnEthernet` (PRI) owns an `Avc` and a `Uni`. The `Avc` consumes a `:cvlan` from a `Cvc`. The `Cvc` consumes an `:svlan` from an `NniGroup`. The `Uni` consumes a `:port` from an `Ntd`. Every step is a chance to bring upstream context up.
+* **Multi-tenancy** — every resource is owned by an RSP and policy-scoped to its owner.
+* **Longer delivery chain** — `NbnEthernet` (PRI) owns an `Avc` and a `Uni`. The `Avc` consumes a `:cvlan` from a `Cvc`. The `Cvc` consumes an `:svlan` from an `NniGroup`. The `Uni` consumes a `:port` from an `Ntd`. Every step is a chance to bring upstream context up.
 
 See [nbn.md](nbn.md) for the narrative version including the named-vs-metrics characteristic pattern, the alias convention, and what each consumer inherits.
 
@@ -52,7 +55,10 @@ Connect to Neo4j (running locally on the default port). It is helpful to keep th
 AshNeo4j.BoltyHelper.is_connected()
 ```
 
-**Optional** — clear the database so the scenario builds from a clean slate:
+**Run this first.** The build cells create instances with unique names and are
+not upserts, so re-running the notebook against an already-populated graph raises
+`instance name must be unique`. That error is harmless — it just means the node
+is already there — but clearing first lets the scenario build cleanly from the top:
 
 ```elixir
 AshNeo4j.Neo4jHelper.delete_all()
@@ -114,14 +120,14 @@ Diffo.Provider.list_place_refs_from({:place, "5STI"})
 To *see* the geography — labels, points and polygons — drop to Neo4j Browser (observation only; note the Ash `id` persists as the node `key` property):
 
 ```cypher
-MATCH (poi:`Poi` {key: '5STI'})-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+MATCH (poi:Poi {key: '5STI'})-[:RELATES]->(:PlaceRef)-[:RELATES]->(csa:Csa)
 RETURN poi, csa;
 ```
 
 Or every pair at once:
 
 ```cypher
-MATCH (poi:`Poi`)-[:`RELATES`]->(:`PlaceRef`)-[:`RELATES`]->(csa:`Csa`)
+MATCH (poi:Poi)-[:RELATES]->(:PlaceRef)-[:RELATES]->(csa:Csa)
 RETURN DISTINCT poi, csa LIMIT 150;
 ```
 

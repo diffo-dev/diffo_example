@@ -71,3 +71,41 @@ new file and haven't added the header, this is the place to catch it.
 
 Forgetting either is the easiest way to introduce CI noise the reviewer
 has to clean up. Save them both the time.
+
+## Commit messages
+
+This repo follows [Conventional Commits](https://conventionalcommits.org), the
+same as upstream diffo (its CHANGELOG is generated from them). Format the
+subject as `type(scope): description`:
+
+- `feat:` / `fix:` — new behaviour or bug fixes in a domain.
+- `chore(deps):` — dependency bumps (e.g. `chore(deps): bump diffo to 0.9.0`),
+  matching the `chore` issue label and diffo's "Dependencies" changelog section.
+- `docs:` documentation-only, `refactor:` non-behavioural restructuring.
+
+Put issue closers in the body/footer (`Closes #NN`). PR titles follow the same
+convention.
+
+## Toolchain
+
+When bumping diffo (or any major dependency), always advance the Erlang and
+Elixir toolchains in `.tool-versions` to match upstream diffo's `.tool-versions`
+(and ash_neo4j's) — keep them in lockstep so this repo builds and tests on the
+same runtime the dependency is developed against. We use [mise](https://mise.jdx.dev),
+which reads `.tool-versions` natively; there is no separate `mise.toml`.
+
+## Releasing / version bumps
+
+A version bump touches more than `mix.exs` — keep the advertised versions in
+sync everywhere they appear:
+
+- `mix.exs` — `@version` and the `:diffo` pin; regenerate `mix.lock`.
+- `README.md` — the install snippet floor (`{:diffo_example, "~> X.Y"}`).
+- `documentation/domains/*.livemd` — the `Mix.install` pins (`:diffo_example`,
+  `:diffo`) and bump other livebook deps (e.g. `:kino`) to current while you're
+  there.
+- `CHANGELOG.md` — add the new version entry.
+- `.tool-versions` — advance the toolchain (see above).
+
+After the version is published, those `~>` pins resolve against hex; until then
+they describe the release this PR produces.

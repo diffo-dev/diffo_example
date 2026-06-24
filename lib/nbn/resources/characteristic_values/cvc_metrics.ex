@@ -55,8 +55,6 @@ defmodule DiffoExample.Nbn.CvcMetrics.ValueCalculation do
   @moduledoc false
   use Ash.Resource.Calculation
 
-  require Ash.Query
-
   alias DiffoExample.Nbn.AvcCharacteristic
   alias DiffoExample.Nbn.BandwidthProfile
   alias DiffoExample.Nbn.CvcMetrics

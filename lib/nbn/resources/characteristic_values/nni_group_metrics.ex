@@ -73,8 +73,6 @@ defmodule DiffoExample.Nbn.NniGroupMetrics.ValueCalculation do
   @moduledoc false
   use Ash.Resource.Calculation
 
-  require Ash.Query
-
   alias DiffoExample.Nbn.CvcCharacteristic
   alias DiffoExample.Nbn.NniCharacteristic
   alias DiffoExample.Nbn.NniGroupMetrics
