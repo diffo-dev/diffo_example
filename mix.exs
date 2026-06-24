@@ -98,7 +98,10 @@ defmodule DiffoExample.MixProject do
       # against CI before the bolty PR is approved/released. Override the transitive
       # bolty (ash_neo4j requires ~> 0.2.0). Swap to a hex pin once 0.2.1 ships,
       # then remove once ash_neo4j bumps its floor. See diffo-dev/bolty#54.
-      {:bolty, github: "diffo-dev/bolty", branch: "54-reset-failed-connection-after-failure", override: true},
+      {:bolty,
+       github: "diffo-dev/bolty",
+       branch: "54-reset-failed-connection-after-failure",
+       override: true},
       {:ash_ai, "~> 0.7"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},
