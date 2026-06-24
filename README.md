@@ -54,6 +54,22 @@ end
 
 You need [Neo4j](https://github.com/neo4j/neo4j) available. As of diffo 0.9.0 the target is **Neo4j 2026.05** (Cypher 25 / BOLT 6.0); we recommend the latest Neo4j Community on the date-versioned line, available at the [Neo4j Deployment Centre](https://neo4j.com/deployment-center/) which can be installed locally. You can also configure connection to a cloud-based database service such as [Neo4j AuraDB](https://neo4j.com/product/auradb/).
 
+## Running the tests
+
+The repo ships a `docker-compose.yml` with a Neo4j 2026.05 server on the port the
+test config expects, so the suite is a one-liner:
+
+```bash
+docker compose up -d   # start Neo4j 2026.05 (Cypher 25 / BOLT 6.0)
+mix test               # ash.setup + the suite
+docker compose down    # stop it when you're done
+```
+
+CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs the same
+suite — `mix compile --warnings-as-errors`, `mix format --check-formatted`, and
+`mix test` — against that image on every push and pull request, on the toolchain
+pinned in `.tool-versions`.
+
 ## Contributions
 
 Contributions are welcome, please start with an [issue](https://github.com/diffo-dev/diffo_example/issues).
