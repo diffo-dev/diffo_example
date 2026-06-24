@@ -14,6 +14,8 @@ Mix.install(
     {:kino, "~> 0.19"}
   ],
   config: [
+    diffo: [ash_domains: [Diffo.Provider]],
+    diffo_example: [ash_domains: [DiffoExample.Access, DiffoExample.Nbn]],
     ash: [require_atomic_by_default?: false],
     bolty: [
       {Bolt,
@@ -55,7 +57,10 @@ Connect to Neo4j (running locally on the default port). It is helpful to keep th
 AshNeo4j.BoltyHelper.is_connected()
 ```
 
-**Optional** — clear the database so the scenario builds from a clean slate:
+**Run this first.** The build cells create instances with unique names and are
+not upserts, so re-running the notebook against an already-populated graph raises
+`instance name must be unique`. That error is harmless — it just means the node
+is already there — but clearing first lets the scenario build cleanly from the top:
 
 ```elixir
 AshNeo4j.Neo4jHelper.delete_all()
@@ -70,13 +75,13 @@ alias DiffoExample.Access
 
 ## The resources at a glance
 
-| Kind | Resource | Plays the role of |
-| --- | --- | --- |
-| Service | `DslAccess` | the broadband product the telco sells |
-| Resource | `Shelf` | a DSLAM frame at the exchange — slots for line cards |
-| Resource | `Card` | a line card — ports for customer paths |
-| Resource | `Path` | the access path from the exchange to the customer |
-| Resource | `Cable` | a copper cable — pairs assigned to paths |
+| Kind     | Resource    | Plays the role of                                      |
+| -------- | ----------- | ------------------------------------------------------ |
+| Service  | `DslAccess` | the broadband product the telco sells                  |
+| Resource | `Shelf`     | a DSLAM frame at the exchange — slots for line cards |
+| Resource | `Card`      | a line card — ports for customer paths               |
+| Resource | `Path`      | the access path from the exchange to the customer      |
+| Resource | `Cable`     | a copper cable — pairs assigned to paths             |
 
 `Shelf`, `Card`, and `Cable` each declare a **pool** (`:slots`, `:ports`, `:pairs`). Each consumer takes a value from its upstream's pool and names the upstream by the role it plays — `:shelf`, `:card`, `:cable`. That name (the assignment's `alias`) lets the relationship be walked from either side.
 
