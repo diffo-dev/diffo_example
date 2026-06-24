@@ -18,6 +18,13 @@ jobs:
         image: neo4j:2026.05.0-community-ubi10
         env:
           NEO4J_AUTH: neo4j/password
+          # Bound the heap/pagecache explicitly. Neo4j auto-sizes from host RAM,
+          # which it misreads inside a CI service container — leaving it to drop
+          # connections under the concurrent test load (a transient mid-run GC
+          # stall). Stable, modest limits keep it steady for the suite.
+          NEO4J_server_memory_heap_initial__size: 1G
+          NEO4J_server_memory_heap_max__size: 1G
+          NEO4J_server_memory_pagecache_size: 512m
         ports:
           - 7687:7687
         options: >-
