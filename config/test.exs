@@ -16,11 +16,6 @@ config :bolty, Bolt,
   max_overflow: 3,
   prefix: :default,
   name: Bolt,
-  # The AshNeo4j.Sandbox holds one connection (an open transaction) for the whole
-  # test. DBConnection's default 15s checkout timeout disconnects a heavy test
-  # mid-run on slower CI (the 5STI seed), cascading "connection is closed" errors.
-  # Raise the pool default so a slow checkout completes. See #72.
-  timeout: 60_000,
   log: true,
   log_hex: true
 
