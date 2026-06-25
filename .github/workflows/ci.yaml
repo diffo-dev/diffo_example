@@ -53,11 +53,11 @@ jobs:
         run: mix format --check-formatted
 
       - name: Test
-        # --max-cases 2 limits ExUnit concurrency. The AshNeo4j.Sandbox holds one
-        # connection (an open transaction) per test for the whole test, and that
-        # transaction inherits DBConnection's 15s checkout default; under high
-        # concurrency on the runner's limited cores, a heavy test's wall-clock
-        # exceeds 15s and the pool disconnects it. Fewer parallel cases keeps each
-        # test's wall-clock under the cap. Proper fix is upstream — see ash_neo4j
-        # (sandbox should pass a generous :timeout to Bolty.transaction).
-        run: mix test --max-cases 2
+        # --max-cases 1 runs tests serially so each gets full CPU. The
+        # AshNeo4j.Sandbox holds one connection (an open transaction) per test for
+        # the whole test, inheriting DBConnection's 15s checkout default; under
+        # concurrency on the runner's limited cores a heavy test's wall-clock
+        # exceeds 15s and the pool disconnects it (--max-cases 2 still flaked).
+        # Serial keeps wall-clock ≈ CPU time, under the cap. Proper fix is upstream
+        # — see ash_neo4j#398 (sandbox should pass a generous :timeout).
+        run: mix test --max-cases 1
