@@ -43,5 +43,5 @@ config :spark,
 config :ash, :require_atomic_by_default?, false
 
 config :diffo, ash_domains: [Diffo.Provider]
-config :diffo_example, ash_domains: [DiffoExample.Access, DiffoExample.Nbn]
+config :diffo_example, ash_domains: [DiffoExample.Access, DiffoExample.Nbn, DiffoExample.Npt]
 import_config "#{config_env()}.exs"

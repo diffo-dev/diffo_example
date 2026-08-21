@@ -1,0 +1,131 @@
+-- allium: 3
+--
+-- SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+--
+-- SPDX-License-Identifier: MIT
+
+-- Scope: NPT's internal timing architecture. Timebases, how they are compared,
+--   and what can be concluded from a comparison.
+-- Excludes: the delivered service, provider operations, the consumer boundary.
+
+------------------------------------------------------------
+-- Value Types
+------------------------------------------------------------
+
+-- Bounds on an instant. An instant cannot be asserted by a timebase that is
+-- itself under question, so time is carried as bounds, never as a point.
+value Interval {
+    earliest: Timestamp
+    latest: Timestamp
+}
+
+-- Time according to whom. There is no view from nowhere.
+value Stamp {
+    bounds: Interval
+    according_to: String
+}
+
+-- A difference with its uncertainty. An offset without one asserts an
+-- exactness no measurement can support.
+value Offset {
+    nanoseconds: Integer
+    uncertainty_nanoseconds: Integer
+}
+
+-- A supplier's claim, not an observation. Graded, and held over a window.
+value QualityIndication {
+    level: String
+    confidence: Decimal
+    holds_over: Stamp
+}
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- Any clock, NPT's own included. NPT's scale gets no structural privilege:
+-- it is a witness among witnesses, and can be the one that is wrong.
+entity Timebase {
+    name: String
+    indicated_quality: QualityIndication
+    kind: LocalTimeScale | ForeignTimebase
+
+    comparisons: Comparison with subject = this
+}
+
+variant LocalTimeScale : Timebase {
+    ensemble_member: Boolean
+}
+
+variant ForeignTimebase : Timebase {
+    operator: String
+}
+
+-- A pairwise difference between two timebases. Not an error: nothing in a
+-- pairwise comparison says which of the two is wrong.
+entity Comparison {
+    subject: Timebase
+    reference: Timebase
+    observed: Stamp
+    difference: Offset
+
+    divergence: Divergence?
+}
+
+-- A difference too large to accept. Detection is cheap; attribution is not.
+-- Two timebases can only disagree. Naming which one is wrong needs a third.
+entity Divergence {
+    detected: Stamp
+    status: detected | attributed | unattributed
+    implicated: Timebase?
+
+    comparisons: Comparison with divergence = this
+    witnesses: comparisons -> reference
+    witness_count: witnesses.unique.count
+    attributable: witness_count >= config.minimum_witnesses_for_attribution
+
+    invariant AttributionNeedsWitnesses {
+        status = attributed implies attributable
+    }
+
+    invariant UnattributedNamesNobody {
+        status = unattributed implies implicated = null
+    }
+}
+
+-- NPT doubting one of its own references. Mirror of the service-side Ticket,
+-- with NPT on the consuming side of the boundary.
+entity SourceQualityFinding {
+    source: Timebase
+    concern: output_incorrect | indication_incorrect
+    raised: Stamp
+    status: open | upheld | unattributed | dismissed
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    -- Two timebases can disagree; three can apportion.
+    minimum_witnesses_for_attribution: Integer = 3
+}
+
+------------------------------------------------------------
+-- Deferred Specifications
+------------------------------------------------------------
+
+-- Weighting witnesses by demonstrated stability, and deriving an ensemble
+-- from mutually comparing timebases none of which is authoritative.
+deferred Ensemble.weight    -- see: detailed/npt-ensemble.allium
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "What difference, against what uncertainty, constitutes a Divergence?"
+open question "Are witnesses weighted, or equal?"
+open question "Can NPT fall back onto a foreign timebase?"
+open question "What vocabulary does QualityIndication.level draw on?"
+open question "Whose clock stamps Stamp.according_to, and how is that named?"
+open question "Should LocalTimeScale navigate to the supplies it feeds, or is that the service's view only?"
