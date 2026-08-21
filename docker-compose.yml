@@ -6,7 +6,8 @@
 #
 #   neo4j → bolt://localhost:7687  (Bolt 6.0 / Cypher 25)
 #
-# As of diffo 0.9.0 the target is Neo4j 2026.05 (Cypher 25 / BOLT 6.0). The
+# As of diffo 0.9.0 the target is Neo4j 2026.06 (Cypher 25 / BOLT 6.0), which
+# is the newest release bolty exercises its Bolt 6 server against. The
 # port and credentials match the Bolt block in config/{dev,test,runtime}.exs
 # (neo4j / password). Community edition is deliberate — it's the floor of the
 # user base and runs everything the suite needs. No volumes: the test suite is
@@ -22,11 +23,11 @@ name: diffo_example
 
 services:
   neo4j:
-    # Pin to the UBI build: the floating neo4j:2026.05 tag drifted to a
+    # Pin to the UBI build: the floating neo4j:2026.06 tag drifted to a
     # Temurin-based build that exits 3 on boot (Apple Silicon); the
     # *.0-community-ubi10 build boots cleanly. Pinning also keeps the suite
     # reproducible.
-    image: neo4j:2026.05.0-community-ubi10
+    image: neo4j:2026.06.0-community-ubi10
     container_name: neo4j-diffo-example
     ports:
       - "7687:7687"

@@ -41,6 +41,20 @@ defmodule DiffoExample.MixProject do
     ]
   end
 
+  @ash_neo4j_git "https://github.com/diffo-dev/ash_neo4j.git"
+
+  # Returns the whole dep: the git and hex forms differ in arity, so this cannot
+  # follow diffo_version/1's shape of returning just the requirement.
+  defp ash_neo4j_dep do
+    case System.get_env("ASH_NEO4J_VERSION") do
+      nil -> {:ash_neo4j, git: @ash_neo4j_git, branch: "dev", override: true}
+      "local" -> {:ash_neo4j, path: "../ash_neo4j", override: true}
+      "main" -> {:ash_neo4j, git: @ash_neo4j_git, override: true}
+      "dev" -> {:ash_neo4j, git: @ash_neo4j_git, branch: "dev", override: true}
+      version -> {:ash_neo4j, "~> #{version}", override: true}
+    end
+  end
+
   defp diffo_version(default_version) do
     case System.get_env("DIFFO_VERSION") do
       nil -> default_version
@@ -94,6 +108,15 @@ defmodule DiffoExample.MixProject do
   defp deps do
     [
       {:diffo, diffo_version("~> 0.9.0")},
+      # ash_neo4j 0.10.1 opens the sandbox holder transaction with DBConnection's
+      # default 15s checkout timeout, so a test holding its connection longer is
+      # force-disconnected mid-run (ash_neo4j#398, diffo_example#77). Fixed on
+      # dev but not yet released. Pin to dev until a release carries it.
+      ash_neo4j_dep(),
+      # ash_neo4j pins bolty ~> 0.2.1 on both 0.10.1 and dev, which predates
+      # bolty 0.4.0 and its Bolt 6 support for Neo4j 2026.06. Override until
+      # ash_neo4j relaxes it.
+      {:bolty, "~> 0.4.0", override: true},
       {:ash_ai, "~> 0.7"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},
