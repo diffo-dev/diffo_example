@@ -22,9 +22,8 @@ defmodule DiffoExample.Nbn.InterceptTest do
   alias DiffoExample.Nbn.ServiceInitializer, as: SI
 
   setup do
-    # Boot the NBN domain exactly as the app does — RSPs, the geo places, and the
-    # standing 5STI service infrastructure (DiffoExample.Nbn.ServiceInitializer).
-    DiffoExample.Nbn.Initializer.init()
+    # The standing infrastructure — RSPs, geo places, the 5STI service edge — is
+    # seeded once in test_helper.exs. Each test only rolls back its own writes.
     {:ok, quokka} = Nbn.get_rsp_by_short_name(:quokka)
     %{quokka: quokka}
   end
