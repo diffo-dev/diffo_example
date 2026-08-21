@@ -94,6 +94,9 @@ defmodule DiffoExample.MixProject do
   defp deps do
     [
       {:diffo, diffo_version("~> 0.9.0")},
+      # ash_neo4j 0.10.1 pins bolty ~> 0.2.0, which predates bolty 0.4.0 and its
+      # Bolt 6 support for Neo4j 2026.06. Override until ash_neo4j relaxes it.
+      {:bolty, "~> 0.4.0", override: true},
       {:ash_ai, "~> 0.7"},
       {:plug_cowboy, "~> 2.7"},
       {:picosat_elixir, "~> 0.2.0"},

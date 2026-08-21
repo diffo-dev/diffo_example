@@ -9,11 +9,7 @@ config :bolty, Bolt,
   auth: [username: "neo4j", password: "password"],
   user_agent: "DiffoExampleDev/1",
   pool_size: 15,
-  max_overflow: 3,
-  prefix: :default,
-  name: Bolt,
-  log: true,
-  log_hex: true
+  name: Bolt
 
 level =
   if System.get_env("DEBUG") do
