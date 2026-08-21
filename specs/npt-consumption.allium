@@ -1,0 +1,145 @@
+-- allium: 3
+--
+-- SPDX-FileCopyrightText: 2025 diffo_example contributors <https://github.com/diffo-dev/diffo_example/graphs.contributors>
+--
+-- SPDX-License-Identifier: MIT
+
+-- Scope: the boundary a network zone consumes NPT through. TMF projection.
+-- Excludes: the model itself, timing architecture, provider operations.
+
+use "./npt-service.allium" as npt
+use "./npt-timing.allium" as timing
+
+------------------------------------------------------------
+-- Contracts
+------------------------------------------------------------
+
+-- TMF638 Service Inventory Management.
+contract Tmf638ServiceInventory {
+    list_services: (zone: npt/NetworkZone) -> Set<npt/Synchronisation>
+    retrieve_service: (service_id: String) -> npt/Synchronisation
+
+    @invariant TenancyIsolation
+        -- A zone reaches only its own sites' services.
+}
+
+-- TMF638 event notification.
+contract Tmf638EventNotification {
+    subscribe: (zone: npt/NetworkZone, event_types: Set<String>) -> EventSubscription
+    unsubscribe: (subscription: EventSubscription) -> Boolean
+    publish: (subscription: EventSubscription, event: npt/ServiceEvent) -> Boolean
+
+    @invariant EventsRespectTenancy
+        -- Events only for services the zone could retrieve.
+}
+
+-- TMF640 Service Activation and Configuration.
+contract Tmf640ServiceActivation {
+    request_service: (zone: npt/NetworkZone, site: npt/Site) -> npt/Synchronisation
+    cease_service: (service: npt/Synchronisation) -> Boolean
+}
+
+-- TMF656 Service Problem Management.
+contract Tmf656ProblemReporting {
+    raise_problem: (zone: npt/NetworkZone, service: npt/Synchronisation, concern: String) -> npt/Ticket
+    retrieve_ticket: (ticket_id: String) -> npt/Ticket
+
+    @invariant ReporterSeesOutcome
+        -- The reporter can always observe the resolution, including that
+        -- no attribution was possible.
+}
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+entity EventSubscription {
+    zone: npt/NetworkZone
+    event_types: Set<String>
+    status: active | cancelled
+}
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+rule ZoneReportsQualityConcern {
+    when: ZoneReportsQualityConcern(zone, service, concern, raised)
+
+    requires: service.zone = zone
+
+    ensures: npt/Ticket.created(
+        zone: zone,
+        service: service,
+        concern: concern,
+        raised: raised,
+        status: received
+    )
+}
+
+------------------------------------------------------------
+-- Actor Declarations
+------------------------------------------------------------
+
+actor ZoneSystem {
+    identified_by: npt/NetworkZone where name != null
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface ZoneServiceInventory {
+    facing zone_system: ZoneSystem
+
+    context service: npt/Synchronisation
+        where zone = zone_system
+
+    exposes:
+        service.site.name
+        service.status
+        service.source_count
+
+    contracts:
+        fulfils Tmf638ServiceInventory
+        fulfils Tmf638EventNotification
+
+    @guarantee ReadOnlyFloor
+        -- TMF640 adds to this surface, never replaces it.
+}
+
+surface ZoneQualityReporting {
+    facing zone_system: ZoneSystem
+
+    context service: npt/Synchronisation
+        where zone = zone_system
+
+    exposes:
+        service.status
+
+    provides:
+        ZoneReportsQualityConcern(zone_system, service, concern, raised)
+
+    contracts:
+        fulfils Tmf656ProblemReporting
+
+    @guarantee ReportingIsSeparateFromInventory
+        -- Raising a problem does not weaken the read-only floor.
+
+    @guarantee UnattributedIsAnHonestAnswer
+        -- A zone may be told its concern was upheld and that no timebase
+        -- could be named. NPT does not manufacture attribution to close.
+
+    @guidance
+        -- Mechanism is not part of the contract.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Is TMF640 activation in scope at launch?"
+open question "What else is in the event catalogue?"
+open question "Does a zone see anything of NPT's internal supply?"
+open question "One subscription per zone, or per site?"
+open question "Who requests a Synchronisation: the zone, or NPT?"
