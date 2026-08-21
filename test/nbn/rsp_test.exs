@@ -18,12 +18,16 @@ defmodule DiffoExample.Nbn.RspTest do
   describe "RSP resource" do
     test "create and activate an RSP" do
       {:ok, rsp} =
-        Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+        Nbn.create_rsp(%{
+          name: "Wedge-tail Telecom (test)",
+          short_name: :wedgetail_test,
+          id: "8001"
+        })
 
       assert is_struct(rsp, Rsp)
       assert rsp.state == :inactive
       assert rsp.id == "8001"
-      assert rsp.short_name == :wedgetail
+      assert rsp.short_name == :wedgetail_test
 
       {:ok, rsp} = Nbn.activate_rsp(rsp)
       assert rsp.state == :active
@@ -31,7 +35,11 @@ defmodule DiffoExample.Nbn.RspTest do
 
     test "RSP state machine: activate → suspend → deactivate" do
       {:ok, rsp} =
-        Nbn.create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+        Nbn.create_rsp(%{
+          name: "Wedge-tail Telecom (test)",
+          short_name: :wedgetail_test,
+          id: "8001"
+        })
 
       {:ok, rsp} = Nbn.activate_rsp(rsp)
       assert rsp.state == :active
@@ -50,25 +58,27 @@ defmodule DiffoExample.Nbn.RspTest do
     end
 
     test "get RSP by short_name" do
-      create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
+      create_rsp(%{name: "Wedge-tail Telecom (test)", short_name: :wedgetail_test, id: "8001"})
 
-      {:ok, rsp} = Nbn.get_rsp_by_short_name(:wedgetail)
-      assert rsp.short_name == :wedgetail
+      {:ok, rsp} = Nbn.get_rsp_by_short_name(:wedgetail_test)
+      assert rsp.short_name == :wedgetail_test
       assert rsp.id == "8001"
     end
 
     test "get RSP by epid" do
-      create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "8002"})
+      create_rsp(%{name: "Quokka Connect (test)", short_name: :quokka_test, id: "8002"})
 
       {:ok, rsp} = Nbn.get_rsp_by_epid("8002")
-      assert rsp.short_name == :quokka
+      assert rsp.short_name == :quokka_test
     end
   end
 
   describe "RSP multi-tenancy" do
     setup do
-      wedgetail = create_rsp(%{name: "Wedge-tail Telecom", short_name: :wedgetail, id: "8001"})
-      quokka = create_rsp(%{name: "Quokka Connect", short_name: :quokka, id: "8002"})
+      wedgetail =
+        create_rsp(%{name: "Wedge-tail Telecom (test)", short_name: :wedgetail_test, id: "8001"})
+
+      quokka = create_rsp(%{name: "Quokka Connect (test)", short_name: :quokka_test, id: "8002"})
       %{wedgetail: wedgetail, quokka: quokka}
     end
 
